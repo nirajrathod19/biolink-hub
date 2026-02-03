@@ -1,0 +1,197 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    /* New Fresh Palette */
+    /* Deep Slate Blue: #1F3B4D -> HSL(200, 43%, 21%) */
+    /* Soft Lavender: #D6CDEA -> HSL(261, 36%, 86%) */
+    /* Electric Lime: #C8EB5E -> HSL(76, 77%, 64%) */
+    /* Matte Black: #121212 -> HSL(0, 0%, 7%) */
+    /* White: #FFFFFF */
+
+    --background: 0 0% 7%;
+    --foreground: 0 0% 98%;
+
+    --card: 200 43% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 200 43% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 76 77% 64%;
+    --primary-foreground: 0 0% 7%;
+
+    --secondary: 200 43% 21%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 200 30% 18%;
+    --muted-foreground: 261 20% 70%;
+
+    --accent: 261 36% 86%;
+    --accent-foreground: 0 0% 7%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 200 30% 22%;
+    --input: 200 30% 22%;
+    --ring: 76 77% 64%;
+
+    --radius: 0.75rem;
+
+    /* Custom BioLink tokens */
+    --gradient-primary: linear-gradient(135deg, hsl(76, 77%, 64%) 0%, hsl(261, 36%, 86%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(261, 36%, 86%) 0%, hsl(200, 43%, 21%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(200, 43%, 16%) 0%, hsl(200, 43%, 10%) 100%);
+    --gradient-glass: linear-gradient(135deg, hsla(0, 0%, 100%, 0.1) 0%, hsla(0, 0%, 100%, 0.05) 100%);
+    
+    --shadow-neon: 0 0 30px hsla(76, 77%, 64%, 0.3);
+    --shadow-neon-accent: 0 0 30px hsla(261, 36%, 86%, 0.3);
+    --shadow-card: 0 4px 30px hsla(0, 0%, 0%, 0.3);
+    --shadow-elevated: 0 20px 60px hsla(0, 0%, 0%, 0.5);
+
+    --glass-bg: hsla(200, 43%, 15%, 0.7);
+    --glass-border: hsla(0, 0%, 100%, 0.1);
+
+    --sidebar-background: 200 43% 10%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 76 77% 64%;
+    --sidebar-primary-foreground: 0 0% 7%;
+    --sidebar-accent: 200 43% 18%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 200 30% 18%;
+    --sidebar-ring: 76 77% 64%;
+
+    /* Specific color tokens for use in components */
+    --lime: 76 77% 64%;
+    --lavender: 261 36% 86%;
+    --slate-blue: 200 43% 21%;
+  }
+
+  /* Light mode overrides for content areas */
+  .light-content {
+    --background: 0 0% 100%;
+    --foreground: 200 43% 21%;
+    --card: 0 0% 98%;
+    --card-foreground: 200 43% 21%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+}
+
+@layer components {
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+
+  .gradient-border {
+    position: relative;
+    background: hsl(var(--card));
+    border-radius: var(--radius);
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: var(--gradient-primary);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+  }
+
+  .neon-glow {
+    box-shadow: var(--shadow-neon);
+  }
+
+  .neon-glow-accent {
+    box-shadow: var(--shadow-neon-accent);
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 4s ease-in-out infinite;
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient 8s ease infinite;
+  }
+
+  /* New utility classes for the fresh palette */
+  .bg-lime {
+    background-color: hsl(var(--lime));
+  }
+
+  .text-lime {
+    color: hsl(var(--lime));
+  }
+
+  .bg-lavender {
+    background-color: hsl(var(--lavender));
+  }
+
+  .text-lavender {
+    color: hsl(var(--lavender));
+  }
+
+  .bg-slate-blue {
+    background-color: hsl(var(--slate-blue));
+  }
+
+  .text-slate-blue {
+    color: hsl(var(--slate-blue));
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
