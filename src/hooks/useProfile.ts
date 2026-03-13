@@ -20,6 +20,10 @@ export interface Profile {
   referral_code: string | null;
   referred_by: string | null;
   interests: string[];
+  ads_balance: number;
+  total_withdrawn: number;
+  is_verified: boolean;
+  announcement_text: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -107,7 +111,7 @@ export const usePublicProfile = (username: string) => {
         .maybeSingle();
 
       if (error) throw error;
-      return data as Profile | null;
+      return data as (Partial<Profile> & { is_verified?: boolean; announcement_text?: string | null }) | null;
     },
     enabled: !!username,
   });

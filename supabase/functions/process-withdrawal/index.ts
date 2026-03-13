@@ -5,115 +5,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Helper for logging
 const logStep = (step: string, details?: unknown) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[PROCESS-WITHDRAWAL] ${step}${detailsStr}`);
-};
-
-// Get PayPal access token
-const getPayPalAccessToken = async (): Promise<string> => {
-  const clientId = Deno.env.get("PAYPAL_CLIENT_ID");
-  const clientSecret = Deno.env.get("PAYPAL_CLIENT_SECRET");
-
-  if (!clientId || !clientSecret) {
-    throw new Error("PayPal credentials not configured");
-  }
-
-  // Use production URL for live payments
-  const baseUrl = "https://api-m.paypal.com";
-
-  const response = await fetch(`${baseUrl}/v1/oauth2/token`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
-    },
-    body: "grant_type=client_credentials",
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    logStep("PayPal auth error", { status: response.status, error: errorText });
-    throw new Error(`PayPal authentication failed: ${errorText}`);
-  }
-
-  const data = await response.json();
-  return data.access_token;
-};
-
-// Process PayPal payout
-const processPayPalPayout = async (
-  accessToken: string,
-  withdrawal: {
-    id: string;
-    amount: number;
-    payment_details: { email?: string; paypal_email?: string };
-  }
-): Promise<{ success: boolean; payoutBatchId?: string; error?: string }> => {
-  const paypalEmail = withdrawal.payment_details?.email || withdrawal.payment_details?.paypal_email;
-
-  if (!paypalEmail) {
-    return { success: false, error: "PayPal email not provided" };
-  }
-
-  // Use production URL for live payments
-  const baseUrl = "https://api-m.paypal.com";
-
-  const payoutRequest = {
-    sender_batch_header: {
-      sender_batch_id: `BRIOO_${withdrawal.id}_${Date.now()}`,
-      email_subject: "You have received a payment from Brioo",
-      email_message: "Thank you for being a Brioo creator! Your withdrawal has been processed.",
-    },
-    items: [
-      {
-        recipient_type: "EMAIL",
-        amount: {
-          value: withdrawal.amount.toFixed(2),
-          currency: "USD",
-        },
-        receiver: paypalEmail,
-        note: `Brioo withdrawal - ID: ${withdrawal.id}`,
-        sender_item_id: withdrawal.id,
-      },
-    ],
-  };
-
-  logStep("Sending PayPal payout request", { 
-    email: paypalEmail, 
-    amount: withdrawal.amount,
-    batchId: payoutRequest.sender_batch_header.sender_batch_id 
-  });
-
-  const response = await fetch(`${baseUrl}/v1/payments/payouts`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(payoutRequest),
-  });
-
-  const responseData = await response.json();
-
-  if (!response.ok) {
-    logStep("PayPal payout error", { status: response.status, response: responseData });
-    return { 
-      success: false, 
-      error: responseData.message || responseData.error_description || "PayPal payout failed" 
-    };
-  }
-
-  logStep("PayPal payout successful", { 
-    batchId: responseData.batch_header?.payout_batch_id,
-    status: responseData.batch_header?.batch_status 
-  });
-
-  return { 
-    success: true, 
-    payoutBatchId: responseData.batch_header?.payout_batch_id 
-  };
 };
 
 Deno.serve(async (req) => {
@@ -124,23 +18,15 @@ Deno.serve(async (req) => {
   try {
     const { withdrawal_id, action } = await req.json();
 
-    if (!withdrawal_id || !action) {
+    if (!withdrawal_id || !["approve", "reject"].includes(action)) {
       return new Response(
-        JSON.stringify({ error: "withdrawal_id and action are required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    if (!["approve", "reject"].includes(action)) {
-      return new Response(
-        JSON.stringify({ error: "action must be 'approve' or 'reject'" }),
+        JSON.stringify({ error: "withdrawal_id and action (approve|reject) required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     logStep(`Processing ${action} for withdrawal: ${withdrawal_id}`);
 
-    // Verify admin auth
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
@@ -154,10 +40,8 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Get user from token
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabase.auth.getUser(token);
-    
     if (userError || !userData.user) {
       return new Response(
         JSON.stringify({ error: "Invalid auth token" }),
@@ -165,18 +49,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if user is admin
-    const { data: isAdmin, error: roleError } = await supabase
-      .rpc("has_role", { _user_id: userData.user.id, _role: "admin" });
-
-    if (roleError || !isAdmin) {
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: userData.user.id,
+      _role: "admin",
+    });
+    if (!isAdmin) {
       return new Response(
         JSON.stringify({ error: "Admin access required" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get withdrawal details - accept both "pending" and "processing" statuses
+    // Fetch withdrawal
     const { data: withdrawal, error: fetchError } = await supabase
       .from("withdrawals")
       .select("*")
@@ -185,149 +69,75 @@ Deno.serve(async (req) => {
       .single();
 
     if (fetchError || !withdrawal) {
-      logStep("Withdrawal not found", { fetchError });
       return new Response(
         JSON.stringify({ error: "Pending withdrawal not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get user's profile for balance check
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from("profiles")
-      .select("id, user_id, wallet_balance")
+      .select("id, user_id, wallet_balance, display_name, username")
       .eq("user_id", withdrawal.user_id)
       .single();
 
-    if (profileError || !profile) {
-      logStep("Profile not found", { profileError });
+    if (!profile) {
       return new Response(
-        JSON.stringify({ error: "User profile not found" }),
+        JSON.stringify({ error: "Profile not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     if (action === "approve") {
-      // If status is "pending", just move to "processing" (under process)
-      if (withdrawal.status === "pending") {
-        const { error: updateError } = await supabase
-          .from("withdrawals")
-          .update({
-            status: "processing",
-          })
-          .eq("id", withdrawal_id);
-
-        if (updateError) {
-          logStep("Error updating withdrawal to processing", { updateError });
-          throw updateError;
-        }
-
-        logStep(`Marked withdrawal ${withdrawal_id} as processing (under process)`);
-
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            action: "marked_processing",
-            message: "Withdrawal marked as under process. Click approve again to send PayPal payout." 
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // If already in "processing" status, complete the withdrawal with PayPal
-      // Verify user still has sufficient balance
-      if (profile.wallet_balance < withdrawal.amount) {
-        return new Response(
-          JSON.stringify({ error: "Insufficient wallet balance" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Process PayPal payout for PayPal withdrawals
-      if (withdrawal.payment_method === "paypal") {
-        try {
-          const accessToken = await getPayPalAccessToken();
-          const payoutResult = await processPayPalPayout(accessToken, {
-            id: withdrawal.id,
-            amount: withdrawal.amount,
-            payment_details: withdrawal.payment_details || {},
-          });
-
-          if (!payoutResult.success) {
-            return new Response(
-              JSON.stringify({ 
-                error: `PayPal payout failed: ${payoutResult.error}` 
-              }),
-              { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
-          }
-
-          logStep("PayPal payout sent successfully", { 
-            batchId: payoutResult.payoutBatchId 
-          });
-        } catch (paypalError) {
-          const errorMessage = paypalError instanceof Error ? paypalError.message : "Unknown PayPal error";
-          logStep("PayPal error", { error: errorMessage });
-          return new Response(
-            JSON.stringify({ error: `PayPal error: ${errorMessage}` }),
-            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-      }
-
-      // Deduct from wallet balance
-      const { error: balanceError } = await supabase
-        .from("profiles")
-        .update({
-          wallet_balance: profile.wallet_balance - withdrawal.amount,
-        })
-        .eq("user_id", withdrawal.user_id);
-
-      if (balanceError) {
-        logStep("Error updating balance", { balanceError });
-        throw balanceError;
-      }
-
-      // Record withdrawal transaction
+      // Mark as completed (admin transfers manually via their bank app)
       await supabase.from("transactions").insert({
         user_id: withdrawal.user_id,
         type: "withdrawal",
         amount: -withdrawal.amount,
-        description: `Withdrawal via ${withdrawal.payment_method}`,
+        description: `Withdrawal via ${withdrawal.payment_method} (manual transfer)`,
         reference_id: withdrawal_id,
       });
 
-      // Update withdrawal status to completed
-      const { error: updateError } = await supabase
+      await supabase
+        .from("profiles")
+        .update({ total_withdrawn: (profile as any).total_withdrawn + withdrawal.amount })
+        .eq("user_id", withdrawal.user_id);
+
+      await supabase
         .from("withdrawals")
-        .update({
-          status: "approved",
-          processed_at: new Date().toISOString(),
-        })
+        .update({ status: "approved", processed_at: new Date().toISOString() })
         .eq("id", withdrawal_id);
 
-      if (updateError) {
-        logStep("Error updating withdrawal", { updateError });
-        throw updateError;
-      }
+      // Audit log
+      await supabase.from("security_audit_log").insert({
+        user_id: userData.user.id,
+        event_type: "withdrawal_approved",
+        event_data: { withdrawal_id, amount: withdrawal.amount, creator: profile.username },
+        success: true,
+      });
 
-      logStep(`Approved withdrawal of $${withdrawal.amount} for user ${withdrawal.user_id}`);
+      logStep(`Approved $${withdrawal.amount} for @${profile.username}`);
+
     } else {
-      // Reject - just update status
-      const { error: updateError } = await supabase
+      // Reject: refund wallet
+      await supabase
+        .from("profiles")
+        .update({ wallet_balance: (profile.wallet_balance || 0) + withdrawal.amount })
+        .eq("user_id", withdrawal.user_id);
+
+      await supabase
         .from("withdrawals")
-        .update({
-          status: "rejected",
-          processed_at: new Date().toISOString(),
-        })
+        .update({ status: "rejected", processed_at: new Date().toISOString() })
         .eq("id", withdrawal_id);
 
-      if (updateError) {
-        logStep("Error updating withdrawal", { updateError });
-        throw updateError;
-      }
+      await supabase.from("security_audit_log").insert({
+        user_id: userData.user.id,
+        event_type: "withdrawal_rejected",
+        event_data: { withdrawal_id, amount: withdrawal.amount, creator: profile.username },
+        success: true,
+      });
 
-      logStep(`Rejected withdrawal ${withdrawal_id}`);
+      logStep(`Rejected & refunded $${withdrawal.amount} to @${profile.username}`);
     }
 
     return new Response(
@@ -335,10 +145,10 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    logStep("Error", { error: errorMessage });
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    logStep("Error", { error: msg });
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: msg }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

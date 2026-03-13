@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Shield, Lock, Loader2, AlertTriangle, CheckCircle, Eye, EyeOff, Fingerprint, Smartphone } from "lucide-react";
+import { Shield, Lock, Loader2, AlertTriangle, CheckCircle, Eye, EyeOff, Fingerprint, Smartphone, Mail, ArrowLeft } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GradientButton } from "@/components/ui/GradientButton";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const ADMIN_SESSION_KEY = "admin_verified_session";
 
@@ -32,8 +33,30 @@ const AdminVerify = () => {
   const [isSetupMode, setIsSetupMode] = useState(false);
   const [showBiometricSetup, setShowBiometricSetup] = useState(false);
   const [biometricFailed, setBiometricFailed] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const handleForgotAdminPassword = async () => {
+    if (!forgotEmail.trim()) {
+      toast({ title: "Error", description: "Enter your admin email", variant: "destructive" });
+      return;
+    }
+    setForgotLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setForgotLoading(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setForgotSent(true);
+      toast({ title: "Email sent!", description: "After resetting your account password, you can set a new admin password from the admin settings." });
+    }
+  };
 
   // Set mode based on password setup status
   useEffect(() => {
@@ -423,6 +446,59 @@ const AdminVerify = () => {
                   </>
                 )}
               </GradientButton>
+
+              {/* Forgot Admin Password */}
+              {!showForgotPassword ? (
+                <button
+                  onClick={() => setShowForgotPassword(true)}
+                  className="w-full text-sm text-primary hover:underline text-center"
+                >
+                  Forgot admin password?
+                </button>
+              ) : (
+                <div className="space-y-3 p-4 bg-secondary/30 rounded-lg border border-border">
+                  {forgotSent ? (
+                    <div className="flex items-start gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                      <p className="text-sm text-muted-foreground">
+                        Password reset email sent to <strong>{forgotEmail}</strong>. After resetting your account password, log in again and set a new admin password from Settings.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-sm text-muted-foreground">
+                        We'll send a password reset to your admin email. After resetting, you can reconfigure the admin password.
+                      </p>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          type="email"
+                          placeholder="Admin email address"
+                          value={forgotEmail}
+                          onChange={(e) => setForgotEmail(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setShowForgotPassword(false)}
+                          className="flex-1 text-sm text-muted-foreground hover:text-foreground py-2"
+                        >
+                          Cancel
+                        </button>
+                        <GradientButton
+                          onClick={handleForgotAdminPassword}
+                          disabled={forgotLoading}
+                          size="sm"
+                          className="flex-1"
+                        >
+                          {forgotLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Reset Link"}
+                        </GradientButton>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
 
               {/* Enable Biometric Toggle - Mobile Only */}
               {isMobile && isBiometricAvailable && !isBiometricEnabled && (

@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { DollarSign, Heart, Save } from "lucide-react";
+import { Coffee, Save, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { useTipJar, useCreateOrUpdateTipJar } from "@/hooks/useTipJar";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 
 export const TipJarSettings = () => {
   const { data: tipJar, isLoading } = useTipJar();
@@ -52,106 +52,114 @@ export const TipJarSettings = () => {
     }
   };
 
+  const handleToggle = async (val: boolean) => {
+    setIsEnabled(val);
+    // Auto-save the toggle immediately for quick enable/disable
+    try {
+      const amounts = suggestedAmounts
+        .split(",")
+        .map((a) => parseFloat(a.trim()))
+        .filter((a) => !isNaN(a) && a > 0);
+      await updateTipJar.mutateAsync({
+        is_enabled: val,
+        paypal_email: paypalEmail || null,
+        venmo_username: venmoUsername || null,
+        cashapp_tag: cashappTag || null,
+        message,
+        suggested_amounts: amounts,
+      });
+    } catch {
+      // silently fail toggle auto-save
+    }
+  };
+
   if (isLoading) {
     return (
-      <GlassCard>
-        <div className="animate-pulse h-48 bg-secondary/50 rounded" />
-      </GlassCard>
+      <GlassCard className="animate-pulse h-16" />
     );
   }
 
   return (
-    <GlassCard>
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Heart className="w-5 h-5 text-primary" />
-        </div>
-        <div>
-          <h3 className="font-display font-semibold">Tip Jar</h3>
-          <p className="text-sm text-muted-foreground">
-            Accept tips and donations from your audience
-          </p>
-        </div>
-      </div>
-
-      <div className="space-y-6">
-        {/* Enable Toggle */}
-        <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg">
+    <GlassCard className="!p-4">
+      {/* Compact header row */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <Coffee className="w-4 h-4 text-primary" />
+          </div>
           <div>
-            <Label>Enable Tip Jar</Label>
-            <p className="text-xs text-muted-foreground">
-              Show tip button on your profile
-            </p>
-          </div>
-          <Switch checked={isEnabled} onCheckedChange={setIsEnabled} />
-        </div>
-
-        {/* Message */}
-        <div className="space-y-2">
-          <Label>Custom Message</Label>
-          <Textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Support my work!"
-            rows={2}
-          />
-        </div>
-
-        {/* Suggested Amounts */}
-        <div className="space-y-2">
-          <Label>Suggested Amounts (comma separated)</Label>
-          <Input
-            value={suggestedAmounts}
-            onChange={(e) => setSuggestedAmounts(e.target.value)}
-            placeholder="3, 5, 10"
-          />
-          <p className="text-xs text-muted-foreground">
-            e.g., "3, 5, 10" will show $3, $5, $10 buttons
-          </p>
-        </div>
-
-        {/* Payment Methods */}
-        <div className="space-y-4">
-          <Label className="text-base font-medium">Payment Methods</Label>
-
-          <div className="space-y-2">
-            <Label className="text-sm">PayPal Email</Label>
-            <Input
-              type="email"
-              value={paypalEmail}
-              onChange={(e) => setPaypalEmail(e.target.value)}
-              placeholder="your@email.com"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-sm">Venmo Username</Label>
-            <Input
-              value={venmoUsername}
-              onChange={(e) => setVenmoUsername(e.target.value)}
-              placeholder="@username"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-sm">Cash App Tag</Label>
-            <Input
-              value={cashappTag}
-              onChange={(e) => setCashappTag(e.target.value)}
-              placeholder="$cashtag"
-            />
+            <h3 className="font-display font-semibold text-sm">Tip Jar</h3>
+            <p className="text-xs text-muted-foreground">Accept tips on your profile</p>
           </div>
         </div>
-
-        <Button
-          onClick={handleSave}
-          disabled={updateTipJar.isPending}
-          className="w-full"
-        >
-          <Save className="w-4 h-4 mr-2" />
-          {updateTipJar.isPending ? "Saving..." : "Save Settings"}
-        </Button>
+        <Switch checked={isEnabled} onCheckedChange={handleToggle} />
       </div>
+
+      {/* Collapsible settings */}
+      <AnimatePresence>
+        {isEnabled && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="pt-4 mt-4 border-t border-border/40 space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Custom Message</Label>
+                <Input
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Support my work!"
+                  className="h-8 text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">PayPal</Label>
+                  <Input
+                    type="email"
+                    value={paypalEmail}
+                    onChange={(e) => setPaypalEmail(e.target.value)}
+                    placeholder="email"
+                    className="h-7 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Venmo</Label>
+                  <Input
+                    value={venmoUsername}
+                    onChange={(e) => setVenmoUsername(e.target.value)}
+                    placeholder="@user"
+                    className="h-7 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Cash App</Label>
+                  <Input
+                    value={cashappTag}
+                    onChange={(e) => setCashappTag(e.target.value)}
+                    placeholder="$tag"
+                    className="h-7 text-xs"
+                  />
+                </div>
+              </div>
+
+              <Button
+                onClick={handleSave}
+                disabled={updateTipJar.isPending}
+                size="sm"
+                className="w-full h-8 text-xs"
+              >
+                <Save className="w-3 h-3 mr-1.5" />
+                {updateTipJar.isPending ? "Saving..." : "Save"}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </GlassCard>
   );
 };

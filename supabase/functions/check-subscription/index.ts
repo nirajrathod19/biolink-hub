@@ -1,10 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 const logStep = (step: string, details?: any) => {
@@ -14,9 +14,11 @@ const logStep = (step: string, details?: any) => {
 
 // Price to plan mapping
 const PRICE_PLANS: Record<string, string> = {
-  "price_1SuH89RcxPa7mlJfqKm9CWlu": "monthly",
-  "price_1SuH8ZRcxPa7mlJfs7ynvtqr": "quarterly",
-  "price_1SuH8oRcxPa7mlJfPoWSNpQH": "annual",
+  "price_1SuH89RcxPa7mlJfqKm9CWlu": "starter",
+  "price_1T10TERcxPa7mlJffqFyIDmK": "full",
+  // Legacy plans
+  "price_1SuH8ZRcxPa7mlJfs7ynvtqr": "starter",
+  "price_1SuH8oRcxPa7mlJfPoWSNpQH": "full",
 };
 
 serve(async (req) => {
@@ -53,6 +55,11 @@ serve(async (req) => {
     
     if (customers.data.length === 0) {
       logStep("No customer found, returning unsubscribed state");
+      // Set is_pro to false when no subscription
+      await supabaseClient
+        .from("profiles")
+        .update({ is_pro: false })
+        .eq("user_id", user.id);
       return new Response(JSON.stringify({ subscribed: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -75,12 +82,19 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      priceId = subscription.items.data[0].price.id;
-      plan = PRICE_PLANS[priceId] || "pro";
+      try {
+        const endTimestamp = typeof subscription.current_period_end === 'number' 
+          ? subscription.current_period_end * 1000 
+          : Date.parse(String(subscription.current_period_end));
+        subscriptionEnd = isNaN(endTimestamp) ? null : new Date(endTimestamp).toISOString();
+      } catch {
+        subscriptionEnd = null;
+      }
+      priceId = subscription.items.data[0]?.price?.id ?? null;
+      plan = priceId && PRICE_PLANS[priceId] ? PRICE_PLANS[priceId] : "pro";
       logStep("Active subscription found", { subscriptionId: subscription.id, plan, endDate: subscriptionEnd });
 
-      // Update profile to is_pro = true if subscribed
+      // Update profile to is_pro = true
       const { error: updateError } = await supabaseClient
         .from("profiles")
         .update({ is_pro: true })
@@ -91,8 +105,24 @@ serve(async (req) => {
       } else {
         logStep("Profile updated to Pro status");
       }
+
+      // Enable revenue sharing in adsense_settings
+      const revenueSharePct = plan === "full" ? 100 : 50;
+      await supabaseClient
+        .from("adsense_settings")
+        .upsert({
+          user_id: user.id,
+          is_revenue_sharing_enabled: true,
+        }, { onConflict: "user_id" });
+      logStep("Revenue sharing enabled", { revenueSharePct });
+
     } else {
       logStep("No active subscription found");
+      // Set is_pro to false when subscription expires
+      await supabaseClient
+        .from("profiles")
+        .update({ is_pro: false })
+        .eq("user_id", user.id);
     }
 
     return new Response(JSON.stringify({

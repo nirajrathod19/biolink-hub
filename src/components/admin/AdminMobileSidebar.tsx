@@ -1,14 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
-  Users,
-  DollarSign,
-  Settings,
-  Shield,
-  Megaphone,
-  BarChart3,
-  LogOut,
-  ExternalLink,
+  LayoutDashboard, Users, DollarSign, Settings, Shield, Megaphone, BarChart3, LogOut, ExternalLink, Bug, Activity, BookOpen,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -19,8 +11,11 @@ import { GradientButton } from "@/components/ui/GradientButton";
 const adminMenuItems = [
   { icon: LayoutDashboard, label: "Overview", href: "/admin" },
   { icon: Users, label: "Users", href: "/admin/users" },
-  { icon: DollarSign, label: "Revenue", href: "/admin/revenue" },
+  { icon: DollarSign, label: "Payouts", href: "/admin/payouts" },
+  { icon: Activity, label: "Activity", href: "/admin/activity" },
   { icon: Megaphone, label: "Ads", href: "/admin/ads" },
+  { icon: BookOpen, label: "Guide", href: "/admin/guide" },
+  { icon: Bug, label: "Bugs", href: "/admin/bugs" },
   { icon: Shield, label: "Security", href: "/admin/security" },
   { icon: Settings, label: "Settings", href: "/admin/settings" },
 ];
@@ -37,19 +32,17 @@ export const AdminMobileSidebar = () => {
 
   return (
     <div className="flex flex-col h-full p-4">
-      {/* Logo */}
       <div className="flex items-center gap-2 mb-8 pt-2">
         <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
           <BarChart3 className="w-4 h-4 text-primary-foreground" />
         </div>
         <div>
           <span className="font-display font-bold">Brioo</span>
-          <span className="text-xs text-muted-foreground block">Admin Panel</span>
+          <span className="text-xs text-muted-foreground block">Admin Console</span>
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1">
+      <nav className="flex-1 space-y-0.5">
         {adminMenuItems.map((item) => {
           const isActive = location.pathname === item.href;
           return (
@@ -59,8 +52,8 @@ export const AdminMobileSidebar = () => {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all",
                   isActive
-                    ? "bg-sidebar-accent text-primary font-medium"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                    ? "bg-primary/10 text-primary font-medium border border-primary/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
                 )}
               >
                 <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -71,8 +64,7 @@ export const AdminMobileSidebar = () => {
         })}
       </nav>
 
-      {/* Quick Links */}
-      <div className="space-y-3 border-t border-sidebar-border pt-4">
+      <div className="space-y-3 border-t border-border/30 pt-4">
         <SheetClose asChild>
           <Link to="/dashboard">
             <GradientButton variant="outline" className="w-full" size="sm">
@@ -81,11 +73,10 @@ export const AdminMobileSidebar = () => {
             </GradientButton>
           </Link>
         </SheetClose>
-        
         <SheetClose asChild>
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-sidebar-accent/50 transition-colors"
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-muted/30 transition-colors"
           >
             <LogOut className="w-5 h-5" />
             <span className="text-sm">Log Out</span>

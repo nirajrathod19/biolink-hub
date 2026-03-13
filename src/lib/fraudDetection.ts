@@ -166,7 +166,6 @@ export const calculateFraudScore = (flags: FraudFlag[]): number => {
 };
 
 export const runFraudCheck = (params: {
-  paypalEmail?: string;
   amount: number;
   walletBalance: number;
   previousWithdrawals: { amount: number; created_at: string }[];
@@ -174,11 +173,6 @@ export const runFraudCheck = (params: {
   totalClicks: number;
 }): FraudCheckResult => {
   const allFlags: FraudFlag[] = [];
-
-  // Check PayPal email
-  if (params.paypalEmail) {
-    allFlags.push(...checkPayPalEmail(params.paypalEmail));
-  }
 
   // Check withdrawal patterns
   allFlags.push(...checkWithdrawalAmount(

@@ -1,5 +1,7 @@
 import { Eye, MousePointer, TrendingUp, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
+import { LiveIndicator } from "@/components/ui/LiveIndicator";
 
 interface StatsRowProps {
   totalViews: number;
@@ -7,34 +9,46 @@ interface StatsRowProps {
   clickRate: string;
   earnings: string;
   isPro?: boolean;
+  isLive?: boolean;
 }
 
-export const StatsRow = ({ totalViews, totalClicks, clickRate, earnings, isPro }: StatsRowProps) => {
+export const StatsRow = ({ totalViews, totalClicks, clickRate, earnings, isPro, isLive = false }: StatsRowProps) => {
+  const earningsNum = parseFloat(earnings.replace(/[^0-9.]/g, "")) || 0;
+
   const stats = [
     {
       icon: Eye,
-      value: totalViews.toLocaleString(),
+      value: totalViews,
       label: "Views",
+      format: (v: number) => Math.round(v).toLocaleString(),
     },
     {
       icon: MousePointer,
-      value: totalClicks.toLocaleString(),
+      value: totalClicks,
       label: "Clicks",
+      format: (v: number) => Math.round(v).toLocaleString(),
     },
     {
       icon: TrendingUp,
-      value: clickRate,
+      value: null as number | null,
+      displayValue: clickRate,
       label: "Rate",
+      format: undefined,
     },
     {
       icon: DollarSign,
-      value: isPro ? earnings : "$0.00",
+      value: isPro ? earningsNum : 0,
       label: "Earned",
+      format: (v: number) => `$${v.toFixed(2)}`,
     },
   ];
 
   return (
     <div className="w-full bg-secondary/50 rounded-xl p-3 sm:p-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-muted-foreground font-medium">Performance</span>
+        <LiveIndicator isConnected={isLive} />
+      </div>
       <div className="flex items-center justify-between gap-1 sm:gap-2">
         {stats.map((stat, index) => (
           <div 
@@ -45,7 +59,15 @@ export const StatsRow = ({ totalViews, totalClicks, clickRate, earnings, isPro }
             )}
           >
             <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary mb-1" />
-            <span className="text-sm sm:text-base font-bold text-foreground">{stat.value}</span>
+            {stat.value !== null && stat.format ? (
+              <AnimatedCounter
+                value={stat.value}
+                formatFn={stat.format}
+                className="text-sm sm:text-base font-bold text-foreground"
+              />
+            ) : (
+              <span className="text-sm sm:text-base font-bold text-foreground">{stat.displayValue}</span>
+            )}
             <span className="text-[10px] sm:text-xs text-muted-foreground">{stat.label}</span>
           </div>
         ))}

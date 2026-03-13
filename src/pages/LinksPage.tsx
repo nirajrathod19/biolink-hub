@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, GripVertical, Trash2, ExternalLink, Loader2, Clock, Sparkles } from "lucide-react";
+import { Plus, GripVertical, Trash2, ExternalLink, Loader2, Clock, Sparkles, Lock, Crown } from "lucide-react";
 import { 
   DndContext, 
   closestCenter, 
@@ -31,6 +31,7 @@ import { useLinks, useCreateLink, useUpdateLink, useDeleteLink, useReorderLinks,
 import { useToast } from "@/hooks/use-toast";
 import { LinkScheduleDialog } from "@/components/links/LinkScheduleDialog";
 import { getLinkAnimationClass } from "@/hooks/useLinkScheduling";
+import { useSubscription } from "@/hooks/useSubscription";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -45,9 +46,12 @@ interface SortableLinkItemProps {
   onToggle: (id: string, isActive: boolean) => void;
   onDelete: (id: string) => void;
   onSchedule: (link: Link) => void;
+  onUpdateAnimation: (id: string, animation: string | null) => void;
+  onUpdateLockType: (id: string, lockType: string | null, lockPassword?: string) => void;
+  isPro: boolean;
 }
 
-const SortableLinkItem = ({ link, onToggle, onDelete, onSchedule }: SortableLinkItemProps) => {
+const SortableLinkItem = ({ link, onToggle, onDelete, onSchedule, onUpdateAnimation, onUpdateLockType, isPro }: SortableLinkItemProps) => {
   const {
     attributes,
     listeners,
@@ -65,6 +69,7 @@ const SortableLinkItem = ({ link, onToggle, onDelete, onSchedule }: SortableLink
 
   const isScheduled = link.scheduled_start || link.scheduled_end;
   const hasAnimation = link.animation && link.animation !== 'none';
+  const hasLock = (link as any).lock_type && (link as any).lock_type !== 'none';
 
   return (
     <div ref={setNodeRef} style={style}>
@@ -105,6 +110,12 @@ const SortableLinkItem = ({ link, onToggle, onDelete, onSchedule }: SortableLink
                   {link.animation}
                 </Badge>
               )}
+              {hasLock && (
+                <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600">
+                  <Lock className="w-3 h-3 mr-1" />
+                  {(link as any).lock_type === "password" ? "Password" : "Newsletter"}
+                </Badge>
+              )}
             </div>
             <p className="text-sm text-muted-foreground truncate">{link.url}</p>
           </div>
@@ -112,6 +123,41 @@ const SortableLinkItem = ({ link, onToggle, onDelete, onSchedule }: SortableLink
           <div className="flex items-center gap-2 text-muted-foreground">
             <span className="text-sm hidden sm:inline">{link.click_count || 0} clicks</span>
           </div>
+
+          {/* Animation Selector */}
+          <Select 
+            value={link.animation || "none"}
+            onValueChange={(val) => onUpdateAnimation(link.id, val === "none" ? null : val)}
+          >
+            <SelectTrigger className="w-24 h-8 text-xs bg-secondary/50 hidden sm:flex">
+              <SelectValue placeholder="Animate" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              <SelectItem value="pulse">Pulse</SelectItem>
+              <SelectItem value="bounce">Bounce</SelectItem>
+              <SelectItem value="shake">Shake</SelectItem>
+              <SelectItem value="glow">Glow</SelectItem>
+              <SelectItem value="wobble">Wobble</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Lock Type Selector - Pro Only */}
+          {isPro && (
+            <Select
+              value={(link as any).lock_type || "none"}
+              onValueChange={(val) => onUpdateLockType(link.id, val === "none" ? null : val)}
+            >
+              <SelectTrigger className="w-24 h-8 text-xs bg-secondary/50 hidden sm:flex">
+                <SelectValue placeholder="Lock" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Open</SelectItem>
+                <SelectItem value="password">🔒 Password</SelectItem>
+                <SelectItem value="newsletter">📧 Newsletter</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
 
           <div className="flex items-center gap-1 sm:gap-2">
             <Button
@@ -156,6 +202,7 @@ const LinksPage = () => {
   const deleteLink = useDeleteLink();
   const reorderLinks = useReorderLinks();
   const { toast } = useToast();
+  const { isSubscribed } = useSubscription();
 
   const [localLinks, setLocalLinks] = useState<Link[]>([]);
   const [isAdding, setIsAdding] = useState(false);
@@ -360,6 +407,30 @@ const LinksPage = () => {
                     onToggle={toggleLink}
                     onDelete={handleDeleteLink}
                     onSchedule={setSchedulingLink}
+                    isPro={isSubscribed}
+                    onUpdateAnimation={async (id, animation) => {
+                      try {
+                        await updateLink.mutateAsync({ id, animation: animation as any });
+                      } catch (e: any) {
+                        toast({ title: "Error", description: e.message, variant: "destructive" });
+                      }
+                    }}
+                    onUpdateLockType={async (id, lockType, lockPassword) => {
+                      try {
+                        const updates: any = { id, lock_type: lockType };
+                        if (lockType === "password") {
+                          const pw = prompt("Enter the password visitors will need:");
+                          if (!pw) return;
+                          updates.lock_password = pw;
+                        } else {
+                          updates.lock_password = null;
+                        }
+                        await updateLink.mutateAsync(updates);
+                        toast({ title: "Success", description: lockType ? "Link locked" : "Link unlocked" });
+                      } catch (e: any) {
+                        toast({ title: "Error", description: e.message, variant: "destructive" });
+                      }
+                    }}
                   />
                 </motion.div>
               ))}

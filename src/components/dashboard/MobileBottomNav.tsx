@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Plus, Eye, Palette, Sparkles } from "lucide-react";
+import { Plus, Eye, Palette, Sparkles, Share2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface MobileBottomNavProps {
   username?: string;
@@ -10,7 +12,25 @@ interface MobileBottomNavProps {
 
 export const MobileBottomNav = ({ username, onAddClick, onPreviewClick }: MobileBottomNavProps) => {
   const location = useLocation();
-  
+  const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
+
+  const bioUrl = username ? `https://brioo.in/${username}` : "";
+
+  const handleShare = async () => {
+    if (!bioUrl) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "My Brioo Bio", text: "Check out my Brioo bio page!", url: bioUrl });
+      } catch (e) {}
+    } else {
+      await navigator.clipboard.writeText(bioUrl);
+      setCopied(true);
+      toast({ title: "Link copied!", description: bioUrl });
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   const navItems = [
     {
       icon: Plus,
@@ -26,6 +46,11 @@ export const MobileBottomNav = ({ username, onAddClick, onPreviewClick }: Mobile
       icon: Palette,
       label: "Design",
       href: "/dashboard/appearance",
+    },
+    {
+      icon: copied ? Check : Share2,
+      label: "Share",
+      action: "share",
     },
     {
       icon: Sparkles,
@@ -64,6 +89,19 @@ export const MobileBottomNav = ({ username, onAddClick, onPreviewClick }: Mobile
               >
                 <item.icon className="w-6 h-6 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground">{item.label}</span>
+              </button>
+            );
+          }
+
+          if (item.action === "share") {
+            return (
+              <button
+                key={item.label}
+                onClick={handleShare}
+                className="flex flex-col items-center gap-1 px-4 py-2"
+              >
+                <item.icon className={cn("w-6 h-6", copied ? "text-green-500" : "text-muted-foreground")} />
+                <span className={cn("text-xs", copied ? "text-green-500 font-medium" : "text-muted-foreground")}>{item.label}</span>
               </button>
             );
           }

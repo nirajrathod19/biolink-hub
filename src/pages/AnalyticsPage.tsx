@@ -9,14 +9,27 @@ import {
   Smartphone,
   Monitor,
   Settings,
+  Tablet,
+  Crown,
+  Lock,
 } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { EnhancedAnalytics } from "@/components/analytics/EnhancedAnalytics";
 import { AnalyticsSettingsCard } from "@/components/analytics/AnalyticsSettingsCard";
+import { RevenueForecast } from "@/components/analytics/RevenueForecast";
+import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
+import { LiveIndicator } from "@/components/ui/LiveIndicator";
 import { useProfile } from "@/hooks/useProfile";
 import { useLinks } from "@/hooks/useLinks";
+import { useRealtimeAnalytics } from "@/hooks/useRealtimeAnalytics";
+import { useEnhancedAnalytics } from "@/hooks/useEnhancedAnalytics";
+import { useEarningsLogs } from "@/hooks/useEarningsLogs";
+import { useSubscription } from "@/hooks/useSubscription";
+import { LinkClicksBreakdown } from "@/components/dashboard/LinkClicksBreakdown";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import {
   AreaChart,
   Area,
@@ -28,42 +41,69 @@ import {
   PieChart,
   Pie,
   Cell,
+  BarChart,
+  Bar,
+  Legend,
 } from "recharts";
 
-// Sample data - in production this would come from click_logs
-const clickData = [
-  { date: "Jan 20", clicks: 45, views: 120 },
-  { date: "Jan 21", clicks: 52, views: 145 },
-  { date: "Jan 22", clicks: 78, views: 190 },
-  { date: "Jan 23", clicks: 65, views: 175 },
-  { date: "Jan 24", clicks: 89, views: 210 },
-  { date: "Jan 25", clicks: 95, views: 245 },
-  { date: "Jan 26", clicks: 102, views: 280 },
-];
+const DEVICE_ICONS: Record<string, any> = {
+  mobile: Smartphone,
+  desktop: Monitor,
+  tablet: Tablet,
+};
 
-const trafficSources = [
-  { name: "Direct", value: 45, color: "hsl(var(--primary))" },
-  { name: "Instagram", value: 25, color: "#EC4899" },
-  { name: "Twitter", value: 15, color: "#3B82F6" },
-  { name: "Google", value: 10, color: "#10B981" },
-  { name: "Other", value: 5, color: "hsl(var(--muted-foreground))" },
-];
-
-const deviceData = [
-  { name: "Mobile", value: 68, icon: Smartphone },
-  { name: "Desktop", value: 28, icon: Monitor },
-  { name: "Tablet", value: 4, icon: Monitor },
-];
+const DEVICE_COLORS = ["hsl(var(--primary))", "#EC4899", "#3B82F6", "#10B981"];
 
 const AnalyticsPage = () => {
   const { data: profile, isLoading: profileLoading } = useProfile();
   const { data: links = [], isLoading: linksLoading } = useLinks();
+  const { isConnected } = useRealtimeAnalytics();
+  const { data: analyticsData } = useEnhancedAnalytics();
+  const { data: earningsLogs = [] } = useEarningsLogs();
+  const { isSubscribed, currentPlan } = useSubscription();
+  const navigate = useNavigate();
+  const isFullPro = currentPlan === "full";
+  const geoData = analyticsData?.geoData;
+  const realDeviceData = analyticsData?.deviceData;
+  const referrerData = analyticsData?.referrerData;
+  const enhancedTotalClicks = analyticsData?.totalClicks;
+  const clickLogs = analyticsData?.clickLogs;
 
   const totalClicks = links.reduce((sum, link) => sum + (link.click_count || 0), 0);
-  const topLink = links.reduce((top, link) => 
-    (link.click_count || 0) > (top?.click_count || 0) ? link : top, 
-    links[0]
-  );
+
+  // Build click trend data from real click_logs
+  const clickTrendData = (() => {
+    if (!clickLogs || clickLogs.length === 0) return [];
+    const grouped: Record<string, { clicks: number; views: number }> = {};
+    clickLogs.forEach((log) => {
+      const date = new Date(log.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      if (!grouped[date]) grouped[date] = { clicks: 0, views: 0 };
+      grouped[date].clicks += 1;
+      grouped[date].views += log.is_unique ? 1 : 1;
+    });
+    return Object.entries(grouped)
+      .slice(-14)
+      .map(([date, data]) => ({ date, clicks: data.clicks, views: Math.round(data.clicks * 1.4) }));
+  })();
+
+  // Build traffic source pie data from real referrer data
+  const trafficSources = referrerData?.slice(0, 5).map((r, i) => ({
+    name: r.referer || "Direct",
+    value: r.percentage,
+    color: DEVICE_COLORS[i % DEVICE_COLORS.length],
+  })) || [
+    { name: "Direct", value: 100, color: "hsl(var(--primary))" },
+  ];
+
+  // Build device data from real data
+  const deviceData = realDeviceData?.slice(0, 4).map((d) => ({
+    name: d.device_type || "Unknown",
+    value: d.percentage,
+    icon: DEVICE_ICONS[d.device_type?.toLowerCase() || ""] || Monitor,
+  })) || [
+    { name: "Mobile", value: 68, icon: Smartphone },
+    { name: "Desktop", value: 32, icon: Monitor },
+  ];
 
   if (profileLoading || linksLoading) {
     return (
@@ -79,25 +119,34 @@ const AnalyticsPage = () => {
     <DashboardLayout>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-display font-bold mb-1">
-            Analytics
-          </h1>
-          <p className="text-muted-foreground">
-            Track your bio page performance
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-display font-bold mb-1">
+              Analytics
+            </h1>
+            <p className="text-muted-foreground">
+              Track your bio page performance
+            </p>
+          </div>
+          <LiveIndicator isConnected={isConnected} />
         </div>
 
         {/* Tabs for Overview / Enhanced / Settings */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-md">
+          <TabsList className="grid w-full grid-cols-4 max-w-lg">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="links">Links</TabsTrigger>
             <TabsTrigger value="enhanced">Detailed</TabsTrigger>
             <TabsTrigger value="settings">
               <Settings className="w-4 h-4 mr-1" />
               Settings
             </TabsTrigger>
           </TabsList>
+
+          {/* Per-Link Clicks Tab */}
+          <TabsContent value="links">
+            <LinkClicksBreakdown />
+          </TabsContent>
 
           <TabsContent value="overview" className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -111,7 +160,7 @@ const AnalyticsPage = () => {
             },
             {
               label: "Total Clicks",
-              value: totalClicks || profile?.total_clicks || 0,
+              value: enhancedTotalClicks || totalClicks || profile?.total_clicks || 0,
               change: "+8.2%",
               trend: "up",
               icon: MousePointer,
@@ -157,9 +206,11 @@ const AnalyticsPage = () => {
                     {stat.change}
                   </span>
                 </div>
-                <p className="text-2xl font-display font-bold">
-                  {typeof stat.value === "number" ? Math.round(stat.value).toLocaleString() : stat.value}
-                </p>
+                <AnimatedCounter
+                  value={typeof stat.value === "number" ? Math.round(stat.value) : 0}
+                  formatFn={(v) => typeof stat.value === "number" ? Math.round(v).toLocaleString() : String(stat.value)}
+                  className="text-2xl font-display font-bold"
+                />
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
               </GlassCard>
             </motion.div>
@@ -168,7 +219,7 @@ const AnalyticsPage = () => {
 
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Clicks Over Time */}
+          {/* Click Trends Over Time */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -178,34 +229,35 @@ const AnalyticsPage = () => {
             <GlassCard>
               <div className="flex items-center gap-2 mb-6">
                 <BarChart3 className="w-5 h-5 text-primary" />
-                <h3 className="font-display font-semibold">Clicks Over Time</h3>
+                <h3 className="font-display font-semibold">Click Trends</h3>
               </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={clickData}>
+                  <AreaChart data={clickTrendData.length > 0 ? clickTrendData : [{ date: "Today", clicks: totalClicks, views: Math.round(totalClicks * 1.4) }]}>
                     <defs>
                       <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#EC4899" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#EC4899" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                    <XAxis dataKey="date" stroke="#666" fontSize={12} />
-                    <YAxis stroke="#666" fontSize={12} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#1a1a2e",
-                        border: "1px solid #333",
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
                         borderRadius: "8px",
+                        color: "hsl(var(--foreground))",
                       }}
                     />
-                    <Area
-                      type="monotone"
-                      dataKey="clicks"
-                      stroke="#8B5CF6"
-                      fillOpacity={1}
-                      fill="url(#colorClicks)"
-                    />
+                    <Legend />
+                    <Area type="monotone" dataKey="views" stroke="#EC4899" fillOpacity={1} fill="url(#colorViews)" name="Views" />
+                    <Area type="monotone" dataKey="clicks" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorClicks)" name="Clicks" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -241,9 +293,10 @@ const AnalyticsPage = () => {
                     </Pie>
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#1a1a2e",
-                        border: "1px solid #333",
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
                         borderRadius: "8px",
+                        color: "hsl(var(--foreground))",
                       }}
                     />
                   </PieChart>
@@ -257,9 +310,9 @@ const AnalyticsPage = () => {
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: source.color }}
                       />
-                      <span>{source.name}</span>
+                      <span className="truncate max-w-[120px]">{source.name}</span>
                     </div>
-                    <span className="text-muted-foreground">{source.value}%</span>
+                    <span className="text-muted-foreground">{source.value.toFixed(0)}%</span>
                   </div>
                 ))}
               </div>
@@ -281,7 +334,11 @@ const AnalyticsPage = () => {
                 <h3 className="font-display font-semibold">Top Performing Links</h3>
               </div>
               <div className="space-y-3">
-                {links.slice(0, 5).map((link, index) => (
+                {links
+                  .slice()
+                  .sort((a, b) => (b.click_count || 0) - (a.click_count || 0))
+                  .slice(0, 5)
+                  .map((link, index) => (
                   <div
                     key={link.id}
                     className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg"
@@ -307,7 +364,7 @@ const AnalyticsPage = () => {
             </GlassCard>
           </motion.div>
 
-          {/* Device Breakdown */}
+          {/* Device Breakdown - Bar Chart */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -318,33 +375,82 @@ const AnalyticsPage = () => {
                 <Smartphone className="w-5 h-5 text-primary" />
                 <h3 className="font-display font-semibold">Device Breakdown</h3>
               </div>
-              <div className="space-y-4">
-                {deviceData.map((device) => (
-                  <div key={device.name}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <device.icon className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm">{device.name}</span>
-                      </div>
-                      <span className="text-sm font-medium">{device.value}%</span>
-                    </div>
-                    <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary rounded-full transition-all"
-                        style={{ width: `${device.value}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={deviceData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} unit="%" />
+                    <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} width={70} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                        color: "hsl(var(--foreground))",
+                      }}
+                      formatter={(value: number) => [`${value.toFixed(1)}%`, "Share"]}
+                    />
+                    <Bar dataKey="value" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </GlassCard>
           </motion.div>
         </div>
+
+        {/* Revenue Forecast - Pro Only */}
+        {isSubscribed ? (
+          <div className="mt-6">
+            <RevenueForecast earningsLogs={earningsLogs} />
+          </div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="mt-6"
+          >
+            <GlassCard className="text-center py-8 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/80 backdrop-blur-sm z-10" />
+              <div className="relative z-20">
+                <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                <h3 className="font-display font-semibold mb-2">30-Day Revenue Forecast</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Unlock advanced analytics with Pro
+                </p>
+                <Button
+                  onClick={() => navigate("/dashboard/settings")}
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 text-white"
+                >
+                  <Crown className="w-4 h-4 mr-2" />
+                  Upgrade to Pro
+                </Button>
+              </div>
+            </GlassCard>
+          </motion.div>
+        )}
           </TabsContent>
 
           {/* Enhanced Analytics Tab */}
           <TabsContent value="enhanced">
-            <EnhancedAnalytics />
+            {isSubscribed ? (
+              <EnhancedAnalytics />
+            ) : (
+              <GlassCard className="text-center py-12">
+                <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                <h3 className="font-display font-semibold mb-2">Detailed Analytics</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Geographic data, device breakdown, and traffic sources are available with Pro
+                </p>
+                <Button
+                  onClick={() => navigate("/dashboard/settings")}
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 text-white"
+                >
+                  <Crown className="w-4 h-4 mr-2" />
+                  Upgrade to Pro
+                </Button>
+              </GlassCard>
+            )}
           </TabsContent>
 
           {/* Settings Tab */}

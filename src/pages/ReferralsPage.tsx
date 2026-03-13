@@ -6,23 +6,31 @@ import { GradientButton } from "@/components/ui/GradientButton";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import { useProfile } from "@/hooks/useProfile";
+import { useReferrals } from "@/hooks/useReferrals";
 import { useToast } from "@/hooks/use-toast";
-
-// Sample referral data - would come from database
-const referralData = [
-  { id: "1", username: "@newcreator", level: 1, earnings: 2.50, joinedDate: "Jan 20, 2026" },
-  { id: "2", username: "@musicmaker", level: 1, earnings: 1.25, joinedDate: "Jan 18, 2026" },
-  { id: "3", username: "@artsy123", level: 2, earnings: 0.45, joinedDate: "Jan 15, 2026" },
-];
+import { format } from "date-fns";
 
 const ReferralsPage = () => {
-  const { data: profile, isLoading } = useProfile();
+  const { data: profile, isLoading: profileLoading } = useProfile();
+  const { data: referrals = [], isLoading: referralsLoading } = useReferrals();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
+
+  const isLoading = profileLoading || referralsLoading;
 
   const referralLink = profile?.referral_code 
     ? `${window.location.origin}/signup?ref=${profile.referral_code}`
     : "";
+
+  const totalEarnings = referrals.reduce((sum, r) => sum + (r.commission_earned || 0), 0);
+
+  const now = new Date();
+  const thisMonthEarnings = referrals
+    .filter((r) => {
+      const d = new Date(r.created_at);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    })
+    .reduce((sum, r) => sum + (r.commission_earned || 0), 0);
 
   const copyToClipboard = async () => {
     try {
@@ -60,10 +68,7 @@ const ReferralsPage = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <GlassCard gradient>
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
@@ -71,17 +76,13 @@ const ReferralsPage = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total Referrals</p>
-                  <p className="text-2xl font-display font-bold">{referralData.length}</p>
+                  <p className="text-2xl font-display font-bold">{referrals.length}</p>
                 </div>
               </div>
             </GlassCard>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <GlassCard>
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
@@ -89,19 +90,13 @@ const ReferralsPage = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total Earnings</p>
-                  <p className="text-2xl font-display font-bold">
-                    ${referralData.reduce((sum, r) => sum + r.earnings, 0).toFixed(2)}
-                  </p>
+                  <p className="text-2xl font-display font-bold">${totalEarnings.toFixed(2)}</p>
                 </div>
               </div>
             </GlassCard>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <GlassCard>
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
@@ -109,7 +104,7 @@ const ReferralsPage = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">This Month</p>
-                  <p className="text-2xl font-display font-bold">$2.50</p>
+                  <p className="text-2xl font-display font-bold">${thisMonthEarnings.toFixed(2)}</p>
                 </div>
               </div>
             </GlassCard>
@@ -117,11 +112,7 @@ const ReferralsPage = () => {
         </div>
 
         {/* Referral Link */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
           <GlassCard gradient className="mb-8">
             <div className="flex items-center gap-2 mb-4">
               <Share2 className="w-5 h-5 text-primary" />
@@ -145,45 +136,26 @@ const ReferralsPage = () => {
         </motion.div>
 
         {/* Commission Tiers */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
           <GlassCard className="mb-8">
             <div className="flex items-center gap-2 mb-4">
               <Gift className="w-5 h-5 text-primary" />
               <h3 className="font-display font-semibold">Commission Structure</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-primary/10 rounded-xl border border-primary/20">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold">Level 1 Referrals</span>
-                  <span className="text-2xl font-display font-bold text-primary">5%</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Earn 5% of the platform's revenue share from creators you directly refer
-                </p>
+            <div className="p-4 bg-primary/10 rounded-xl border border-primary/20">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-semibold">Direct Referrals</span>
+                <span className="text-2xl font-display font-bold text-primary">5%</span>
               </div>
-              <div className="p-4 bg-secondary/50 rounded-xl border border-border">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold">Level 2 Referrals</span>
-                  <span className="text-2xl font-display font-bold text-muted-foreground">1%</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Earn 1% from creators referred by your Level 1 referrals
-                </p>
-              </div>
+              <p className="text-sm text-muted-foreground">
+                Earn 5% of the platform's revenue share from creators you directly refer
+              </p>
             </div>
           </GlassCard>
         </motion.div>
 
         {/* Referral List */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
           <GlassCard>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -191,30 +163,34 @@ const ReferralsPage = () => {
                 <h3 className="font-display font-semibold">Your Referrals</h3>
               </div>
               <span className="text-xs bg-secondary px-2 py-1 rounded-full">
-                {referralData.length} total
+                {referrals.length} total
               </span>
             </div>
             
-            {referralData.length > 0 ? (
+            {referrals.length > 0 ? (
               <div className="space-y-3">
-                {referralData.map((referral) => (
+                {referrals.map((referral) => (
                   <div
                     key={referral.id}
                     className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-sm font-bold text-primary-foreground">
-                        {referral.username.charAt(1).toUpperCase()}
+                        {(referral.referred_username || "?").charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-medium text-sm">{referral.username}</p>
+                        <p className="font-medium text-sm">
+                          @{referral.referred_username || "unknown"}
+                        </p>
                         <p className="text-xs text-muted-foreground">
-                          Joined {referral.joinedDate} • Level {referral.level}
+                          Joined {format(new Date(referral.created_at), "MMM d, yyyy")} • Level {referral.level}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-green-500">+${referral.earnings.toFixed(2)}</p>
+                      <p className="font-semibold text-green-500">
+                        +${(referral.commission_earned || 0).toFixed(2)}
+                      </p>
                       <p className="text-xs text-muted-foreground">earned</p>
                     </div>
                   </div>

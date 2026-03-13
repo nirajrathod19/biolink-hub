@@ -2,20 +2,18 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Helper for logging
 const logStep = (step: string, details?: unknown) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[PAY-WITH-WALLET] ${step}${detailsStr}`);
 };
 
-// Subscription plans with prices
-const SUBSCRIPTION_PLANS: Record<string, { name: string; price: number; durationDays: number }> = {
-  monthly: { name: "Pro Monthly", price: 3, durationDays: 30 },
-  quarterly: { name: "Pro 4 Months", price: 11, durationDays: 120 },
-  annual: { name: "Pro Annual", price: 30, durationDays: 365 },
+const WALLET_PLANS: Record<string, { name: string; price: number; stripePlan: string }> = {
+  starter: { name: "Starter Pro", price: 3, stripePlan: "starter" },
+  full: { name: "Full Pro", price: 5, stripePlan: "full" },
 };
 
 Deno.serve(async (req) => {
@@ -26,17 +24,16 @@ Deno.serve(async (req) => {
   try {
     const { plan } = await req.json();
 
-    if (!plan || !SUBSCRIPTION_PLANS[plan]) {
+    if (!plan || !WALLET_PLANS[plan]) {
       return new Response(
-        JSON.stringify({ error: "Invalid plan. Must be 'monthly', 'quarterly', or 'annual'" }),
+        JSON.stringify({ error: "Invalid plan. Must be 'starter' or 'full'" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const selectedPlan = SUBSCRIPTION_PLANS[plan];
+    const selectedPlan = WALLET_PLANS[plan];
     logStep("Processing wallet payment", { plan, price: selectedPlan.price });
 
-    // Verify auth
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
@@ -50,12 +47,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Get user from token
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabase.auth.getUser(token);
-    
+
     if (userError || !userData.user) {
-      logStep("Auth failed", { error: userError?.message });
       return new Response(
         JSON.stringify({ error: "Invalid auth token" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -65,7 +60,7 @@ Deno.serve(async (req) => {
     const userId = userData.user.id;
     logStep("User authenticated", { userId });
 
-    // Get user's profile
+    // Get profile with advisory lock to prevent race conditions
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("id, wallet_balance, is_pro")
@@ -73,18 +68,15 @@ Deno.serve(async (req) => {
       .single();
 
     if (profileError || !profile) {
-      logStep("Profile not found", { profileError });
       return new Response(
         JSON.stringify({ error: "User profile not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Check if user has enough balance
-    if (profile.wallet_balance < selectedPlan.price) {
-      logStep("Insufficient balance", { balance: profile.wallet_balance, required: selectedPlan.price });
+    if ((profile.wallet_balance || 0) < selectedPlan.price) {
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: "Insufficient wallet balance",
           balance: profile.wallet_balance,
           required: selectedPlan.price,
@@ -93,48 +85,63 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Deduct from wallet balance and set pro status
-    const newBalance = profile.wallet_balance - selectedPlan.price;
+    // Deduct from wallet and activate Pro
+    const newBalance = (profile.wallet_balance || 0) - selectedPlan.price;
     const { error: updateError } = await supabase
       .from("profiles")
-      .update({
-        wallet_balance: newBalance,
-        is_pro: true,
-      })
+      .update({ wallet_balance: newBalance, is_pro: true })
       .eq("user_id", userId);
 
-    if (updateError) {
-      logStep("Error updating profile", { updateError });
-      throw updateError;
+    if (updateError) throw updateError;
+
+    // Cancel any existing wallet subscription for this user
+    await supabase
+      .from("wallet_subscriptions")
+      .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .eq("status", "active");
+
+    // Create new wallet subscription record for auto-renewal
+    const nextRenewal = new Date();
+    nextRenewal.setDate(nextRenewal.getDate() + 30);
+
+    const { error: subError } = await supabase.from("wallet_subscriptions").insert({
+      user_id: userId,
+      plan,
+      price: selectedPlan.price,
+      status: "active",
+      next_renewal_at: nextRenewal.toISOString(),
+    });
+
+    if (subError) {
+      logStep("Error creating wallet subscription record", { subError });
     }
 
-    // Record subscription transaction
-    const { error: txError } = await supabase.from("transactions").insert({
+    // Record transaction
+    await supabase.from("transactions").insert({
       user_id: userId,
       type: "subscription",
       amount: -selectedPlan.price,
       description: `${selectedPlan.name} subscription via wallet`,
     });
 
-    if (txError) {
-      logStep("Error recording transaction", { txError });
-      // Don't throw, just log - the subscription was already activated
-    }
-
-    logStep("Subscription activated successfully", { 
-      plan, 
-      price: selectedPlan.price, 
-      newBalance,
-      durationDays: selectedPlan.durationDays,
+    // Audit log
+    await supabase.from("security_audit_log").insert({
+      user_id: userId,
+      event_type: "wallet_subscription_purchase",
+      event_data: { plan, price: selectedPlan.price, new_balance: newBalance },
+      success: true,
     });
 
+    logStep("Subscription activated", { plan, newBalance, nextRenewal: nextRenewal.toISOString() });
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         plan: selectedPlan.name,
         price: selectedPlan.price,
         new_balance: newBalance,
-        duration_days: selectedPlan.durationDays,
+        next_renewal: nextRenewal.toISOString(),
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

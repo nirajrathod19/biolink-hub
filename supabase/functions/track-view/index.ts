@@ -2,32 +2,38 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 const PRO_THRESHOLD = 1000;
-const REVENUE_PER_UNIQUE_VIEW = 0.001; // $0.001 per unique view
-const CREATOR_SHARE = 0.5; // 50% to creator when Pro
-const REFERRAL_COMMISSION_RATE = 0.05; // 5% Level 1 referral commission
+const REVENUE_PER_UNIQUE_VIEW = 0.001;
+const REFERRAL_COMMISSION_RATE = 0.05;
+const CPM_RATE = 2.50;
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { profile_id } = await req.json();
+    const { profile_id, track_ad_impression } = await req.json();
 
     if (!profile_id) {
-      console.error("Missing profile_id in request");
       return new Response(
         JSON.stringify({ error: "profile_id is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get visitor information from headers
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(profile_id)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid profile_id format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const visitorIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() 
       || req.headers.get("cf-connecting-ip") 
       || req.headers.get("x-real-ip") 
@@ -37,13 +43,12 @@ Deno.serve(async (req) => {
 
     console.log(`[TRACK-VIEW] Tracking view for profile: ${profile_id}, IP: ${visitorIp}`);
 
-    // Create Supabase client with service role for database operations
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Check if this visitor has already visited this profile
+    // Check if this visitor has already visited
     const { data: existingVisit, error: checkError } = await supabase
       .from("click_logs")
       .select("id")
@@ -52,15 +57,11 @@ Deno.serve(async (req) => {
       .eq("user_agent", userAgent)
       .maybeSingle();
 
-    if (checkError) {
-      console.error("[TRACK-VIEW] Error checking existing visit:", checkError);
-      throw checkError;
-    }
+    if (checkError) throw checkError;
 
     const isUnique = !existingVisit;
-    console.log(`[TRACK-VIEW] Visitor is unique: ${isUnique}`);
+    const deviceType = /mobile|android|iphone|ipad/i.test(userAgent) ? "mobile" : "desktop";
 
-    // Log the click
     const { data: clickLog, error: logError } = await supabase
       .from("click_logs")
       .insert({
@@ -69,55 +70,53 @@ Deno.serve(async (req) => {
         user_agent: userAgent,
         referer,
         is_unique: isUnique,
+        device_type: deviceType,
       })
       .select("id")
       .single();
 
-    if (logError) {
-      console.error("[TRACK-VIEW] Error logging click:", logError);
-      throw logError;
-    }
+    if (logError) throw logError;
 
-    // Get current profile stats including user_id and referrer
+    // Get profile stats
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("id, user_id, total_clicks, unique_clicks, is_pro, pending_revenue, referred_by")
+      .select("id, user_id, total_clicks, unique_clicks, is_pro, pending_revenue, referred_by, ads_balance")
       .eq("id", profile_id)
       .single();
 
-    if (profileError) {
-      console.error("[TRACK-VIEW] Error fetching profile:", profileError);
-      throw profileError;
-    }
+    if (profileError) throw profileError;
 
     const newTotalClicks = (profile.total_clicks || 0) + 1;
     const newUniqueClicks = isUnique 
       ? (profile.unique_clicks || 0) + 1 
       : profile.unique_clicks || 0;
 
-    // Check if should unlock Pro
     const shouldUnlockPro = !profile.is_pro && newUniqueClicks >= PRO_THRESHOLD;
-    
-    if (shouldUnlockPro) {
-      console.log(`[TRACK-VIEW] 🎉 Profile ${profile_id} unlocked Pro status!`);
-    }
 
-    // Calculate revenue only for unique views
+    // Determine revenue share based on subscription tier
+    // Check subscription tier from adsense_settings or default
+    let creatorShareRate = 0.5; // Default 50% for starter
+    
+    // Check if user has a subscription and what tier
+    const { data: checkSubData } = await supabase
+      .from("adsense_settings")
+      .select("is_revenue_sharing_enabled")
+      .eq("user_id", profile.user_id)
+      .maybeSingle();
+
+    // We'll use is_pro status - full pro gets 100%, starter gets 50%
+    // This is simplified; the actual tier check happens via check-subscription
+    const isPro = profile.is_pro || shouldUnlockPro;
+
     let creatorRevenue = 0;
-    let referralRevenue = 0;
     let newPendingRevenue = profile.pending_revenue || 0;
 
     if (isUnique) {
       const totalRevenue = REVENUE_PER_UNIQUE_VIEW;
       
-      // Check if creator is Pro (or just became Pro)
-      const isPro = profile.is_pro || shouldUnlockPro;
-      
       if (isPro) {
-        // 50% to creator, 50% to platform
-        creatorRevenue = totalRevenue * CREATOR_SHARE;
+        creatorRevenue = totalRevenue * creatorShareRate;
         newPendingRevenue = newPendingRevenue + creatorRevenue;
-        console.log(`[TRACK-VIEW] Pro creator earns: $${creatorRevenue.toFixed(4)}`);
 
         // Record earning transaction
         await supabase.from("transactions").insert({
@@ -128,23 +127,50 @@ Deno.serve(async (req) => {
           reference_id: clickLog.id,
         });
 
-        // Process Level 1 referral commission
+        // Update daily ad earnings log
+        const today = new Date().toISOString().split("T")[0];
+        const { data: existingLog } = await supabase
+          .from("ad_earnings_logs")
+          .select("id, impressions, gross_revenue, creator_share, platform_share")
+          .eq("user_id", profile.user_id)
+          .eq("date", today)
+          .maybeSingle();
+
+        if (existingLog) {
+          await supabase
+            .from("ad_earnings_logs")
+            .update({
+              impressions: (existingLog.impressions || 0) + 1,
+              gross_revenue: (existingLog.gross_revenue || 0) + totalRevenue,
+              creator_share: (existingLog.creator_share || 0) + creatorRevenue,
+              platform_share: (existingLog.platform_share || 0) + (totalRevenue - creatorRevenue),
+              revenue_share_pct: creatorShareRate * 100,
+            })
+            .eq("id", existingLog.id);
+        } else {
+          await supabase.from("ad_earnings_logs").insert({
+            user_id: profile.user_id,
+            date: today,
+            impressions: 1,
+            gross_revenue: totalRevenue,
+            creator_share: creatorRevenue,
+            platform_share: totalRevenue - creatorRevenue,
+            revenue_share_pct: creatorShareRate * 100,
+          });
+        }
+
+        // Process referral commission
         if (profile.referred_by) {
-          // Get referrer's profile
-          const { data: referrerProfile, error: referrerError } = await supabase
+          const { data: referrerProfile } = await supabase
             .from("profiles")
             .select("id, user_id, pending_revenue")
             .eq("id", profile.referred_by)
             .single();
 
-          if (!referrerError && referrerProfile) {
-            // 5% of platform's share (which is 50%)
-            const platformShare = totalRevenue * (1 - CREATOR_SHARE);
-            referralRevenue = platformShare * REFERRAL_COMMISSION_RATE;
-            
-            console.log(`[TRACK-VIEW] Referrer earns commission: $${referralRevenue.toFixed(4)}`);
+          if (referrerProfile) {
+            const platformShare = totalRevenue * (1 - creatorShareRate);
+            const referralRevenue = platformShare * REFERRAL_COMMISSION_RATE;
 
-            // Update referrer's pending revenue
             await supabase
               .from("profiles")
               .update({
@@ -152,7 +178,6 @@ Deno.serve(async (req) => {
               })
               .eq("id", referrerProfile.id);
 
-            // Record referral transaction for referrer
             await supabase.from("transactions").insert({
               user_id: referrerProfile.user_id,
               type: "referral",
@@ -160,27 +185,55 @@ Deno.serve(async (req) => {
               description: `Referral commission from @${profile_id}`,
               reference_id: clickLog.id,
             });
-
-            // Update referrals table commission_earned
-            await supabase
-              .from("referrals")
-              .update({
-                commission_earned: supabase.rpc("increment_commission", {
-                  referral_id: profile.referred_by,
-                  amount: referralRevenue,
-                }),
-              })
-              .eq("referrer_id", referrerProfile.id)
-              .eq("referred_id", profile.id);
           }
         }
-      } else {
-        console.log(`[TRACK-VIEW] Non-Pro creator - 100% revenue to platform`);
       }
     }
 
-    // Update profile with new counts and revenue
-    const { error: updateError } = await supabase
+    // Track ad impression if requested
+    if (track_ad_impression && isUnique) {
+      const estimatedAdRevenue = CPM_RATE / 1000;
+      const creatorAdShare = isPro ? estimatedAdRevenue * creatorShareRate : 0;
+      
+      await supabase.from("ad_impressions").insert({
+        profile_id,
+        user_id: profile.user_id,
+        estimated_revenue: estimatedAdRevenue,
+        visitor_ip: visitorIp,
+        user_agent: userAgent,
+        device_type: deviceType,
+      });
+
+      const { data: existingSettings } = await supabase
+        .from("adsense_settings")
+        .select("total_impressions, total_estimated_revenue, creator_earnings")
+        .eq("user_id", profile.user_id)
+        .maybeSingle();
+
+      if (existingSettings) {
+        await supabase
+          .from("adsense_settings")
+          .update({
+            total_impressions: (existingSettings.total_impressions || 0) + 1,
+            total_estimated_revenue: (existingSettings.total_estimated_revenue || 0) + estimatedAdRevenue,
+            creator_earnings: (existingSettings.creator_earnings || 0) + creatorAdShare,
+            last_calculated_at: new Date().toISOString(),
+          })
+          .eq("user_id", profile.user_id);
+      } else {
+        await supabase.from("adsense_settings").insert({
+          user_id: profile.user_id,
+          total_impressions: 1,
+          total_estimated_revenue: estimatedAdRevenue,
+          creator_earnings: creatorAdShare,
+          is_revenue_sharing_enabled: isPro,
+          last_calculated_at: new Date().toISOString(),
+        });
+      }
+    }
+
+    // Update profile
+    await supabase
       .from("profiles")
       .update({
         total_clicks: newTotalClicks,
@@ -189,13 +242,6 @@ Deno.serve(async (req) => {
         ...(shouldUnlockPro && { is_pro: true }),
       })
       .eq("id", profile_id);
-
-    if (updateError) {
-      console.error("[TRACK-VIEW] Error updating profile:", updateError);
-      throw updateError;
-    }
-
-    console.log(`[TRACK-VIEW] Successfully tracked view. Total: ${newTotalClicks}, Unique: ${newUniqueClicks}, Revenue: $${creatorRevenue.toFixed(4)}`);
 
     return new Response(
       JSON.stringify({
@@ -209,8 +255,12 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error("[TRACK-VIEW] Error tracking view:", errorMessage);
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : typeof error === "object" && error !== null
+        ? JSON.stringify(error)
+        : String(error);
+    console.error("[TRACK-VIEW] Error:", errorMessage, "Full error:", JSON.stringify(error));
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

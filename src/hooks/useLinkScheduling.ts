@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-export type LinkAnimation = 'none' | 'pulse' | 'bounce' | 'shake' | 'glow';
+export type LinkAnimation = 'none' | 'pulse' | 'bounce' | 'shake' | 'glow' | 'wobble';
 
 export interface LinkSchedule {
   id: string;
@@ -74,6 +74,8 @@ export const getLinkAnimationClass = (animation: string | null): string => {
       return 'animate-[shake_0.5s_ease-in-out_infinite]';
     case 'glow':
       return 'animate-[glow_1.5s_ease-in-out_infinite]';
+    case 'wobble':
+      return 'animate-[wobble_1s_ease-in-out_infinite]';
     default:
       return '';
   }

@@ -17,13 +17,13 @@ export interface Transaction {
 
 export interface WithdrawalRequest {
   amount: number;
-  payment_method: "paypal" | "bank_transfer";
+  payment_method: "bank_transfer" | "upi";
   payment_details: {
-    paypal_email?: string;
     bank_name?: string;
     account_number?: string;
-    routing_number?: string;
     account_holder?: string;
+    upi_id?: string;
+    ifsc_code?: string;
   };
 }
 
@@ -131,7 +131,6 @@ export const useRequestWithdrawal = () => {
 
       // Run fraud detection
       const fraudResult = runFraudCheck({
-        paypalEmail: request.payment_details.paypal_email,
         amount: request.amount,
         walletBalance: profile.wallet_balance,
         previousWithdrawals: previousWithdrawals || [],
@@ -139,24 +138,22 @@ export const useRequestWithdrawal = () => {
         totalClicks: profile.total_clicks || 0,
       });
 
-      // Create withdrawal request with fraud flags
-      const { data, error } = await supabase
-        .from("withdrawals")
-        .insert({
-          user_id: user.id,
-          amount: request.amount,
-          payment_method: request.payment_method,
-          payment_details: request.payment_details,
-          status: "pending",
-          fraud_flags: fraudResult.flags.length > 0 ? JSON.parse(JSON.stringify(fraudResult.flags)) : null,
-          fraud_score: fraudResult.score,
-          is_flagged: fraudResult.isFlagged,
-        } as any)
-        .select()
-        .single();
+      // Use atomic DB function to prevent double-spend
+      const { data: withdrawalId, error } = await supabase.rpc(
+        "request_withdrawal" as any,
+        {
+          p_user_id: user.id,
+          p_amount: request.amount,
+          p_payment_method: request.payment_method,
+          p_payment_details: request.payment_details,
+          p_fraud_flags: fraudResult.flags.length > 0 ? JSON.parse(JSON.stringify(fraudResult.flags)) : null,
+          p_fraud_score: fraudResult.score,
+          p_is_flagged: fraudResult.isFlagged,
+        }
+      );
 
       if (error) throw error;
-      return { ...data, fraudResult };
+      return { id: withdrawalId, fraudResult };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["withdrawals", user?.id] });

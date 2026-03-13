@@ -1,22 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import bcrypt from "npm:bcryptjs@2.4.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  // Supabase JS adds `x-supabase-client-platform` which must be explicitly allowed
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, x-supabase-client-platform, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-
-// Simple hash function for password verification
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -55,8 +46,8 @@ serve(async (req) => {
         );
       }
 
-      // Hash the password
-      const hashedPassword = await hashPassword(password);
+      // Hash the password using bcrypt with 12 rounds
+      const hashedPassword = await bcrypt.hash(password, 12);
 
       // Store or update admin password in admin_settings
       const { error: upsertError } = await supabase
@@ -125,10 +116,10 @@ serve(async (req) => {
         );
       }
 
-      // Hash the provided password and compare
-      const hashedPassword = await hashPassword(password);
+      // Verify password using bcrypt compare
+      const isValid = await bcrypt.compare(password, settingData.setting_value);
       
-      if (hashedPassword !== settingData.setting_value) {
+      if (!isValid) {
         console.log(`Failed admin login attempt for user ${user_id}`);
         return new Response(
           JSON.stringify({ error: "Invalid password" }),

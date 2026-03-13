@@ -12,8 +12,8 @@ import { useCheckLockout, useRecordLoginAttempt, useLogSecurityEvent } from "@/h
 import { z } from "zod";
 
 const loginSchema = z.object({
-  email: z.string().trim().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  email: z.string().trim().email("Please enter a valid email address").max(255, "Email must be less than 255 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters").max(72, "Password must be less than 72 characters"),
 });
 
 const LoginPage = () => {
@@ -26,6 +26,7 @@ const LoginPage = () => {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+  const [forgotCooldown, setForgotCooldown] = useState(0);
   const [lockoutInfo, setLockoutInfo] = useState<{ locked: boolean; message?: string; attempts_remaining?: number } | null>(null);
   
   const { signIn, user, loading } = useAuth();
@@ -54,6 +55,15 @@ const LoginPage = () => {
       }
     }
   }, [user, loading, isAdmin, roleLoading, navigate]);
+
+  // Forgot password cooldown timer
+  useEffect(() => {
+    if (forgotCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setForgotCooldown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [forgotCooldown]);
 
   // Check lockout status when email changes
   useEffect(() => {
@@ -108,6 +118,8 @@ const LoginPage = () => {
     const { error } = await signIn(email, password);
     
     if (error) {
+      const errorMessage = error.message.toLowerCase();
+      
       // Record failed login attempt
       try {
         const result = await recordAttempt.mutateAsync({
@@ -147,6 +159,24 @@ const LoginPage = () => {
         });
       }
     } else {
+      // Check if email is verified in profiles
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("email_verified")
+        .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      if (profile && !profile.email_verified) {
+        await supabase.auth.signOut();
+        toast({
+          title: "Email not verified",
+          description: "Please check your inbox and verify your email before signing in.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       // Record successful login
       try {
         await recordAttempt.mutateAsync({ email, success: true });
@@ -158,7 +188,6 @@ const LoginPage = () => {
         title: "Welcome back!",
         description: "You've successfully signed in.",
       });
-      navigate("/dashboard");
     }
     
     setIsLoading(false);
@@ -167,6 +196,8 @@ const LoginPage = () => {
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (forgotCooldown > 0) return;
+
     if (!forgotEmail.trim()) {
       toast({
         title: "Error",
@@ -178,25 +209,38 @@ const LoginPage = () => {
 
     setForgotLoading(true);
     
-    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    
-    setForgotLoading(false);
-    
-    if (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
+    try {
+      const response = await supabase.functions.invoke("send-verification-email", {
+        body: {
+          email: forgotEmail,
+          type: "password_reset",
+        },
       });
-    } else {
+
+      if (response.error) {
+        const msg = response.error.message || "";
+        if (msg.includes("non-2xx")) {
+          throw new Error("Email service is temporarily busy. Please wait and try again.");
+        }
+        throw response.error;
+      }
+      if (response.data && !response.data.success) throw new Error(response.data.error);
+
       setForgotSent(true);
+      setForgotCooldown(60);
       toast({
         title: "Email sent!",
         description: "Check your inbox for the password reset link.",
       });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send reset email",
+        variant: "destructive",
+      });
     }
+    
+    setForgotLoading(false);
   };
 
   if (loading || roleLoading) {
@@ -282,10 +326,12 @@ const LoginPage = () => {
                     type="submit" 
                     className="w-full" 
                     size="lg"
-                    disabled={forgotLoading}
+                    disabled={forgotLoading || forgotCooldown > 0}
                   >
                     {forgotLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : forgotCooldown > 0 ? (
+                      <>Resend available in {forgotCooldown}s</>
                     ) : (
                       <>
                         Send Reset Link
@@ -315,6 +361,8 @@ const LoginPage = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className={`pl-10 bg-secondary/50 border-border h-12 ${errors.email ? 'border-destructive' : ''}`}
+                      maxLength={255}
+                      autoComplete="email"
                     />
                   </div>
                   {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
@@ -330,6 +378,8 @@ const LoginPage = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className={`pl-10 pr-10 bg-secondary/50 border-border h-12 ${errors.password ? 'border-destructive' : ''}`}
+                      maxLength={72}
+                      autoComplete="current-password"
                     />
                     <button
                       type="button"

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Loader2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { SocialIconsBar } from "@/components/profile/SocialIconsBar";
 import { MonetizationStrip } from "@/components/dashboard/MonetizationStrip";
 import { MobileBottomNav } from "@/components/dashboard/MobileBottomNav";
@@ -13,6 +14,8 @@ import { PreviewDrawer } from "@/components/dashboard/PreviewDrawer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useLinks } from "@/hooks/useLinks";
+import { useRealtimeAnalytics } from "@/hooks/useRealtimeAnalytics";
+import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import {
   Dialog,
   DialogContent,
@@ -26,8 +29,22 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const { data: links = [], isLoading: linksLoading } = useLinks();
+  const { isConnected } = useRealtimeAnalytics();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+
+  // Detect new user needing onboarding
+  useEffect(() => {
+    if (profile && !onboardingDismissed && !profileLoading) {
+      const isAutoUsername = profile.username?.startsWith("user_");
+      const noAvatar = !profile.avatar_url;
+      if (isAutoUsername || noAvatar) {
+        setShowOnboarding(true);
+      }
+    }
+  }, [profile, profileLoading, onboardingDismissed]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -36,11 +53,7 @@ const Dashboard = () => {
   }, [user, authLoading, navigate]);
 
   if (authLoading || profileLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (!user) {
@@ -50,7 +63,8 @@ const Dashboard = () => {
   const currentClicks = profile?.unique_clicks || 0;
   const targetClicks = 1000;
   const totalClicks = links.reduce((sum, link) => sum + (link.click_count || 0), 0);
-  const totalViews = profile?.total_clicks ? Math.round(profile.total_clicks * 1.4) : 0;
+  // Use real total_clicks (page views) from profile, tracked by the track-view function
+  const totalViews = profile?.total_clicks || 0;
   const clickRate = totalViews > 0 ? `${((totalClicks / totalViews) * 100).toFixed(1)}%` : "0%";
   const earnings = `$${(profile?.wallet_balance || 0).toFixed(2)}`;
 
@@ -65,7 +79,7 @@ const Dashboard = () => {
 
       <div className="max-w-2xl mx-auto px-4 pb-24 lg:pb-8">
         {/* Profile Header with Social Icons */}
-        <motion.div
+        <motion.header
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -77,7 +91,7 @@ const Dashboard = () => {
               {profile?.avatar_url ? (
                 <img 
                   src={profile.avatar_url} 
-                  alt={profile?.display_name || profile?.username}
+                  alt={`${profile?.display_name || profile?.username}'s avatar`}
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
@@ -95,37 +109,39 @@ const Dashboard = () => {
               <SocialIconsBar isEditable={true} />
             </div>
           </div>
-        </motion.div>
+        </motion.header>
 
-        {/* Add Link Button (+ button) - After profile section */}
+        {/* Add Link Button */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.3 }}
           className="mb-6"
         >
-          <Link to="/dashboard/links">
+          <Link to="/dashboard/links" className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg">
             <GlassCard className="p-4 hover:bg-secondary/80 transition-colors cursor-pointer border-dashed border-2 border-border">
               <div className="flex items-center justify-center gap-2">
-                <Plus className="w-5 h-5 text-primary" />
+                <Plus className="w-5 h-5 text-primary" aria-hidden="true" />
                 <span className="font-medium text-foreground">Add Link</span>
               </div>
             </GlassCard>
           </Link>
         </motion.div>
 
-        {/* Links List - Center of page */}
-        <motion.div
+        {/* Links List */}
+        <motion.section
+          aria-label="Your links"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.3 }}
           className="mb-6"
         >
           <LinksList links={links} />
-        </motion.div>
+        </motion.section>
 
-        {/* Stats Row - Horizontal, compact, at bottom */}
-        <motion.div
+        {/* Stats Row */}
+        <motion.section
+          aria-label="Performance statistics"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.3 }}
@@ -136,8 +152,9 @@ const Dashboard = () => {
             clickRate={clickRate}
             earnings={earnings}
             isPro={profile?.is_pro}
+            isLive={isConnected}
           />
-        </motion.div>
+        </motion.section>
       </div>
 
       {/* Mobile Bottom Navigation */}
@@ -153,6 +170,13 @@ const Dashboard = () => {
         onClose={() => setShowPreview(false)}
         profile={profile}
         links={links}
+      />
+
+      {/* Onboarding Wizard */}
+      <OnboardingWizard
+        open={showOnboarding}
+        onComplete={() => { setShowOnboarding(false); setOnboardingDismissed(true); }}
+        currentUsername={profile?.username}
       />
 
       {/* Add Link Dialog */}

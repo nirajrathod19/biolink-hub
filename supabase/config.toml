@@ -23,3 +23,33 @@ verify_jwt = false
 
 [functions.security-check]
 verify_jwt = false
+
+[functions.verify-email-token]
+verify_jwt = false
+
+[functions.reset-password-token]
+verify_jwt = false
+
+[functions.render-profile]
+verify_jwt = false
+
+[functions.sitemap]
+verify_jwt = false
+
+[functions.sync-adsense-revenue]
+verify_jwt = false
+
+[functions.create-product-checkout]
+verify_jwt = false
+
+[functions.send-verification-email]
+verify_jwt = false
+
+[functions.admin-magic-link]
+verify_jwt = false
+
+[functions.calculate-ad-revenue]
+verify_jwt = false
+
+[functions.ai-color-matcher]
+verify_jwt = false

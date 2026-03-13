@@ -23,6 +23,7 @@ export interface PendingWithdrawal {
     message: string;
     severity: "low" | "medium" | "high";
   }>;
+  payment_details?: Record<string, any>;
 }
 
 export interface RecentUser {
@@ -81,6 +82,7 @@ export const usePendingWithdrawals = () => {
           user_id,
           amount,
           payment_method,
+          payment_details,
           status,
           created_at,
           is_flagged,

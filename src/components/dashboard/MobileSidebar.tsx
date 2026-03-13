@@ -11,23 +11,32 @@ import {
   Users,
   Eye,
   DollarSign,
+  MessageSquare,
+  UserCircle,
+  Mail,
+  Zap,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { SheetClose } from "@/components/ui/sheet";
+import { ContactSupportDialog } from "@/components/dashboard/ContactSupportDialog";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: Link2, label: "My Links", href: "/dashboard/links" },
   { icon: Share2, label: "Social Media", href: "/dashboard/social" },
   { icon: Palette, label: "Appearance", href: "/dashboard/appearance" },
+  { icon: MessageSquare, label: "Community", href: "/dashboard/community" },
   { icon: BarChart3, label: "Analytics", href: "/dashboard/analytics" },
   { icon: DollarSign, label: "Monetization", href: "/dashboard/monetization" },
   { icon: Wallet, label: "Wallet", href: "/dashboard/wallet" },
   { icon: Users, label: "Referrals", href: "/dashboard/referrals" },
   { icon: Settings, label: "Settings", href: "/dashboard/settings" },
+  { icon: UserCircle, label: "Profile", href: "/dashboard/profile" },
+  { icon: Mail, label: "Subscribers", href: "/dashboard/subscribers" },
+  { icon: Zap, label: "Dynamic Rules", href: "/dashboard/rules" },
 ];
 
 export const MobileSidebar = () => {
@@ -79,7 +88,7 @@ export const MobileSidebar = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1">
+      <nav className="flex-1 space-y-1 overflow-y-auto min-h-0">
         {menuItems.map((item) => {
           const isActive = location.pathname === item.href;
           return (
@@ -101,8 +110,9 @@ export const MobileSidebar = () => {
         })}
       </nav>
 
-      {/* Sign Out */}
-      <div className="border-t border-sidebar-border pt-4">
+      {/* Support + Sign Out */}
+      <div className="border-t border-sidebar-border pt-4 space-y-1">
+        <ContactSupportDialog />
         <SheetClose asChild>
           <button
             onClick={handleSignOut}

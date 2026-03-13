@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
-import { Link2, Lock, Eye, EyeOff, Loader2, CheckCircle } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link2, Lock, Eye, EyeOff, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { GradientButton } from "@/components/ui/GradientButton";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -16,26 +16,21 @@ const ResetPasswordPage = () => {
   const [error, setError] = useState<string | null>(null);
   
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
-  // Check if we have a valid session from the email link
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setError("Invalid or expired reset link. Please request a new one.");
-      }
-    };
-    checkSession();
-  }, []);
+  const token = searchParams.get("token");
+  const userId = searchParams.get("user_id");
+
+  const hasValidParams = token && userId;
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (newPassword.length < 6) {
+    if (newPassword.length < 8) {
       toast({
         title: "Error",
-        description: "Password must be at least 6 characters",
+        description: "Password must be at least 8 characters",
         variant: "destructive",
       });
       return;
@@ -52,25 +47,33 @@ const ResetPasswordPage = () => {
 
     setIsLoading(true);
     
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword,
-    });
-
-    setIsLoading(false);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
+    try {
+      const response = await supabase.functions.invoke("reset-password-token", {
+        body: {
+          token,
+          user_id: userId,
+          new_password: newPassword,
+        },
       });
-    } else {
+
+      if (response.error) throw response.error;
+      if (response.data && !response.data.success) throw new Error(response.data.error);
+
       setIsSuccess(true);
       toast({
         title: "Password Updated!",
         description: "Your password has been changed successfully.",
       });
+    } catch (err: any) {
+      setError(err.message || "Failed to reset password");
+      toast({
+        title: "Error",
+        description: err.message || "Failed to reset password",
+        variant: "destructive",
+      });
     }
+
+    setIsLoading(false);
   };
 
   return (
@@ -81,21 +84,36 @@ const ResetPasswordPage = () => {
         transition={{ duration: 0.6 }}
         className="w-full max-w-md"
       >
-        {/* Logo */}
         <Link to="/" className="flex items-center gap-2 mb-8 justify-center">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-            <Link2 className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-display font-bold">Brioo</span>
+          <div className="flex items-center gap-2">
+              <img 
+                src="/Logo1.png" 
+                alt="Brioo Logo" 
+                className="w-8 h-8 object-contain drop-shadow-[0_0_1px_#fffff(255,255,255,0.2)]" 
+              />
+            </div>
         </Link>
 
         <div className="bg-card border border-border rounded-2xl p-8">
-          {error ? (
+          {!hasValidParams ? (
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+                <XCircle className="w-8 h-8 text-destructive" />
+              </div>
+              <h1 className="text-2xl font-display font-bold mb-2">Invalid Reset Link</h1>
+              <p className="text-muted-foreground mb-6">This password reset link is invalid or has expired. Please request a new one.</p>
+              <Link to="/login">
+                <GradientButton className="w-full">
+                  Back to Login
+                </GradientButton>
+              </Link>
+            </div>
+          ) : error ? (
             <div className="text-center">
               <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
                 <Lock className="w-8 h-8 text-destructive" />
               </div>
-              <h1 className="text-2xl font-display font-bold mb-2">Link Expired</h1>
+              <h1 className="text-2xl font-display font-bold mb-2">Reset Failed</h1>
               <p className="text-muted-foreground mb-6">{error}</p>
               <Link to="/login">
                 <GradientButton className="w-full">
@@ -168,7 +186,7 @@ const ResetPasswordPage = () => {
                   type="submit" 
                   className="w-full" 
                   size="lg"
-                  disabled={isLoading || newPassword.length < 6}
+                  disabled={isLoading || newPassword.length < 8}
                 >
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

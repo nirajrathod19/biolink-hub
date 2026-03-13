@@ -6,11 +6,13 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AdminRoute } from "@/components/auth/AdminRoute";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import Landing from "./pages/Landing";
 import DemoPage from "./pages/DemoPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 import Dashboard from "./pages/Dashboard";
 import LinksPage from "./pages/LinksPage";
 import SocialPage from "./pages/SocialPage";
@@ -20,11 +22,15 @@ import WalletPage from "./pages/WalletPage";
 import ReferralsPage from "./pages/ReferralsPage";
 import SettingsPage from "./pages/SettingsPage";
 import MonetizationPage from "./pages/MonetizationPage";
+import CommunityPage from "./pages/CommunityPage";
+import EditProfilePage from "./pages/EditProfilePage";
+import SubscribersPage from "./pages/SubscribersPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminVerify from "./pages/AdminVerify";
 import SecurityPage from "./pages/SecurityPage";
 import ProfilePage from "./pages/ProfilePage";
 import AdRedirectPage from "./pages/AdRedirectPage";
+import DynamicRulesPage from "./pages/DynamicRulesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +39,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
+        <ThemeToggle />
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -43,6 +50,7 @@ const App = () => (
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
             <Route path="/ad-redirect" element={<AdRedirectPage />} />
             
             {/* Protected creator routes */}
@@ -55,6 +63,10 @@ const App = () => (
             <Route path="/dashboard/referrals" element={<ProtectedRoute><ReferralsPage /></ProtectedRoute>} />
             <Route path="/dashboard/monetization" element={<ProtectedRoute><MonetizationPage /></ProtectedRoute>} />
             <Route path="/dashboard/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+            <Route path="/dashboard/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
+            <Route path="/dashboard/profile" element={<ProtectedRoute><EditProfilePage /></ProtectedRoute>} />
+            <Route path="/dashboard/subscribers" element={<ProtectedRoute><SubscribersPage /></ProtectedRoute>} />
+            <Route path="/dashboard/rules" element={<ProtectedRoute><DynamicRulesPage /></ProtectedRoute>} />
             
             {/* Admin routes */}
             <Route path="/admin/verify" element={<AdminVerify />} />

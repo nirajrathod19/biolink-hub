@@ -1,19 +1,21 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { DollarSign, ArrowUpRight, ArrowDownRight, Wallet, CreditCard, Gift, Loader2, Clock, Crown } from "lucide-react";
+import { DollarSign, Wallet, Loader2, Clock, Crown, CheckCircle, XCircle, ArrowDownRight, TrendingUp, BarChart3, Globe } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GradientButton } from "@/components/ui/GradientButton";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
-import { useTransactions, useWithdrawals, useRequestWithdrawal, usePayWithWallet } from "@/hooks/useWallet";
+import { useWithdrawals, useRequestWithdrawal, usePayWithWallet, useTransactions } from "@/hooks/useWallet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const WALLET_PLANS = [
   { key: "monthly" as const, name: "Monthly", price: 3, savings: null },
@@ -25,8 +27,8 @@ const WalletPage = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { data: profile, isLoading: profileLoading } = useProfile();
-  const { data: transactions = [], isLoading: transactionsLoading } = useTransactions();
-  const { data: withdrawals = [] } = useWithdrawals();
+  const { data: withdrawals = [], isLoading: withdrawalsLoading } = useWithdrawals();
+  const { data: transactions = [] } = useTransactions();
   const requestWithdrawal = useRequestWithdrawal();
   const payWithWallet = usePayWithWallet();
 
@@ -34,12 +36,14 @@ const WalletPage = () => {
   const [proDialogOpen, setProDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<"monthly" | "quarterly" | "annual">("monthly");
   const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"paypal" | "bank_transfer">("paypal");
-  const [paypalEmail, setPaypalEmail] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"upi" | "bank_transfer">("upi");
+  // Bank Transfer
   const [bankName, setBankName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
-  const [routingNumber, setRoutingNumber] = useState("");
   const [accountHolder, setAccountHolder] = useState("");
+  const [ifscCode, setIfscCode] = useState("");
+  // UPI
+  const [upiId, setUpiId] = useState("");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -58,23 +62,33 @@ const WalletPage = () => {
   }
 
   const walletBalance = profile?.wallet_balance || 0;
-  const pendingAmount = profile?.pending_revenue || 0;
-  const totalEarned = transactions
-    .filter(tx => tx.type === "earning" || tx.type === "referral")
-    .reduce((sum, tx) => sum + tx.amount, 0);
+  const totalWithdrawn = profile?.total_withdrawn || 0;
+  const pendingRevenue = profile?.pending_revenue || 0;
+  const adsBalance = profile?.ads_balance || 0;
+
+  // Calculate earnings from transactions
+  const earningTransactions = transactions.filter(t => t.type === "earning");
+  const totalEarned = earningTransactions.reduce((sum, t) => sum + t.amount, 0);
+  const last7DaysEarnings = earningTransactions
+    .filter(t => new Date(t.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
+    .reduce((sum, t) => sum + t.amount, 0);
 
   const handleWithdraw = async () => {
     const amount = parseFloat(withdrawAmount);
     if (isNaN(amount) || amount < 3) return;
 
-    const paymentDetails = paymentMethod === "paypal" 
-      ? { paypal_email: paypalEmail }
-      : { 
-          bank_name: bankName,
-          account_number: accountNumber,
-          routing_number: routingNumber,
-          account_holder: accountHolder,
-        };
+    let paymentDetails: any = {};
+
+    if (paymentMethod === "upi") {
+      paymentDetails.upi_id = upiId;
+    } else if (paymentMethod === "bank_transfer") {
+      paymentDetails = {
+        bank_name: bankName,
+        account_number: accountNumber,
+        account_holder: accountHolder,
+        ifsc_code: ifscCode,
+      };
+    }
 
     await requestWithdrawal.mutateAsync({
       amount,
@@ -83,12 +97,16 @@ const WalletPage = () => {
     });
 
     setWithdrawDialogOpen(false);
+    resetWithdrawForm();
+  };
+
+  const resetWithdrawForm = () => {
     setWithdrawAmount("");
-    setPaypalEmail("");
     setBankName("");
     setAccountNumber("");
-    setRoutingNumber("");
     setAccountHolder("");
+    setIfscCode("");
+    setUpiId("");
   };
 
   const handlePayWithWallet = async () => {
@@ -100,6 +118,27 @@ const WalletPage = () => {
   const selectedPlanDetails = WALLET_PLANS.find(p => p.key === selectedPlan);
   const canAffordPlan = selectedPlanDetails && walletBalance >= selectedPlanDetails.price;
 
+  const isWithdrawValid = () => {
+    const amount = parseFloat(withdrawAmount);
+    if (isNaN(amount) || amount < 3 || amount > walletBalance) return false;
+    if (paymentMethod === "upi" && !upiId) return false;
+    if (paymentMethod === "bank_transfer" && (!accountHolder || !accountNumber || !ifscCode)) return false;
+    return true;
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "approved":
+        return <Badge className="bg-green-500/20 text-green-500 border-green-500/30"><CheckCircle className="w-3 h-3 mr-1" /> Paid</Badge>;
+      case "rejected":
+        return <Badge className="bg-red-500/20 text-red-500 border-red-500/30"><XCircle className="w-3 h-3 mr-1" /> Rejected</Badge>;
+      case "processing":
+        return <Badge className="bg-orange-500/20 text-orange-500 border-orange-500/30"><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Processing</Badge>;
+      default:
+        return <Badge className="bg-yellow-500/20 text-yellow-500 border-yellow-500/30"><Clock className="w-3 h-3 mr-1" /> Pending</Badge>;
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto">
@@ -109,41 +148,41 @@ const WalletPage = () => {
             Wallet
           </h1>
           <p className="text-muted-foreground">
-            Manage your earnings and withdrawals
+            Your ad revenue is automatically split — 50% goes directly to your wallet.
           </p>
         </div>
 
         {/* Balance Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
             <GlassCard gradient>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
-                  <Wallet className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Available Balance</p>
-                  <p className="text-3xl font-display font-bold">${walletBalance.toFixed(2)}</p>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-9 h-9 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Wallet className="w-4 h-4 text-primary" />
                 </div>
               </div>
-              <GradientButton 
-                className="w-full" 
-                disabled={walletBalance < 3 || !!pendingWithdrawal}
-                onClick={() => setWithdrawDialogOpen(true)}
-              >
-                {pendingWithdrawal 
-                  ? pendingWithdrawal.status === "processing" 
-                    ? "Under Process" 
-                    : "Withdrawal Pending"
-                  : walletBalance < 3 
-                    ? "Min. $3 to withdraw" 
-                    : "Withdraw"
-                }
-              </GradientButton>
+              <p className="text-xs text-muted-foreground">Available</p>
+              <p className="text-xl md:text-2xl font-display font-bold">${walletBalance.toFixed(2)}</p>
+            </GlassCard>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05, duration: 0.5 }}
+          >
+            <GlassCard>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-9 h-9 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-yellow-500" />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">Pending</p>
+              <p className="text-xl md:text-2xl font-display font-bold">${pendingRevenue.toFixed(2)}</p>
             </GlassCard>
           </motion.div>
 
@@ -153,61 +192,113 @@ const WalletPage = () => {
             transition={{ delay: 0.1, duration: 0.5 }}
           >
             <GlassCard>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center">
-                  <CreditCard className="w-6 h-6 text-yellow-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Pending</p>
-                  <p className="text-2xl font-display font-bold">${pendingAmount.toFixed(2)}</p>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-9 h-9 rounded-lg bg-green-500/10 flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-green-500" />
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Revenue not yet transferred to wallet
-              </p>
+              <p className="text-xs text-muted-foreground">Total Earned</p>
+              <p className="text-xl md:text-2xl font-display font-bold">${totalEarned.toFixed(2)}</p>
             </GlassCard>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
+            transition={{ delay: 0.15, duration: 0.5 }}
           >
             <GlassCard>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
-                  <DollarSign className="w-6 h-6 text-green-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Earned</p>
-                  <p className="text-2xl font-display font-bold">${totalEarned.toFixed(2)}</p>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <ArrowDownRight className="w-4 h-4 text-blue-500" />
                 </div>
               </div>
+              <p className="text-xs text-muted-foreground">Withdrawn</p>
+              <p className="text-xl md:text-2xl font-display font-bold">${totalWithdrawn.toFixed(2)}</p>
             </GlassCard>
           </motion.div>
         </div>
+
+        {/* Withdraw Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="mb-6"
+        >
+          <GradientButton
+            className="w-full"
+            size="lg"
+            disabled={walletBalance < 3 || !!pendingWithdrawal}
+            onClick={() => setWithdrawDialogOpen(true)}
+          >
+            <Wallet className="w-5 h-5 mr-2" />
+            {pendingWithdrawal
+              ? pendingWithdrawal.status === "processing"
+                ? "Withdrawal Under Process"
+                : "Withdrawal Pending"
+              : walletBalance < 3
+                ? "Min. $3 to withdraw"
+                : `Withdraw $${walletBalance.toFixed(2)}`
+            }
+          </GradientButton>
+        </motion.div>
+
+        {/* Earnings Summary */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.5 }}
+        >
+          <GlassCard className="mb-6">
+            <h3 className="font-display font-semibold mb-3 flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-primary" />
+              Earnings Summary
+            </h3>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="p-3 bg-secondary/30 rounded-lg text-center">
+                <p className="text-xs text-muted-foreground">Last 7 Days</p>
+                <p className="text-lg font-bold">${last7DaysEarnings.toFixed(4)}</p>
+              </div>
+              <div className="p-3 bg-secondary/30 rounded-lg text-center">
+                <p className="text-xs text-muted-foreground">Ad Revenue</p>
+                <p className="text-lg font-bold">${adsBalance.toFixed(2)}</p>
+              </div>
+              <div className="p-3 bg-secondary/30 rounded-lg text-center">
+                <p className="text-xs text-muted-foreground">Views</p>
+                <p className="text-lg font-bold">{profile?.unique_clicks || 0}</p>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              💡 You earn $0.001 per unique profile view. Revenue is auto-credited to your wallet daily.
+            </p>
+          </GlassCard>
+        </motion.div>
 
         {/* Pay with Wallet for Pro */}
         {!profile?.is_pro && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25, duration: 0.5 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
           >
-            <GlassCard className="mb-8 border-primary/30">
+            <GlassCard className="mb-6 border-primary/30">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
                     <Crown className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-display font-semibold">Pay with Wallet Balance</h3>
+                    <h3 className="font-display font-semibold">Upgrade to Pro</h3>
                     <p className="text-sm text-muted-foreground">
-                      Use your wallet balance to subscribe to Pro and start earning revenue
+                      Use wallet balance or reach 1,000 unique clicks
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Progress: {profile?.unique_clicks || 0} / 1,000 clicks
                     </p>
                   </div>
                 </div>
-                <GradientButton 
+                <GradientButton
                   onClick={() => setProDialogOpen(true)}
                   disabled={walletBalance < 3}
                 >
@@ -219,40 +310,14 @@ const WalletPage = () => {
           </motion.div>
         )}
 
-        {/* Pro Status */}
-        {!profile?.is_pro && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-          >
-            <GlassCard className="mb-8 border-yellow-500/30">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <h3 className="font-display font-semibold mb-1 text-yellow-500">🔒 Pro Required</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Unlock Pro to start earning revenue. Reach 1,000 unique clicks or subscribe to Pro.
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Progress: {profile?.unique_clicks || 0} / 1,000 unique clicks
-                  </p>
-                </div>
-                <GradientButton variant="outline" onClick={() => navigate("/dashboard/settings")}>
-                  View Pro Plans
-                </GradientButton>
-              </div>
-            </GlassCard>
-          </motion.div>
-        )}
-
         {/* Pending Withdrawal Alert */}
         {pendingWithdrawal && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
+            transition={{ delay: 0.35, duration: 0.5 }}
           >
-            <GlassCard className={`mb-8 ${pendingWithdrawal.status === "processing" ? "border-orange-500/30" : "border-yellow-500/30"}`}>
+            <GlassCard className={`mb-6 ${pendingWithdrawal.status === "processing" ? "border-orange-500/30" : "border-yellow-500/30"}`}>
               <div className="flex items-center gap-3">
                 <Clock className={`w-5 h-5 ${pendingWithdrawal.status === "processing" ? "text-orange-500" : "text-yellow-500"}`} />
                 <div>
@@ -260,7 +325,7 @@ const WalletPage = () => {
                     {pendingWithdrawal.status === "processing" ? "Withdrawal Under Process" : "Withdrawal Pending"}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Your withdrawal request of ${pendingWithdrawal.amount.toFixed(2)} via {pendingWithdrawal.payment_method.replace("_", " ")} is {pendingWithdrawal.status === "processing" ? "being processed" : "awaiting approval"}.
+                    ${pendingWithdrawal.amount.toFixed(2)} via {pendingWithdrawal.payment_method.replace("_", " ")} — {pendingWithdrawal.status === "processing" ? "being processed" : "awaiting approval"}
                   </p>
                 </div>
               </div>
@@ -268,67 +333,49 @@ const WalletPage = () => {
           </motion.div>
         )}
 
-        {/* Transactions */}
+        {/* Withdrawal History */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.5 }}
         >
           <GlassCard>
-            <h3 className="font-display font-semibold mb-4">Transaction History</h3>
+            <h3 className="font-display font-semibold mb-4">Withdrawal History</h3>
             <div className="space-y-3">
-              {transactionsLoading ? (
+              {withdrawalsLoading ? (
                 <div className="flex justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                 </div>
-              ) : !profile?.is_pro && transactions.length === 0 ? (
+              ) : withdrawals.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-muted-foreground">
-                    Unlock Pro to start earning and see your transactions here.
-                  </p>
-                </div>
-              ) : transactions.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">
-                    No transactions yet. Share your profile to start earning!
+                  <ArrowDownRight className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm">
+                    No withdrawals yet. Once your balance reaches $3, you can request a payout.
                   </p>
                 </div>
               ) : (
-                transactions.map((tx) => (
+                withdrawals.map((w) => (
                   <div
-                    key={tx.id}
+                    key={w.id}
                     className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg"
                   >
                     <div className="flex items-center gap-3">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          tx.type === "earning"
-                            ? "bg-green-500/10"
-                            : tx.type === "referral"
-                            ? "bg-purple-500/10"
-                            : "bg-red-500/10"
-                        }`}
-                      >
-                        {tx.type === "earning" && <ArrowUpRight className="w-5 h-5 text-green-500" />}
-                        {tx.type === "referral" && <Gift className="w-5 h-5 text-purple-500" />}
-                        {(tx.type === "withdrawal" || tx.type === "subscription") && (
-                          <ArrowDownRight className="w-5 h-5 text-red-500" />
-                        )}
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <ArrowDownRight className="w-5 h-5 text-primary" />
                       </div>
                       <div>
-                        <p className="font-medium text-sm">{tx.description || tx.type}</p>
+                        <p className="font-medium text-sm capitalize">
+                          {w.payment_method.replace("_", " ")}
+                        </p>
                         <p className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}
+                          {formatDistanceToNow(new Date(w.created_at), { addSuffix: true })}
                         </p>
                       </div>
                     </div>
-                    <p
-                      className={`font-semibold ${
-                        tx.amount > 0 ? "text-green-500" : "text-red-500"
-                      }`}
-                    >
-                      {tx.amount > 0 ? "+" : ""}${Math.abs(tx.amount).toFixed(4)}
-                    </p>
+                    <div className="flex items-center gap-3">
+                      <p className="font-semibold">${w.amount.toFixed(2)}</p>
+                      {getStatusBadge(w.status)}
+                    </div>
                   </div>
                 ))
               )}
@@ -339,11 +386,11 @@ const WalletPage = () => {
 
       {/* Withdrawal Dialog */}
       <Dialog open={withdrawDialogOpen} onOpenChange={setWithdrawDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Request Withdrawal</DialogTitle>
             <DialogDescription>
-              Enter the amount and payment details for your withdrawal request.
+              Choose your preferred payment method and enter your details.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -369,46 +416,53 @@ const WalletPage = () => {
               <Label>Payment Method</Label>
               <RadioGroup
                 value={paymentMethod}
-                onValueChange={(v) => setPaymentMethod(v as "paypal" | "bank_transfer")}
-                className="mt-2"
+                onValueChange={(v) => setPaymentMethod(v as any)}
+                className="mt-2 space-y-2"
               >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="paypal" id="paypal" />
-                  <Label htmlFor="paypal" className="font-normal">PayPal (Automated)</Label>
+                <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-secondary/30">
+                  <RadioGroupItem value="upi" id="upi" />
+                  <Label htmlFor="upi" className="font-normal flex items-center gap-2 cursor-pointer flex-1">
+                    <span>🇮🇳</span> UPI
+                    <Badge variant="outline" className="ml-auto text-xs">Instant via Razorpay</Badge>
+                  </Label>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-secondary/30">
                   <RadioGroupItem value="bank_transfer" id="bank" />
-                  <Label htmlFor="bank" className="font-normal">Bank Transfer (Manual)</Label>
+                  <Label htmlFor="bank" className="font-normal flex items-center gap-2 cursor-pointer flex-1">
+                    <span>🏦</span> Bank Transfer (NEFT/IMPS)
+                    <Badge variant="outline" className="ml-auto text-xs">1-2 days</Badge>
+                  </Label>
                 </div>
               </RadioGroup>
             </div>
 
-            {paymentMethod === "paypal" && (
+            {/* UPI fields */}
+            {paymentMethod === "upi" && (
               <div>
-                <Label htmlFor="paypal-email">PayPal Email</Label>
+                <Label htmlFor="upi-id">UPI ID</Label>
                 <Input
-                  id="paypal-email"
-                  type="email"
-                  value={paypalEmail}
-                  onChange={(e) => setPaypalEmail(e.target.value)}
-                  placeholder="your-email@paypal.com"
+                  id="upi-id"
+                  value={upiId}
+                  onChange={(e) => setUpiId(e.target.value)}
+                  placeholder="yourname@upi or 9876543210@paytm"
                   className="mt-1"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Payments are processed automatically via PayPal
+                  Payouts processed via Razorpay X — works with Google Pay, PhonePe, Paytm
                 </p>
               </div>
             )}
 
+            {/* Bank Transfer fields */}
             {paymentMethod === "bank_transfer" && (
-              <>
+              <div className="space-y-3">
                 <div>
                   <Label htmlFor="account-holder">Account Holder Name</Label>
                   <Input
                     id="account-holder"
                     value={accountHolder}
                     onChange={(e) => setAccountHolder(e.target.value)}
-                    placeholder="John Doe"
+                    placeholder="As on bank passbook"
                     className="mt-1"
                   />
                 </div>
@@ -418,51 +472,47 @@ const WalletPage = () => {
                     id="bank-name"
                     value={bankName}
                     onChange={(e) => setBankName(e.target.value)}
-                    placeholder="Bank of America"
+                    placeholder="State Bank of India"
                     className="mt-1"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="account-number">Account Number</Label>
-                    <Input
-                      id="account-number"
-                      value={accountNumber}
-                      onChange={(e) => setAccountNumber(e.target.value)}
-                      placeholder="XXXX XXXX XXXX"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="routing-number">Routing Number</Label>
-                    <Input
-                      id="routing-number"
-                      value={routingNumber}
-                      onChange={(e) => setRoutingNumber(e.target.value)}
-                      placeholder="XXXXXXXXX"
-                      className="mt-1"
-                    />
-                  </div>
+                <div>
+                  <Label htmlFor="account-number">Account Number</Label>
+                  <Input
+                    id="account-number"
+                    value={accountNumber}
+                    onChange={(e) => setAccountNumber(e.target.value)}
+                    placeholder="Your bank account number"
+                    className="mt-1"
+                  />
                 </div>
-              </>
+                <div>
+                  <Label htmlFor="ifsc-code">IFSC Code</Label>
+                  <Input
+                    id="ifsc-code"
+                    value={ifscCode}
+                    onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
+                    placeholder="e.g. SBIN0001234"
+                    className="mt-1"
+                    maxLength={11}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Payouts via Razorpay X NEFT/IMPS. Typically processed within 1-2 business days.
+                </p>
+              </div>
             )}
           </div>
           <div className="flex justify-end gap-2">
-            <GradientButton
+            <Button
               variant="outline"
               onClick={() => setWithdrawDialogOpen(false)}
             >
               Cancel
-            </GradientButton>
+            </Button>
             <GradientButton
               onClick={handleWithdraw}
-              disabled={
-                requestWithdrawal.isPending ||
-                parseFloat(withdrawAmount) < 3 ||
-                parseFloat(withdrawAmount) > walletBalance ||
-                (paymentMethod === "paypal" && !paypalEmail) ||
-                (paymentMethod === "bank_transfer" && (!bankName || !accountNumber || !accountHolder))
-              }
+              disabled={requestWithdrawal.isPending || !isWithdrawValid()}
             >
               {requestWithdrawal.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -502,18 +552,18 @@ const WalletPage = () => {
                 {WALLET_PLANS.map((plan) => {
                   const canAfford = walletBalance >= plan.price;
                   return (
-                    <div 
+                    <div
                       key={plan.key}
                       className={`flex items-center justify-between p-3 rounded-lg border ${
-                        selectedPlan === plan.key 
-                          ? "border-primary bg-primary/10" 
+                        selectedPlan === plan.key
+                          ? "border-primary bg-primary/10"
                           : "border-border bg-secondary/30"
                       } ${!canAfford ? "opacity-50" : ""}`}
                     >
                       <div className="flex items-center space-x-3">
-                        <RadioGroupItem 
-                          value={plan.key} 
-                          id={plan.key} 
+                        <RadioGroupItem
+                          value={plan.key}
+                          id={plan.key}
                           disabled={!canAfford}
                         />
                         <div>

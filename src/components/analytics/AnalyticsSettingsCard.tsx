@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
-import { Settings, Save, ExternalLink } from "lucide-react";
+import { Settings, Save, ExternalLink, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { useAnalyticsSettings, useUpdateAnalyticsSettings } from "@/hooks/useAnalyticsSettings";
+import { useIsAdmin } from "@/hooks/useUserRole";
 import { toast } from "sonner";
 
 export const AnalyticsSettingsCard = () => {
+  const { isAdmin, isLoading: roleLoading } = useIsAdmin();
   const { data: settings, isLoading } = useAnalyticsSettings();
   const updateSettings = useUpdateAnalyticsSettings();
 
@@ -40,10 +42,32 @@ export const AnalyticsSettingsCard = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || roleLoading) {
     return (
       <GlassCard>
         <div className="animate-pulse h-48 bg-secondary/50 rounded" />
+      </GlassCard>
+    );
+  }
+
+  // Non-admin creators see an info message instead
+  if (!isAdmin) {
+    return (
+      <GlassCard>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <ShieldAlert className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-display font-semibold">Analytics Integrations</h3>
+            <p className="text-sm text-muted-foreground">
+              Admin-managed settings
+            </p>
+          </div>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Analytics integrations (Google Analytics, Meta Pixel) and ad placements are managed by the platform admin. These tracking scripts only run on public bio pages and do not affect your dashboard.
+        </p>
       </GlassCard>
     );
   }
@@ -57,7 +81,7 @@ export const AnalyticsSettingsCard = () => {
         <div>
           <h3 className="font-display font-semibold">Analytics Integrations</h3>
           <p className="text-sm text-muted-foreground">
-            Connect third-party analytics
+            Connect third-party analytics (bio pages only)
           </p>
         </div>
       </div>
@@ -138,6 +162,10 @@ export const AnalyticsSettingsCard = () => {
             </div>
           )}
         </div>
+
+        <p className="text-xs text-muted-foreground">
+          ℹ️ These scripts will only be injected on public bio pages (/:username), not on the dashboard.
+        </p>
 
         <Button
           onClick={handleSave}

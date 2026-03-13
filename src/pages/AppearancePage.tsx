@@ -1,62 +1,57 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Check, Palette, Type, Sparkles, Eye, Heart } from "lucide-react";
+import { Eye, Type, Heart, Save, Layers, Image, SlidersHorizontal, LayoutGrid, List, Grid3X3, Maximize, Megaphone } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GradientButton } from "@/components/ui/GradientButton";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Slider } from "@/components/ui/slider";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useToast } from "@/hooks/use-toast";
 import { INTEREST_CATEGORIES } from "@/hooks/useHeroAd";
-
-const TEMPLATES = [
-  { id: "minimal", name: "Minimal", description: "Clean and simple", color: "#0a0a0f" },
-  { id: "dark-neon", name: "Dark Neon", description: "Neon accents", color: "#0f0f1a" },
-  { id: "business", name: "Business", description: "Professional style", color: "#1a1a2e" },
-  { id: "influencer", name: "Influencer", description: "Bold and colorful", color: "#gradient" },
-  { id: "anime", name: "Anime", description: "Playful theme", color: "#1a0a2e" },
-  { id: "grid", name: "Grid Layout", description: "Modern grid", color: "#0a0f0a" },
-];
-
-const THEME_COLORS = [
-  { name: "Purple", value: "#8B5CF6" },
-  { name: "Blue", value: "#3B82F6" },
-  { name: "Green", value: "#10B981" },
-  { name: "Pink", value: "#EC4899" },
-  { name: "Orange", value: "#F97316" },
-  { name: "Red", value: "#EF4444" },
-  { name: "Cyan", value: "#06B6D4" },
-  { name: "Yellow", value: "#EAB308" },
-];
+import { ThemeGallery } from "@/components/appearance/ThemeGallery";
+import { ThemeLivePreview } from "@/components/appearance/ThemeLivePreview";
+import { AssetLayerManager } from "@/components/appearance/AssetLayerManager";
+import { AIColorMatcher } from "@/components/appearance/AIColorMatcher";
 
 const AppearancePage = () => {
   const { data: profile, isLoading } = useProfile();
   const updateProfile = useUpdateProfile();
+  const { isSubscribed, currentPlan } = useSubscription();
+  const isPro = isSubscribed && (currentPlan === "starter" || currentPlan === "full" || currentPlan === "pro");
   const { toast } = useToast();
 
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState("minimal");
-  const [selectedColor, setSelectedColor] = useState("#8B5CF6");
+  const [selectedTheme, setSelectedTheme] = useState("minimal-mono");
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [productCardSize, setProductCardSize] = useState(100);
+  const [productLayout, setProductLayout] = useState<"vertical" | "horizontal">("vertical");
+  const [viewMode, setViewMode] = useState<"list" | "tiles" | "xl-icons">("tiles");
+  const [announcementText, setAnnouncementText] = useState("");
 
-  // Update state when profile loads
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.display_name || "");
       setBio(profile.bio || "");
-      setSelectedTemplate(profile.template || "minimal");
-      setSelectedColor(profile.theme_color || "#8B5CF6");
+      setSelectedTheme(profile.template || "minimal-mono");
       setSelectedInterests(profile.interests || []);
+      const config = (profile as any).layout_config || {};
+      setProductCardSize(config.product_card_size || 100);
+      setProductLayout(config.product_layout || "vertical");
+      setViewMode(config.view_mode || "tiles");
+      setAnnouncementText((profile as any).announcement_text || "");
     }
   }, [profile]);
 
   const toggleInterest = (interestId: string) => {
-    setSelectedInterests(prev => 
+    setSelectedInterests((prev) =>
       prev.includes(interestId)
-        ? prev.filter(i => i !== interestId)
+        ? prev.filter((i) => i !== interestId)
         : [...prev, interestId]
     );
   };
@@ -66,24 +61,23 @@ const AppearancePage = () => {
       await updateProfile.mutateAsync({
         display_name: displayName,
         bio,
-        template: selectedTemplate,
-        theme_color: selectedColor,
+        template: selectedTheme,
         interests: selectedInterests,
-      });
-      toast({ title: "Success", description: "Appearance settings saved!" });
+        announcement_text: announcementText || null,
+        layout_config: {
+          product_card_size: productCardSize,
+          product_layout: productLayout,
+          view_mode: viewMode,
+        },
+      } as any);
+      toast({ title: "Saved!", description: "Your appearance settings have been updated." });
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
 
   if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
-      </DashboardLayout>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -92,19 +86,16 @@ const AppearancePage = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold mb-1">
-              Appearance
-            </h1>
-            <p className="text-muted-foreground">
-              Customize how your bio page looks
-            </p>
+            <h1 className="text-2xl md:text-3xl font-display font-bold mb-1">Customized</h1>
+            <p className="text-muted-foreground">Design your bio page with explorer layouts, layers & assets</p>
           </div>
           <div className="flex gap-3">
-            <GradientButton variant="outline">
-              <Eye className="w-4 h-4" />
-              Preview
-            </GradientButton>
-            <GradientButton onClick={handleSave} disabled={updateProfile.isPending}>
+            <GradientButton
+              onClick={handleSave}
+              disabled={updateProfile.isPending}
+              className="gap-2"
+            >
+              <Save className="w-4 h-4" />
               {updateProfile.isPending ? "Saving..." : "Save Changes"}
             </GradientButton>
           </div>
@@ -114,10 +105,7 @@ const AppearancePage = () => {
           {/* Settings Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Profile Info */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <GlassCard>
                 <div className="flex items-center gap-2 mb-4">
                   <Type className="w-5 h-5 text-primary" />
@@ -146,54 +134,179 @@ const AppearancePage = () => {
               </GlassCard>
             </motion.div>
 
-            {/* Templates */}
+            {/* Theme Gallery (renamed to Customized) */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
               <GlassCard>
+                <ThemeGallery
+                  selectedThemeId={selectedTheme}
+                  onSelect={setSelectedTheme}
+                />
+              </GlassCard>
+            </motion.div>
+
+            {/* Product & Store Controls */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+            >
+              <GlassCard>
                 <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  <h3 className="font-display font-semibold">Templates</h3>
+                  <SlidersHorizontal className="w-5 h-5 text-primary" />
+                  <h3 className="font-display font-semibold">Product Display</h3>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {TEMPLATES.map((template) => (
-                    <button
-                      key={template.id}
-                      onClick={() => setSelectedTemplate(template.id)}
-                      className={`relative p-4 rounded-xl border-2 transition-all ${
-                        selectedTemplate === template.id
-                          ? "border-primary bg-primary/10"
-                          : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <div
-                        className="w-full h-20 rounded-lg mb-3"
-                        style={{
-                          background: template.color === "#gradient"
-                            ? "linear-gradient(135deg, #8B5CF6, #EC4899)"
-                            : template.color,
-                        }}
-                      />
-                      <p className="font-medium text-sm">{template.name}</p>
-                      <p className="text-xs text-muted-foreground">{template.description}</p>
-                      {selectedTemplate === template.id && (
-                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                          <Check className="w-4 h-4 text-primary-foreground" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
+
+                <div className="space-y-5">
+                  {/* Card Size */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm">Card Size</Label>
+                      <span className="text-xs font-mono text-muted-foreground">{productCardSize}%</span>
+                    </div>
+                    <Slider
+                      value={[productCardSize]}
+                      onValueChange={([val]) => setProductCardSize(val)}
+                      min={50}
+                      max={150}
+                      step={5}
+                    />
+                  </div>
+
+                  {/* Layout Toggle */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Layout Direction</Label>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setProductLayout("vertical")}
+                        className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-medium transition-all ${
+                          productLayout === "vertical"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-secondary text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        📄 Row-by-Row
+                      </button>
+                      <button
+                        onClick={() => setProductLayout("horizontal")}
+                        className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-medium transition-all ${
+                          productLayout === "horizontal"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-secondary text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        ↔️ Scroll View
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* View Mode */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">View</Label>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setViewMode("xl-icons")}
+                        className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${
+                          viewMode === "xl-icons"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-secondary text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <Maximize className="w-3.5 h-3.5" />
+                        Extra Large
+                      </button>
+                      <button
+                        onClick={() => setViewMode("list")}
+                        className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${
+                          viewMode === "list"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-secondary text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <List className="w-3.5 h-3.5" />
+                        List
+                      </button>
+                      <button
+                        onClick={() => setViewMode("tiles")}
+                        className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${
+                          viewMode === "tiles"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-secondary text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <Grid3X3 className="w-3.5 h-3.5" />
+                        Tiles
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </GlassCard>
             </motion.div>
+
+            {/* Announcement Bar */}
+            {isPro && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.18 }}
+              >
+                <GlassCard>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Megaphone className="w-5 h-5 text-primary" />
+                    <h3 className="font-display font-semibold text-sm">Announcement Bar</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Add a scrolling marquee at the top of your profile for urgent updates.
+                  </p>
+                  <Input
+                    value={announcementText}
+                    onChange={(e) => setAnnouncementText(e.target.value)}
+                    placeholder="e.g. 🔥 New merch drop this Friday!"
+                    maxLength={200}
+                    className="bg-secondary/50 border-border"
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">{announcementText.length}/200 — leave empty to hide</p>
+                </GlassCard>
+              </motion.div>
+            )}
+
+            {/* AI Color Matcher (Pro only) */}
+            {isPro && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.19 }}
+              >
+                <AIColorMatcher
+                  avatarUrl={profile?.avatar_url || null}
+                  onApplyColor={(color) => {
+                    // Apply as theme_color
+                    updateProfile.mutateAsync({ theme_color: color } as any).then(() => {
+                      toast({ title: "Color applied!", description: `Theme color set to ${color}` });
+                    });
+                  }}
+                />
+              </motion.div>
+            )}
+
+            {/* Custom Asset Uploads */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <AssetLayerManager />
+            </motion.div>
+
 
             {/* Interests */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.25 }}
             >
               <GlassCard>
                 <div className="flex items-center gap-2 mb-4">
@@ -220,105 +333,27 @@ const AppearancePage = () => {
                 </div>
               </GlassCard>
             </motion.div>
-
-            {/* Theme Colors */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <GlassCard>
-                <div className="flex items-center gap-2 mb-4">
-                  <Palette className="w-5 h-5 text-primary" />
-                  <h3 className="font-display font-semibold">Theme Color</h3>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  {THEME_COLORS.map((color) => (
-                    <button
-                      key={color.value}
-                      onClick={() => setSelectedColor(color.value)}
-                      className={`relative w-12 h-12 rounded-full transition-transform hover:scale-110 ${
-                        selectedColor === color.value ? "ring-2 ring-offset-2 ring-offset-background ring-primary" : ""
-                      }`}
-                      style={{ backgroundColor: color.value }}
-                      title={color.name}
-                    >
-                      {selectedColor === color.value && (
-                        <Check className="absolute inset-0 m-auto w-5 h-5 text-white" />
-                      )}
-                    </button>
-                  ))}
-                  <div className="relative">
-                    <input
-                      type="color"
-                      value={selectedColor}
-                      onChange={(e) => setSelectedColor(e.target.value)}
-                      className="absolute inset-0 w-12 h-12 opacity-0 cursor-pointer"
-                    />
-                    <div className="w-12 h-12 rounded-full border-2 border-dashed border-border flex items-center justify-center">
-                      <span className="text-xs">+</span>
-                    </div>
-                  </div>
-                </div>
-              </GlassCard>
-            </motion.div>
           </div>
 
-          {/* Preview Column */}
+          {/* Live Preview Column */}
           <div className="lg:col-span-1">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.15 }}
               className="sticky top-6"
             >
               <GlassCard>
-                <h3 className="font-display font-semibold mb-4 text-center">Live Preview</h3>
-                <div 
-                  className="rounded-xl overflow-hidden"
-                  style={{
-                    background: TEMPLATES.find(t => t.id === selectedTemplate)?.color === "#gradient"
-                      ? "linear-gradient(135deg, #8B5CF6, #EC4899)"
-                      : TEMPLATES.find(t => t.id === selectedTemplate)?.color || "#0a0a0f",
-                  }}
-                >
-                  <div className="p-6 text-center">
-                    {/* Avatar */}
-                    <div 
-                      className="w-20 h-20 rounded-full mx-auto mb-4 p-1"
-                      style={{ background: `linear-gradient(135deg, ${selectedColor}, ${selectedColor}88)` }}
-                    >
-                      <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-2xl">
-                        👤
-                      </div>
-                    </div>
-
-                    {/* Name */}
-                    <h4 className="font-bold text-lg mb-1" style={{ color: selectedColor }}>
-                      {displayName || profile?.username || "Your Name"}
-                    </h4>
-                    <p className="text-xs text-muted-foreground mb-4 line-clamp-2">
-                      {bio || "Your bio will appear here"}
-                    </p>
-
-                    {/* Sample Links */}
-                    <div className="space-y-2">
-                      {["Link 1", "Link 2", "Link 3"].map((link, i) => (
-                        <div
-                          key={i}
-                          className="py-2 px-4 rounded-lg text-xs font-medium"
-                          style={{
-                            backgroundColor: `${selectedColor}20`,
-                            borderColor: `${selectedColor}40`,
-                            borderWidth: 1,
-                          }}
-                        >
-                          {link}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Eye className="w-4 h-4 text-primary" />
+                  <h3 className="font-display font-semibold text-sm">Live Preview</h3>
                 </div>
+                <ThemeLivePreview
+                  themeId={selectedTheme}
+                  displayName={displayName || profile?.username || ""}
+                  bio={bio}
+                  avatarUrl={profile?.avatar_url}
+                />
               </GlassCard>
             </motion.div>
           </div>

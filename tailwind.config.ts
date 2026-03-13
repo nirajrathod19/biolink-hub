@@ -90,8 +90,18 @@ export default {
           "100%": { backgroundPosition: "200% 0" },
         },
         glow: {
-          "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.5" },
+          "0%, 100%": { boxShadow: "0 0 5px hsl(var(--primary))", opacity: "1" },
+          "50%": { boxShadow: "0 0 20px hsl(var(--primary))", opacity: "0.8" },
+        },
+        shake: {
+          "0%, 100%": { transform: "translateX(0)" },
+          "25%": { transform: "translateX(-4px)" },
+          "75%": { transform: "translateX(4px)" },
+        },
+        wobble: {
+          "0%, 100%": { transform: "rotate(0deg)" },
+          "25%": { transform: "rotate(-2deg)" },
+          "75%": { transform: "rotate(2deg)" },
         },
       },
       animation: {

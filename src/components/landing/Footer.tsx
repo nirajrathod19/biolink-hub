@@ -36,9 +36,13 @@ export const Footer = () => {
           {/* Brand */}
           <div className="col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <Link2 className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <div className="flex items-center gap-2">
+              <img 
+                src="/Logo.png" 
+                alt="Brioo Logo" 
+                className="w-8 h-8 object-contain drop-shadow-[0_0_1px_#fffff(255,255,255,0.2)]" 
+              />
+            </div>
               <span className="text-xl font-display font-bold">Brioo</span>
             </Link>
             <p className="text-sm text-muted-foreground mb-6 max-w-xs">

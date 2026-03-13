@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 // Moves pending_revenue to wallet_balance for all profiles
-// Can be called manually by admin or via cron job
+// Requires admin authentication
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -15,10 +15,59 @@ Deno.serve(async (req) => {
   try {
     console.log("[MOVE-PENDING] Starting pending revenue transfer");
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Authentication check - require Authorization header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.error("[MOVE-PENDING] Missing or invalid Authorization header");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - Authentication required" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    
+    // Verify the user from the token
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+    
+    if (userError || !userData?.user) {
+      console.error("[MOVE-PENDING] Invalid token:", userError?.message);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - Invalid token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check if user is admin
+    const { data: isAdmin, error: roleError } = await supabase.rpc("has_role", {
+      _user_id: userData.user.id,
+      _role: "admin"
+    });
+
+    if (roleError || !isAdmin) {
+      console.error("[MOVE-PENDING] Admin access denied for user:", userData.user.id);
+      return new Response(
+        JSON.stringify({ error: "Forbidden - Admin access required" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`[MOVE-PENDING] Authorized admin: ${userData.user.id}`);
+
+    // Log the action to security audit
+    await supabase.from("security_audit_log").insert({
+      user_id: userData.user.id,
+      event_type: "admin_move_pending_to_wallet",
+      event_data: { action: "initiated" },
+      ip_address: req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip"),
+      user_agent: req.headers.get("user-agent"),
+      success: true
+    });
 
     // Get all profiles with pending revenue > 0
     const { data: profiles, error: fetchError } = await supabase
@@ -66,6 +115,20 @@ Deno.serve(async (req) => {
       totalMoved += pendingAmount;
       console.log(`[MOVE-PENDING] Moved $${pendingAmount.toFixed(4)} for profile ${profile.id}`);
     }
+
+    // Log completion
+    await supabase.from("security_audit_log").insert({
+      user_id: userData.user.id,
+      event_type: "admin_move_pending_to_wallet",
+      event_data: { 
+        action: "completed",
+        processed_count: processedCount,
+        total_moved: totalMoved
+      },
+      ip_address: req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip"),
+      user_agent: req.headers.get("user-agent"),
+      success: true
+    });
 
     console.log(`[MOVE-PENDING] Completed. Processed: ${processedCount}, Total moved: $${totalMoved.toFixed(2)}`);
 

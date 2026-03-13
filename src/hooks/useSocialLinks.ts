@@ -116,26 +116,16 @@ export const usePublicSocialLinks = (userId: string) => {
   return useQuery({
     queryKey: ["public-social-links", userId],
     queryFn: async () => {
-      // Use social_links_public view for unauthenticated access
+      // Query social_links directly - RLS now allows public read access for active links
       const { data, error } = await supabase
-        .from("social_links_public")
-        .select("*")
-        .eq("is_active", true)
-        .order("position", { ascending: true });
-
-      if (error) throw error;
-      
-      // Filter by user - the view doesn't include user_id for privacy
-      // We need to get social links from the main table using RLS
-      const { data: socialData, error: socialError } = await supabase
         .from("social_links")
         .select("id, platform, url, is_active, position, created_at")
         .eq("user_id", userId)
         .eq("is_active", true)
         .order("position", { ascending: true });
 
-      if (socialError) throw socialError;
-      return socialData as SocialLink[];
+      if (error) throw error;
+      return data as SocialLink[];
     },
     enabled: !!userId,
   });

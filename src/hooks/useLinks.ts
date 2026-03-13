@@ -18,6 +18,8 @@ export interface Link {
   scheduled_end?: string | null;
   animation?: string | null;
   is_highlighted?: boolean;
+  lock_type?: string | null;
+  lock_password?: string | null;
 }
 
 export const useLinks = () => {

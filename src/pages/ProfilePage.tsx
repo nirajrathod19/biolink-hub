@@ -1,240 +1,202 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Instagram,
-  Youtube,
-  Twitter,
-  Linkedin,
-  Github,
-  ExternalLink,
-  Sparkles,
-  MessageCircle,
-  Send,
-  Camera,
-  Facebook,
+  Instagram, Youtube, Twitter, Linkedin, Github, ExternalLink, Sparkles,
+  MessageCircle, Send, Camera, Facebook,
 } from "lucide-react";
 import { usePublicProfile } from "@/hooks/useProfile";
 import { usePublicLinks } from "@/hooks/useLinks";
 import { usePublicSocialLinks } from "@/hooks/useSocialLinks";
 import { GlobalAdBanner } from "@/components/profile/GlobalAdBanner";
 import { useTrackProfileView } from "@/hooks/useViewTracking";
+import { StoreProductGrid } from "@/components/profile/StoreProductGrid";
+import { DigitalProductsGrid } from "@/components/profile/DigitalProductsGrid";
+import { ProductStorefront } from "@/components/profile/ProductStorefront";
+import { ShoppingCart } from "@/components/profile/ShoppingCart";
+import { CartProvider } from "@/components/profile/CartContext";
+import { ProfileSEO } from "@/components/seo/ProfileSEO";
+import { AdSenseAd } from "@/components/ads/AdSenseAd";
+import { TipJarDisplay } from "@/components/profile/TipJarDisplay";
+import { CommunityFeed } from "@/components/profile/CommunityFeed";
+import { QABox } from "@/components/profile/QABox";
+import { ProfileSkeleton } from "@/components/profile/ProfileSkeleton";
+import { ProfileNotFound } from "@/components/profile/ProfileNotFound";
+import { PublicLinkList } from "@/components/profile/PublicLinkList";
+import { EmailCaptureBlock } from "@/components/profile/EmailCaptureBlock";
+import { FloatingMusicPlayer } from "@/components/profile/FloatingMusicPlayer";
+import { VerifiedBadge } from "@/components/profile/VerifiedBadge";
+import { AnnouncementBar } from "@/components/profile/AnnouncementBar";
+import { RecentSalesTicker } from "@/components/profile/RecentSalesTicker";
+import { ContactMeForm } from "@/components/profile/ContactMeForm";
+import { ProfileStats } from "@/components/profile/ProfileStats";
+import { getThemeById } from "@/lib/bioThemes";
+import { usePublicLayoutElements } from "@/hooks/useLayoutElements";
+import { usePublicDisplayRules } from "@/hooks/useLinkDisplayRules";
+import { getVisitorContext, applyDisplayRules } from "@/lib/visitorDetection";
 
 const SOCIAL_ICONS: Record<string, any> = {
-  instagram: Instagram,
-  youtube: Youtube,
-  twitter: Twitter,
-  linkedin: Linkedin,
-  facebook: Facebook,
-  github: Github,
-  whatsapp: MessageCircle,
-  telegram: Send,
-  snapchat: Camera,
+  instagram: Instagram, youtube: Youtube, twitter: Twitter, linkedin: Linkedin,
+  facebook: Facebook, github: Github, whatsapp: MessageCircle, telegram: Send, snapchat: Camera,
 };
 
-const SOCIAL_COLORS: Record<string, string> = {
-  instagram: "hover:text-pink-500",
-  youtube: "hover:text-red-500",
-  twitter: "hover:text-blue-400",
-  linkedin: "hover:text-blue-600",
-  facebook: "hover:text-blue-500",
-  github: "hover:text-foreground",
-  whatsapp: "hover:text-green-500",
-  telegram: "hover:text-blue-400",
-  snapchat: "hover:text-yellow-400",
-};
-
-const ProfilePage = () => {
+const ProfilePageContent = () => {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
   const { data: profile, isLoading: profileLoading, error: profileError } = usePublicProfile(username || "");
-  const { data: links = [] } = usePublicLinks(profile?.user_id || "");
+  const { data: allLinks = [] } = usePublicLinks(profile?.user_id || "");
   const { data: socialLinks = [] } = usePublicSocialLinks(profile?.user_id || "");
-  
-  // Track profile view when page loads
+  const { data: layoutElements = [] } = usePublicLayoutElements(profile?.user_id || "");
+  const { data: displayRules = [] } = usePublicDisplayRules(profile?.user_id || "");
+
+  const visitorContext = getVisitorContext();
+  const visibleLinkIds = displayRules.length > 0
+    ? applyDisplayRules(allLinks.map((l: any) => l.id), displayRules, visitorContext)
+    : new Set(allLinks.map((l: any) => l.id));
+  const links = allLinks.filter((l: any) => visibleLinkIds.has(l.id));
+
   useTrackProfileView(profile?.id);
 
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, link: { id: string; url: string }) => {
     e.preventDefault();
-    // Redirect through interstitial ad page
-    const params = new URLSearchParams({
-      url: link.url,
-      link_id: link.id,
-      profile_id: profile?.id || "",
-    });
+    const params = new URLSearchParams({ url: link.url, link_id: link.id, profile_id: profile?.id || "" });
     navigate(`/ad-redirect?${params.toString()}`);
   };
 
-  if (profileLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
+  if (profileLoading) return <ProfileSkeleton />;
+  if (profileError || !profile) return <ProfileNotFound username={username} />;
 
-  if (profileError || !profile) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-display font-bold mb-4">404</h1>
-          <p className="text-muted-foreground mb-6">Profile not found</p>
-          <a href="/" className="text-primary hover:underline">
-            Create your own BioLink page
-          </a>
-        </div>
-      </div>
-    );
-  }
+  const theme = getThemeById(profile.template || "minimal-mono");
+  const layoutConfig = (profile as any).layout_config || {};
+  const productCardSize = layoutConfig.product_card_size || 100;
+  const productLayout = layoutConfig.product_layout || "vertical";
+
+  const bgAssets = layoutElements.filter((e) => e.element_type === "custom_asset" && (e.settings as any)?.role === "background");
+  const fgAssets = layoutElements.filter((e) => e.element_type === "custom_asset" && (e.settings as any)?.role === "foreground");
+
+  const audioLinks = links.filter((l: any) => l.link_type === "audio" && l.url).map((l: any) => ({ id: l.id, title: l.title || "Untitled Track", url: l.url }));
+  const isAudioLab = (profile as any).content_track === "audio";
+  const isVerified = !!(profile as any).is_verified;
+  const announcementText = (profile as any).announcement_text;
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div 
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] blur-[100px]"
-          style={{ background: `linear-gradient(to bottom, ${profile.theme_color}33, transparent)` }}
-        />
-        <div 
-          className="absolute bottom-0 left-1/4 w-64 h-64 rounded-full blur-[80px]"
-          style={{ background: `${profile.theme_color}20` }}
-        />
-      </div>
+    <div className="min-h-screen relative overflow-hidden" style={{ background: theme.background }}>
+      <ProfileSEO username={profile.username || ""} displayName={profile.display_name} bio={profile.bio} avatarUrl={profile.avatar_url} />
 
-      <div className="relative z-10 max-w-lg mx-auto px-4 py-12">
-        {/* Global Ad Banner - Always at top */}
-        <GlobalAdBanner themeColor={profile.theme_color || "#8B5CF6"} />
+      {bgAssets.map((asset) => (
+        <div key={asset.id} className="absolute inset-0 pointer-events-none" style={{ zIndex: asset.z_index, opacity: asset.opacity / 100 }}>
+          {asset.custom_asset_url && (
+            <img src={asset.custom_asset_url} alt="" className="w-full h-full object-cover"
+              style={asset.is_absolute ? { position: "absolute", left: `${asset.position_x}%`, top: `${asset.position_y}%`, width: `${asset.width}%`, height: "auto" } : undefined}
+            />
+          )}
+        </div>
+      ))}
 
-        {/* Profile Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-8"
-        >
-          {/* Avatar */}
+      <main className="relative z-10 max-w-lg mx-auto px-4 pt-6 pb-12">
+        <GlobalAdBanner themeColor={theme.accent} />
+        {announcementText && <AnnouncementBar text={announcementText} theme={theme} />}
+        <AdSenseAd slot="header" format="horizontal" className="mb-4" profileId={profile.id} />
+
+        <motion.header initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center mb-8">
           <div className="relative inline-block mb-4">
-            <div 
-              className="w-28 h-28 rounded-full p-1"
-              style={{ background: `linear-gradient(135deg, ${profile.theme_color}, ${profile.theme_color}88)` }}
-            >
+            <div className="w-28 h-28 rounded-full p-1" style={{ background: `linear-gradient(135deg, ${theme.accent}, ${theme.accent}88)` }}>
               {profile.avatar_url ? (
-                <img 
-                  src={profile.avatar_url} 
-                  alt={profile.display_name || profile.username}
-                  className="w-full h-full rounded-full object-cover"
-                />
+                <img src={profile.avatar_url} alt={`${profile.display_name || profile.username}'s avatar`} className="w-full h-full rounded-full object-cover" />
               ) : (
-                <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-4xl">
-                  👤
-                </div>
+                <div className="w-full h-full rounded-full flex items-center justify-center text-4xl" style={{ background: theme.cardBg }} role="img" aria-label="Default avatar">👤</div>
               )}
             </div>
             {profile.is_pro && (
-              <div 
-                className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ background: `linear-gradient(135deg, ${profile.theme_color}, ${profile.theme_color}88)` }}
-              >
-                <Sparkles className="w-4 h-4 text-primary-foreground" />
+              <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${theme.accent}, ${theme.accent}88)` }} aria-label="Pro member">
+                <Sparkles className="w-4 h-4" style={{ color: theme.accentText }} aria-hidden="true" />
               </div>
             )}
           </div>
-
-          {/* Name & Bio */}
-          <h1 className="text-2xl font-display font-bold mb-2">
+          <h1 className="text-2xl font-display font-bold mb-2 flex items-center justify-center gap-1.5" style={{ color: theme.textColor }}>
             {profile.display_name || `@${profile.username}`}
+            {isVerified && <VerifiedBadge size={22} />}
           </h1>
-          {profile.bio && (
-            <p className="text-muted-foreground text-sm max-w-xs mx-auto mb-4">
-              {profile.bio}
-            </p>
-          )}
-
-          {/* Social Icons */}
+          {profile.bio && <p className="text-sm max-w-xs mx-auto mb-4" style={{ color: theme.bioTextColor }}>{profile.bio}</p>}
           {socialLinks.length > 0 && (
-            <div className="flex justify-center gap-3 mb-4">
+            <nav aria-label="Social media links" className="flex justify-center gap-3 mb-4">
               {socialLinks.map((social) => {
                 const Icon = SOCIAL_ICONS[social.platform] || ExternalLink;
-                const colorClass = SOCIAL_COLORS[social.platform] || "hover:text-primary";
-                
                 return (
-                  <a
-                    key={social.id}
-                    href={social.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground transition-colors ${colorClass}`}
-                    aria-label={social.platform}
-                  >
-                    <Icon className="w-5 h-5" />
+                  <a key={social.id} href={social.url} target="_blank" rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                    style={{ background: theme.socialBg, color: theme.socialText, backdropFilter: theme.socialBg.includes("rgba") ? "blur(8px)" : undefined }}
+                    aria-label={`Visit ${social.platform} profile`}>
+                    <Icon className="w-5 h-5" aria-hidden="true" />
                   </a>
                 );
               })}
-            </div>
+            </nav>
           )}
-        </motion.div>
+          {profile.user_id && <ProfileStats profileId={profile.id!} userId={profile.user_id!} initialViews={(profile as any).total_clicks || 0} initialClicks={(profile as any).unique_clicks || 0} theme={theme} />}
+        </motion.header>
 
-        {/* Links */}
-        <div className="space-y-3">
-          {links.map((link, index) => (
-            <motion.div
-              key={link.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + index * 0.05, duration: 0.5 }}
-            >
-              <a
-                href={link.url}
-                onClick={(e) => handleLinkClick(e, link)}
-                className="block bg-card/80 backdrop-blur-sm border border-border rounded-xl p-4 hover:border-primary/50 hover:bg-card transition-all group cursor-pointer"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <p className="font-medium group-hover:text-primary transition-colors">
-                      {link.title}
-                    </p>
-                    {link.badge && (
-                      <span 
-                        className="px-2 py-0.5 text-xs font-semibold rounded-full"
-                        style={{ 
-                          backgroundColor: `${profile.theme_color}20`,
-                          color: profile.theme_color 
-                        }}
-                      >
-                        {link.badge}
-                      </span>
-                    )}
-                  </div>
-                  <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
-              </a>
-            </motion.div>
-          ))}
-        </div>
+        {profile.user_id && <RecentSalesTicker userId={profile.user_id} theme={theme} />}
 
-        {links.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">No links yet</p>
-          </div>
+        <PublicLinkList links={links} theme={theme} onLinkClick={handleLinkClick} creatorId={profile.user_id} creatorName={profile.display_name || profile.username || undefined} />
+
+        {profile.user_id && <section aria-label="Community updates"><CommunityFeed userId={profile.user_id} theme={theme} /></section>}
+        {profile.user_id && <section aria-label="Questions and answers"><QABox creatorUserId={profile.user_id} creatorName={profile.display_name || profile.username} theme={theme} /></section>}
+
+        <AdSenseAd slot="mid" format="rectangle" className="my-6" profileId={profile.id} />
+
+        {/* Store Products - Category-wise horizontal scroll */}
+        {profile.user_id && (
+          <ProductStorefront userId={profile.user_id} theme={theme} creatorUsername={username} />
         )}
 
-        {/* Footer */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
-          className="mt-12 text-center"
-        >
-          <a
-            href="/"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/50 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <span className="gradient-text font-semibold">BioLink</span>
-            <span>• Create your free page</span>
+        {/* Digital Products */}
+        {profile.user_id && (
+          <section aria-label="Digital products" style={{ transform: `scale(${productCardSize / 100})`, transformOrigin: "top center" }} className={productLayout === "horizontal" ? "overflow-x-auto" : ""}>
+            <DigitalProductsGrid userId={profile.user_id} theme={theme} creatorUsername={username} />
+          </section>
+        )}
+
+        {/* Store Integrations */}
+        {profile.user_id && (
+          <section aria-label="Store products" style={{ transform: `scale(${productCardSize / 100})`, transformOrigin: "top center" }} className={productLayout === "horizontal" ? "overflow-x-auto" : ""}>
+            <StoreProductGrid userId={profile.user_id} theme={theme} />
+          </section>
+        )}
+
+        {profile.user_id && <section aria-label="Support and tips"><TipJarDisplay userId={profile.user_id} theme={theme} /></section>}
+        {profile.user_id && <section aria-label="Contact form"><ContactMeForm creatorId={profile.user_id} creatorName={profile.display_name || profile.username || undefined} theme={theme} /></section>}
+        {profile.user_id && <section aria-label="Subscribe to updates"><EmailCaptureBlock creatorId={profile.user_id} creatorName={profile.display_name || profile.username || undefined} theme={theme} /></section>}
+
+        <AdSenseAd slot="footer" format="horizontal" className="mt-6" profileId={profile.id} />
+
+        {fgAssets.map((asset) => (
+          <div key={asset.id} className="pointer-events-none" style={{ position: asset.is_absolute ? "fixed" : "relative", zIndex: asset.z_index, opacity: asset.opacity / 100, left: asset.is_absolute ? `${asset.position_x}%` : undefined, top: asset.is_absolute ? `${asset.position_y}%` : undefined }}>
+            {asset.custom_asset_url && <img src={asset.custom_asset_url} alt="" style={{ width: `${asset.width}%`, height: "auto" }} />}
+          </div>
+        ))}
+
+        {isAudioLab && audioLinks.length > 0 && <FloatingMusicPlayer tracks={audioLinks} theme={theme} />}
+
+        {/* Floating Shopping Cart */}
+        <ShoppingCart theme={theme} creatorUsername={username} />
+
+        <motion.footer initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6, duration: 0.5 }} className="mt-12 text-center">
+          <a href="/" className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm transition-all hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            style={{ background: `${theme.accent}12`, border: `1px solid ${theme.accent}25`, color: theme.footerText }}>
+            <span className="font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Brioo</span>
+            <span className="text-xs opacity-70">•</span>
+            <span className="text-xs">Create your free page →</span>
           </a>
-        </motion.div>
-      </div>
+        </motion.footer>
+      </main>
     </div>
   );
 };
+
+const ProfilePage = () => (
+  <CartProvider>
+    <ProfilePageContent />
+  </CartProvider>
+);
 
 export default ProfilePage;

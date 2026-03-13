@@ -8,11 +8,14 @@ export const AdminMobileHeader = () => {
     <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       <div className="flex items-center justify-between px-4 h-14">
         <Link to="/admin" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-            <BarChart3 className="w-4 h-4 text-primary-foreground" />
+          <div className="flex items-center gap-2 mb-8 pt-2">
+        <div className="flex items-center gap-2">
+            <img 
+              src="/Logo1.png" 
+              alt="Brioo Mobile" 
+              className="w-12 h-8 object-contain" 
+            />            
           </div>
-          <div>
-            <span className="font-display font-bold text-lg">Brioo</span>
             <span className="text-xs text-muted-foreground block -mt-1">Admin</span>
           </div>
         </Link>

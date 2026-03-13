@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { User, Lock, Bell, Shield, LogOut, Trash2, Eye, EyeOff, Loader2, CheckCircle } from "lucide-react";
+import { User, Lock, Bell, Shield, LogOut, Trash2, Eye, EyeOff, Loader2, CheckCircle, Globe, Copy, Check, Crown } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GradientButton } from "@/components/ui/GradientButton";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
@@ -13,6 +13,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
 import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -215,7 +216,16 @@ const SettingsPage = () => {
                   </GradientButton>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Your bio page URL: brioo.in/{username || "yourname"}
+                  Your bio page URL: <span className="font-mono text-primary">brioo.in/{username || "yourname"}</span>
+                  <button 
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(`https://brioo.in/${username}`);
+                      toast({ title: "Copied!", description: `https://brioo.in/${username}` });
+                    }}
+                    className="ml-2 inline-flex items-center gap-1 text-primary hover:underline"
+                  >
+                    <Copy className="w-3 h-3" /> Copy
+                  </button>
                 </p>
               </div>
               <div>
@@ -326,6 +336,58 @@ const SettingsPage = () => {
                 </GradientButton>
               </div>
             </div>
+          </GlassCard>
+        </motion.div>
+
+        {/* Custom Domain (Pro Feature) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+        >
+          <GlassCard className="mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Globe className="w-5 h-5 text-primary" />
+              <h3 className="font-display font-semibold">Custom Domain</h3>
+              {!profile?.is_pro && (
+                <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full flex items-center gap-1">
+                  <Crown className="w-3 h-3" /> Pro
+                </span>
+              )}
+            </div>
+            {profile?.is_pro ? (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Point your own domain to your Brioo bio page for a white-label experience.
+                </p>
+                <div>
+                  <Label>Your Custom Domain</Label>
+                  <Input
+                    placeholder="links.yourbrand.com"
+                    className="bg-secondary/50 border-border mt-1"
+                  />
+                </div>
+                <GradientButton size="sm" disabled>
+                  Save Domain (Coming Soon)
+                </GradientButton>
+              </div>
+            ) : (
+              <div className="text-center py-6 space-y-3">
+                <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                  <Crown className="w-7 h-7 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Unlock Custom Domains</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Use your own domain like <span className="font-mono text-primary">links.yourbrand.com</span> instead of brioo.in/{profile?.username}
+                  </p>
+                </div>
+                <GradientButton size="sm" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                  <Crown className="w-4 h-4 mr-1" />
+                  Upgrade to Pro
+                </GradientButton>
+              </div>
+            )}
           </GlassCard>
         </motion.div>
 

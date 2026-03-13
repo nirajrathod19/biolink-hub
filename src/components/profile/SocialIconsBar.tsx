@@ -23,15 +23,15 @@ import { useSocialLinks, useCreateSocialLink } from "@/hooks/useSocialLinks";
 import { useToast } from "@/hooks/use-toast";
 
 const PLATFORMS = [
-  { value: "instagram", label: "Instagram", icon: Instagram, color: "text-pink-500", placeholder: "Enter Instagram username", prefix: "https://instagram.com/" },
-  { value: "youtube", label: "YouTube", icon: Youtube, color: "text-red-500", placeholder: "Enter YouTube channel URL", prefix: "https://youtube.com/@" },
-  { value: "twitter", label: "Twitter / X", icon: Twitter, color: "text-blue-400", placeholder: "Enter Twitter username", prefix: "https://twitter.com/" },
-  { value: "linkedin", label: "LinkedIn", icon: Linkedin, color: "text-blue-600", placeholder: "Enter LinkedIn URL", prefix: "https://linkedin.com/in/" },
-  { value: "facebook", label: "Facebook", icon: Facebook, color: "text-blue-500", placeholder: "Enter Facebook username", prefix: "https://facebook.com/" },
+  { value: "instagram", label: "Instagram", icon: Instagram, color: "text-pink-500", placeholder: "Enter Instagram username", prefix: "https://www.instagram.com/" },
+  { value: "youtube", label: "YouTube", icon: Youtube, color: "text-red-500", placeholder: "Enter YouTube channel URL", prefix: "https://www.youtube.com/@" },
+  { value: "twitter", label: "Twitter / X", icon: Twitter, color: "text-blue-400", placeholder: "Enter Twitter username", prefix: "https://x.com/" },
+  { value: "linkedin", label: "LinkedIn", icon: Linkedin, color: "text-blue-600", placeholder: "Enter LinkedIn URL", prefix: "https://www.linkedin.com/in/" },
+  { value: "facebook", label: "Facebook", icon: Facebook, color: "text-blue-500", placeholder: "Enter Facebook username", prefix: "https://www.facebook.com/" },
   { value: "github", label: "GitHub", icon: Github, color: "text-foreground", placeholder: "Enter GitHub username", prefix: "https://github.com/" },
   { value: "whatsapp", label: "WhatsApp", icon: MessageCircle, color: "text-green-500", placeholder: "Enter phone number", prefix: "https://wa.me/" },
   { value: "telegram", label: "Telegram", icon: Send, color: "text-blue-400", placeholder: "Enter Telegram username", prefix: "https://t.me/" },
-  { value: "snapchat", label: "Snapchat", icon: Camera, color: "text-yellow-400", placeholder: "Enter Snapchat username", prefix: "https://snapchat.com/add/" },
+  { value: "snapchat", label: "Snapchat", icon: Camera, color: "text-yellow-400", placeholder: "Enter Snapchat username", prefix: "https://www.snapchat.com/add/" },
 ];
 
 interface SocialIconsBarProps {
