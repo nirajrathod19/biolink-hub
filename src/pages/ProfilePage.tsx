@@ -142,12 +142,12 @@ const ProfilePageContent = () => {
         {profile.user_id && <section aria-label="Community updates"><CommunityFeed userId={profile.user_id} theme={theme} /></section>}
         {profile.user_id && <section aria-label="Questions and answers"><QABox creatorUserId={profile.user_id} creatorName={profile.display_name || profile.username} theme={theme} /></section>}
 
-        <AdSenseAd slot="mid" format="rectangle" className="my-6" profileId={profile.id} />
-
         {/* Store Products - Category-wise horizontal scroll */}
         {profile.user_id && (
           <ProductStorefront userId={profile.user_id} theme={theme} creatorUsername={username} />
         )}
+
+        <AdSenseAd slot="mid" format="fluid" className="my-6" profileId={profile.id} />
 
         {/* Digital Products */}
         {profile.user_id && (

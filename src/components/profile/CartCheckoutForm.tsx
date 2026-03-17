@@ -3,7 +3,7 @@ import { ArrowLeft, Truck, CreditCard, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+
 import { useCart } from "@/components/profile/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { CURRENCIES } from "@/hooks/useExchangeRates";
@@ -32,7 +32,11 @@ export const CartCheckoutForm = ({ theme, creatorUsername, discount = 0, couponC
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
+  const [addressLine1, setAddressLine1] = useState("");
+  const [addressLine2, setAddressLine2] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [pincode, setPincode] = useState("");
   const [loading, setLoading] = useState(false);
 
   const currency = items[0]?.currency || "INR";
@@ -41,7 +45,8 @@ export const CartCheckoutForm = ({ theme, creatorUsername, discount = 0, couponC
 
   const buildWhatsAppMessage = (method: string, transactionId?: string) => {
     const itemList = items.map((i) => `${i.title} x${i.quantity}`).join(", ");
-    let msg = `📦 New Order on Brioo!\n\nItems: ${itemList}\nTotal: ${getCurrencySymbol(currency)}${finalAmount.toFixed(2)}\nMethod: ${method.toUpperCase()}\nAddress: ${address}\nCustomer: ${name}\nPhone: ${phone}`;
+    const fullAddress = [addressLine1, addressLine2, city, state, pincode].filter(Boolean).join(", ");
+    let msg = `📦 New Order on Brioo!\n\nItems: ${itemList}\nTotal: ${getCurrencySymbol(currency)}${finalAmount.toFixed(2)}\nMethod: ${method.toUpperCase()}\nAddress: ${fullAddress}\nCustomer: ${name}\nPhone: ${phone}`;
     if (couponCode) msg += `\nCoupon: ${couponCode} (-${getCurrencySymbol(currency)}${discount.toFixed(2)})`;
     if (transactionId) msg += `\nTransaction ID: ${transactionId}`;
     return msg;
@@ -59,23 +64,51 @@ export const CartCheckoutForm = ({ theme, creatorUsername, discount = 0, couponC
       currency: i.currency 
     }));
 
-    const { error } = await supabase.from("orders").insert({
+    const baseAmount = totalAmount;
+    const deliveryCharges = 0;
+    const platformFee = 0;
+    const sellerPayoutAmount = baseAmount - deliveryCharges;
+
+    const fullAddr = [addressLine1, addressLine2, city, state, pincode].filter(Boolean).join(", ");
+
+    const { data: insertedOrder, error } = await supabase.from("orders").insert({
       creator_id: creatorId,
       customer_name: name,
       customer_email: email || null,
       customer_phone: phone,
-      shipping_address: address,
+      shipping_address: fullAddr,
+      address_line1: addressLine1,
+      address_line2: addressLine2 || null,
+      city: city,
+      state: state,
+      pincode: pincode,
       items: orderItems,
       total_amount: Number(finalAmount.toFixed(2)),
       payment_method: sanitizedMethod,
       status: sanitizedMethod === "cod" ? "pending" : "paid",
       transaction_id: transactionId || null,
-      currency: currency
-    });
+      currency: currency,
+      base_amount: baseAmount,
+      delivery_charges: deliveryCharges,
+      platform_fee: platformFee,
+      seller_payout_amount: sellerPayoutAmount,
+      payout_status: "pending",
+    } as any).select("id");
 
     if (error) {
       console.error("Order Insert Error:", error);
       throw error;
+    }
+
+    // Trigger automated notifications (fire-and-forget)
+    const newOrderId = (insertedOrder as any)?.id;
+    if (newOrderId) {
+      // WhatsApp seller notification
+      supabase.functions.invoke("notify-seller-whatsapp", { body: { orderId: newOrderId } })
+        .catch((e) => console.warn("WhatsApp notification failed:", e));
+      // Shiprocket order creation
+      supabase.functions.invoke("create-shiprocket-order", { body: { orderId: newOrderId } })
+        .catch((e) => console.warn("Shiprocket order creation failed:", e));
     }
 
     if (couponCode) {
@@ -114,7 +147,7 @@ export const CartCheckoutForm = ({ theme, creatorUsername, discount = 0, couponC
   };
 
   const handleCOD = async () => {
-    if (!name || !phone || !address) { toast.error("Please fill all required fields"); return; }
+    if (!name || !phone || !addressLine1 || !city || !state || !pincode) { toast.error("Please fill all required fields"); return; }
     setLoading(true);
     try {
       await saveOrder("cod");
@@ -130,7 +163,7 @@ export const CartCheckoutForm = ({ theme, creatorUsername, discount = 0, couponC
   };
 
   const handleOnlinePayment = async () => {
-    if (!name || !phone || !address) { toast.error("Please fill all required fields"); return; }
+    if (!name || !phone || !addressLine1 || !city || !state || !pincode) { toast.error("Please fill all required fields"); return; }
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-product-checkout", {
@@ -208,8 +241,26 @@ export const CartCheckoutForm = ({ theme, creatorUsername, discount = 0, couponC
           <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 98765 43210" />
         </div>
         <div>
-          <Label>Shipping Address *</Label>
-          <Textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Full shipping address" rows={3} />
+          <Label>Address Line 1 *</Label>
+          <Input value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} placeholder="House/Flat No., Street" />
+        </div>
+        <div>
+          <Label>Address Line 2 (Landmark)</Label>
+          <Input value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} placeholder="Landmark, Area" />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <Label>City *</Label>
+            <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" />
+          </div>
+          <div>
+            <Label>State *</Label>
+            <Input value={state} onChange={(e) => setState(e.target.value)} placeholder="State" />
+          </div>
+        </div>
+        <div>
+          <Label>Pincode *</Label>
+          <Input value={pincode} onChange={(e) => setPincode(e.target.value)} placeholder="6-digit pincode" maxLength={6} />
         </div>
       </div>
 

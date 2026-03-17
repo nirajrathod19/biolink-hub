@@ -1,11 +1,9 @@
 import { useEffect } from 'react'
-import { supabase } from './integrations/supabase/client' // Make sure this path is correct
+import { supabase } from './integrations/supabase/client'
 
 function App() {
-  
   useEffect(() => {
     const checkConnection = async () => {
-      // Try to fetch 1 row from the 'profiles' table
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -17,8 +15,10 @@ function App() {
         console.log("✅ Connection Successful!", data)
       }
     }
-    
     checkConnection()
   }, [])
 
-  // ... rest of your code
+  return <div>Connection Test</div>
+}
+
+export default App

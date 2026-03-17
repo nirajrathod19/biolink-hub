@@ -14,6 +14,7 @@ import {
   Heart,
   Globe,
   Image as ImageIcon,
+  Bot,
 } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GradientButton } from "@/components/ui/GradientButton";
@@ -29,6 +30,8 @@ import { compressImage } from "@/lib/imageCompression";
 import { INTEREST_CATEGORIES } from "@/hooks/useHeroAd";
 import { Link } from "react-router-dom";
 import { ThemeGallery } from "@/components/appearance/ThemeGallery";
+import { intentOptions } from "@/components/onboarding/IntentSurvey";
+import { Switch } from "@/components/ui/switch";
 
 const THEME_COLORS = [
   { name: "Purple", value: "#8B5CF6" },
@@ -63,20 +66,22 @@ const EditProfilePage = () => {
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [activeIntents, setActiveIntents] = useState<string[]>([]);
 
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.display_name || "");
       setUsername(profile.username || "");
       setBio(profile.bio || "");
-      setWhatsappNumber((profile as any).whatsapp_number || "");
-      const bd = (profile as any).bank_details || {};
+      setWhatsappNumber(profile.whatsapp_number || "");
+      const bd = profile.bank_details || {};
       setBankAccountNo(bd.account_no || "");
       setBankIfsc(bd.ifsc || "");
       setAvatarUrl(profile.avatar_url);
       setSelectedTemplate(profile.template || "minimal");
       setSelectedColor(profile.theme_color || "#8B5CF6");
       setSelectedInterests(profile.interests || []);
+      setActiveIntents(profile.content_track ? profile.content_track.split(",") : []);
     }
   }, [profile]);
 
@@ -146,6 +151,8 @@ const EditProfilePage = () => {
         interests: selectedInterests,
         whatsapp_number: whatsappNumber || null,
         bank_details: (bankAccountNo || bankIfsc) ? { account_no: bankAccountNo, ifsc: bankIfsc } : null,
+        content_track: activeIntents.length > 0 ? activeIntents.join(",") : null,
+        user_intent: activeIntents.length > 0 ? { selections: activeIntents, updated_at: new Date().toISOString() } : null,
       } as any);
       setUsername(cleanUsername);
       toast({ title: "Profile saved!", description: "Your changes are live." });
@@ -464,6 +471,50 @@ const EditProfilePage = () => {
                 <Palette className="w-4 h-4 text-primary" />
                 Appearance
               </Link>
+            </div>
+          </GlassCard>
+        </motion.div>
+
+        {/* AI Settings - Feature Visibility */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.38 }}
+        >
+          <GlassCard className="mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Bot className="w-5 h-5 text-primary" />
+              <h3 className="font-display font-semibold">AI Settings</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Choose which features appear on your dashboard. Re-run your onboarding preferences anytime.
+            </p>
+            <div className="space-y-3">
+              {intentOptions.map((opt) => {
+                const isActive = activeIntents.includes(opt.id);
+                return (
+                  <div key={opt.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
+                    <div className="flex items-center gap-3">
+                      <opt.icon className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">{opt.label}</p>
+                        <p className="text-xs text-muted-foreground">{opt.labelHi}</p>
+                      </div>
+                      {opt.tier === "pro" && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent/20 text-accent-foreground font-semibold uppercase">Pro</span>
+                      )}
+                    </div>
+                    <Switch
+                      checked={isActive}
+                      onCheckedChange={(checked) => {
+                        setActiveIntents((prev) =>
+                          checked ? [...prev, opt.id] : prev.filter((i) => i !== opt.id)
+                        );
+                      }}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </GlassCard>
         </motion.div>

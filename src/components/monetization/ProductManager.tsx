@@ -90,8 +90,8 @@ export const ProductManager = () => {
   const checkCreatorReady = (): boolean => {
     if (!profile) return false;
     
-    const whatsapp = profile.whatsapp_number;
-    const bank = profile.bank_details;
+    const whatsapp = (profile as any).whatsapp_number;
+    const bank = (profile as any).bank_details;
 
     // सुनिश्चित करें कि बैंक डिटेल्स और व्हाट्सएप्प दोनों मौजूद हैं
     if (!whatsapp || !bank || !bank.account_no || !bank.ifsc) {

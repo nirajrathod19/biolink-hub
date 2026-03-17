@@ -24,6 +24,10 @@ export interface Profile {
   total_withdrawn: number;
   is_verified: boolean;
   announcement_text: string | null;
+  content_track: string | null;
+  whatsapp_number: string | null;
+  bank_details: any;
+  user_intent: any;
   created_at: string;
   updated_at: string;
 }

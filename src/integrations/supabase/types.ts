@@ -511,6 +511,36 @@ export type Database = {
           },
         ]
       }
+      content_track: {
+        Row: {
+          content_id: string | null
+          content_type: string | null
+          created_at: string | null
+          id: string
+          owner_id: string | null
+          user_agent: string | null
+          viewer_ip: string | null
+        }
+        Insert: {
+          content_id?: string | null
+          content_type?: string | null
+          created_at?: string | null
+          id?: string
+          owner_id?: string | null
+          user_agent?: string | null
+          viewer_ip?: string | null
+        }
+        Update: {
+          content_id?: string | null
+          content_type?: string | null
+          created_at?: string | null
+          id?: string
+          owner_id?: string | null
+          user_agent?: string | null
+          viewer_ip?: string | null
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           code: string
@@ -873,45 +903,96 @@ export type Database = {
       }
       orders: {
         Row: {
+          address_line1: string | null
+          address_line2: string | null
+          base_amount: number | null
+          city: string | null
+          courier_partner: string | null
           created_at: string | null
           creator_id: string | null
+          currency: string | null
+          customer_address: string | null
           customer_email: string | null
           customer_name: string
           customer_phone: string
+          delivery_charges: number | null
           id: string
           items: Json
+          package_weight_kg: number | null
           payment_method: string | null
+          payout_status: string | null
+          pickup_scheduled_at: string | null
+          pincode: string | null
+          platform_fee: number | null
+          seller_payout_amount: number | null
           shipping_address: string | null
+          shiprocket_order_id: string | null
+          state: string | null
           status: string | null
           total_amount: number
+          tracking_id: string | null
           transaction_id: string | null
         }
         Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          base_amount?: number | null
+          city?: string | null
+          courier_partner?: string | null
           created_at?: string | null
           creator_id?: string | null
+          currency?: string | null
+          customer_address?: string | null
           customer_email?: string | null
           customer_name: string
           customer_phone: string
+          delivery_charges?: number | null
           id?: string
           items: Json
+          package_weight_kg?: number | null
           payment_method?: string | null
+          payout_status?: string | null
+          pickup_scheduled_at?: string | null
+          pincode?: string | null
+          platform_fee?: number | null
+          seller_payout_amount?: number | null
           shipping_address?: string | null
+          shiprocket_order_id?: string | null
+          state?: string | null
           status?: string | null
           total_amount: number
+          tracking_id?: string | null
           transaction_id?: string | null
         }
         Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          base_amount?: number | null
+          city?: string | null
+          courier_partner?: string | null
           created_at?: string | null
           creator_id?: string | null
+          currency?: string | null
+          customer_address?: string | null
           customer_email?: string | null
           customer_name?: string
           customer_phone?: string
+          delivery_charges?: number | null
           id?: string
           items?: Json
+          package_weight_kg?: number | null
           payment_method?: string | null
+          payout_status?: string | null
+          pickup_scheduled_at?: string | null
+          pincode?: string | null
+          platform_fee?: number | null
+          seller_payout_amount?: number | null
           shipping_address?: string | null
+          shiprocket_order_id?: string | null
+          state?: string | null
           status?: string | null
           total_amount?: number
+          tracking_id?: string | null
           transaction_id?: string | null
         }
         Relationships: [
@@ -920,14 +1001,14 @@ export type Database = {
             columns: ["creator_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "orders_creator_id_fkey"
             columns: ["creator_id"]
             isOneToOne: false
             referencedRelation: "profiles_public"
-            referencedColumns: ["id"]
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1009,6 +1090,7 @@ export type Database = {
           images: string[] | null
           preview_image_url: string | null
           price: number
+          slug: string | null
           title: string
         }
         Insert: {
@@ -1024,6 +1106,7 @@ export type Database = {
           images?: string[] | null
           preview_image_url?: string | null
           price: number
+          slug?: string | null
           title: string
         }
         Update: {
@@ -1039,6 +1122,7 @@ export type Database = {
           images?: string[] | null
           preview_image_url?: string | null
           price?: number
+          slug?: string | null
           title?: string
         }
         Relationships: [
@@ -1047,14 +1131,14 @@ export type Database = {
             columns: ["creator_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "products_creator_id_fkey"
             columns: ["creator_id"]
             isOneToOne: false
             referencedRelation: "profiles_public"
-            referencedColumns: ["id"]
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1125,14 +1209,22 @@ export type Database = {
           email_verified: boolean | null
           id: string
           interests: string[] | null
+          is_onboarded: boolean | null
           is_pro: boolean | null
           is_verified: boolean | null
           layout_config: Json | null
           pending_revenue: number | null
+          pickup_address_line1: string | null
+          pickup_address_line2: string | null
+          pickup_city: string | null
+          pickup_phone: string | null
+          pickup_pincode: string | null
+          pickup_state: string | null
           referral_code: string | null
           referred_by: string | null
           reset_token: string | null
           reset_token_expires_at: string | null
+          subscription_plan: string | null
           template: string | null
           theme_color: string | null
           total_clicks: number | null
@@ -1140,6 +1232,7 @@ export type Database = {
           unique_clicks: number | null
           updated_at: string
           user_id: string
+          user_intent: Json | null
           username: string
           verification_token: string | null
           verification_token_expires_at: string | null
@@ -1158,14 +1251,22 @@ export type Database = {
           email_verified?: boolean | null
           id?: string
           interests?: string[] | null
+          is_onboarded?: boolean | null
           is_pro?: boolean | null
           is_verified?: boolean | null
           layout_config?: Json | null
           pending_revenue?: number | null
+          pickup_address_line1?: string | null
+          pickup_address_line2?: string | null
+          pickup_city?: string | null
+          pickup_phone?: string | null
+          pickup_pincode?: string | null
+          pickup_state?: string | null
           referral_code?: string | null
           referred_by?: string | null
           reset_token?: string | null
           reset_token_expires_at?: string | null
+          subscription_plan?: string | null
           template?: string | null
           theme_color?: string | null
           total_clicks?: number | null
@@ -1173,6 +1274,7 @@ export type Database = {
           unique_clicks?: number | null
           updated_at?: string
           user_id: string
+          user_intent?: Json | null
           username: string
           verification_token?: string | null
           verification_token_expires_at?: string | null
@@ -1191,14 +1293,22 @@ export type Database = {
           email_verified?: boolean | null
           id?: string
           interests?: string[] | null
+          is_onboarded?: boolean | null
           is_pro?: boolean | null
           is_verified?: boolean | null
           layout_config?: Json | null
           pending_revenue?: number | null
+          pickup_address_line1?: string | null
+          pickup_address_line2?: string | null
+          pickup_city?: string | null
+          pickup_phone?: string | null
+          pickup_pincode?: string | null
+          pickup_state?: string | null
           referral_code?: string | null
           referred_by?: string | null
           reset_token?: string | null
           reset_token_expires_at?: string | null
+          subscription_plan?: string | null
           template?: string | null
           theme_color?: string | null
           total_clicks?: number | null
@@ -1206,6 +1316,7 @@ export type Database = {
           unique_clicks?: number | null
           updated_at?: string
           user_id?: string
+          user_intent?: Json | null
           username?: string
           verification_token?: string | null
           verification_token_expires_at?: string | null

@@ -15,6 +15,15 @@ export interface Order {
   status: string | null;
   transaction_id: string | null;
   created_at: string;
+  currency: string | null;
+  tracking_id: string | null;
+  courier_partner: string | null;
+  package_weight_kg: number | null;
+  base_amount: number | null;
+  delivery_charges: number | null;
+  platform_fee: number | null;
+  seller_payout_amount: number | null;
+  payout_status: string | null;
 }
 
 export const useCreatorOrders = () => {

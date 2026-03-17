@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Link2,
@@ -15,6 +16,7 @@ import {
   UserCircle,
   Mail,
   Zap,
+  Crown,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -22,21 +24,22 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { SheetClose } from "@/components/ui/sheet";
 import { ContactSupportDialog } from "@/components/dashboard/ContactSupportDialog";
+import { ProUpgradeModal } from "@/components/dashboard/ProUpgradeModal";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  { icon: Link2, label: "My Links", href: "/dashboard/links" },
-  { icon: Share2, label: "Social Media", href: "/dashboard/social" },
-  { icon: Palette, label: "Appearance", href: "/dashboard/appearance" },
-  { icon: MessageSquare, label: "Community", href: "/dashboard/community" },
-  { icon: BarChart3, label: "Analytics", href: "/dashboard/analytics" },
-  { icon: DollarSign, label: "Monetization", href: "/dashboard/monetization" },
-  { icon: Wallet, label: "Wallet", href: "/dashboard/wallet" },
-  { icon: Users, label: "Referrals", href: "/dashboard/referrals" },
-  { icon: Settings, label: "Settings", href: "/dashboard/settings" },
-  { icon: UserCircle, label: "Profile", href: "/dashboard/profile" },
-  { icon: Mail, label: "Subscribers", href: "/dashboard/subscribers" },
-  { icon: Zap, label: "Dynamic Rules", href: "/dashboard/rules" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", proOnly: false },
+  { icon: Link2, label: "My Links", href: "/dashboard/links", proOnly: false },
+  { icon: Share2, label: "Social Media", href: "/dashboard/social", proOnly: false },
+  { icon: Palette, label: "Appearance", href: "/dashboard/appearance", proOnly: false },
+  { icon: MessageSquare, label: "Community", href: "/dashboard/community", proOnly: false },
+  { icon: BarChart3, label: "Analytics", href: "/dashboard/analytics", proOnly: false },
+  { icon: DollarSign, label: "Monetization", href: "/dashboard/monetization", proOnly: true },
+  { icon: Wallet, label: "Wallet", href: "/dashboard/wallet", proOnly: false },
+  { icon: Users, label: "Referrals", href: "/dashboard/referrals", proOnly: false },
+  { icon: Settings, label: "Settings", href: "/dashboard/settings", proOnly: false },
+  { icon: UserCircle, label: "Profile", href: "/dashboard/profile", proOnly: false },
+  { icon: Mail, label: "Subscribers", href: "/dashboard/subscribers", proOnly: false },
+  { icon: Zap, label: "Dynamic Rules", href: "/dashboard/rules", proOnly: false },
 ];
 
 export const MobileSidebar = () => {
@@ -44,6 +47,10 @@ export const MobileSidebar = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { data: profile } = useProfile();
+  const [proModalOpen, setProModalOpen] = useState(false);
+  const [proFeatureName, setProFeatureName] = useState("");
+
+  const isPro = profile?.is_pro || false;
 
   const handleSignOut = async () => {
     await signOut();
@@ -91,6 +98,27 @@ export const MobileSidebar = () => {
       <nav className="flex-1 space-y-1 overflow-y-auto min-h-0">
         {menuItems.map((item) => {
           const isActive = location.pathname === item.href;
+          const isLocked = item.proOnly && !isPro;
+
+          if (isLocked) {
+            return (
+              <button
+                key={item.href}
+                onClick={() => { setProFeatureName(item.label); setProModalOpen(true); }}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all w-full text-left",
+                  "text-muted-foreground hover:bg-sidebar-accent/50 opacity-60"
+                )}
+              >
+                <item.icon className="w-5 h-5 flex-shrink-0" />
+                <span className="text-sm flex items-center gap-1.5">
+                  {item.label}
+                  <Crown className="w-3 h-3 text-amber-500" />
+                </span>
+              </button>
+            );
+          }
+
           return (
             <SheetClose asChild key={item.href}>
               <Link
@@ -123,6 +151,13 @@ export const MobileSidebar = () => {
           </button>
         </SheetClose>
       </div>
+
+      {/* Pro Upgrade Modal */}
+      <ProUpgradeModal
+        open={proModalOpen}
+        onClose={() => setProModalOpen(false)}
+        feature={proFeatureName}
+      />
     </div>
   );
 };

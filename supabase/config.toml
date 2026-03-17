@@ -53,3 +53,15 @@ verify_jwt = false
 
 [functions.ai-color-matcher]
 verify_jwt = false
+
+[functions.notify-seller-whatsapp]
+verify_jwt = false
+
+[functions.create-shiprocket-order]
+verify_jwt = false
+
+[functions.order-status-sync]
+verify_jwt = false
+
+[functions.mark-order-packed]
+verify_jwt = false

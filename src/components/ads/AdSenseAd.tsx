@@ -2,15 +2,17 @@ import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const ADSENSE_PUBLISHER_ID = "ca-pub-5644108299979986";
+const ADSENSE_SLOT = "3003036738";
+const ADSENSE_LAYOUT_KEY = "-fb+5w+4e-db+86";
 
 interface AdSenseAdProps {
-  slot: string;
+  slot?: string;
   format?: "auto" | "fluid" | "rectangle" | "horizontal" | "vertical";
   className?: string;
   profileId?: string;
 }
 
-export const AdSenseAd = ({ slot, format = "auto", className = "", profileId }: AdSenseAdProps) => {
+export const AdSenseAd = ({ slot, format = "fluid", className = "", profileId }: AdSenseAdProps) => {
   const adRef = useRef<HTMLDivElement>(null);
   const hasTrackedImpression = useRef(false);
   const hasPushed = useRef(false);
@@ -39,13 +41,16 @@ export const AdSenseAd = ({ slot, format = "auto", className = "", profileId }: 
         className="adsbygoogle"
         style={{ display: "block" }}
         data-ad-format="fluid"
-        data-ad-layout-key="-fb+5w+4e-db+86" // Added from your ad unit code
+        data-ad-layout-key={ADSENSE_LAYOUT_KEY}
         data-ad-client={ADSENSE_PUBLISHER_ID}
-        data-ad-slot="3003036738" // Your specific Slot ID
+        data-ad-slot={ADSENSE_SLOT}
       />
     </div>
   );
 };
 
-// Kept for backward compat — script is now in index.html
+/** Alias for backward compatibility */
+export const BioAdSense = AdSenseAd;
+
+// Script is loaded in index.html
 export const AdSenseScript = () => null;
