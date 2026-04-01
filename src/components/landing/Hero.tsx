@@ -24,7 +24,7 @@ const THEME_GRADIENTS = [
 ];
 
 // Animated counter component
-const AnimatedNumber = ({ value, label }: { value: string; label: string }) => {
+const AnimatedNumber = forwardRef<HTMLDivElement, { value: string; label: string }>(({ value, label }, _ref) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
   const numericValue = parseInt(value.replace(/[^0-9]/g, "")) || 0;
@@ -44,7 +44,8 @@ const AnimatedNumber = ({ value, label }: { value: string; label: string }) => {
       <div className="text-sm text-muted-foreground mt-1">{label}</div>
     </div>
   );
-};
+});
+AnimatedNumber.displayName = "AnimatedNumber";
 
 // Floating bio card component
 const FloatingBioCard = ({ mouseX, mouseY }: { mouseX: any; mouseY: any }) => {
