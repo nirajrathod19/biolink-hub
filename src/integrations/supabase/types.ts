@@ -1959,6 +1959,19 @@ export type Database = {
         }
         Returns: string
       }
+      track_profile_view: {
+        Args: {
+          p_device_type: string
+          p_is_unique: boolean
+          p_pro_threshold: number
+          p_profile_id: string
+          p_referer: string
+          p_revenue_per_view: number
+          p_user_agent: string
+          p_visitor_ip: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "creator" | "user"
