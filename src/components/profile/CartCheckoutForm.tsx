@@ -101,7 +101,7 @@ export const CartCheckoutForm = ({ theme, creatorUsername, discount = 0, couponC
     }
 
     // Trigger automated notifications (fire-and-forget)
-    const newOrderId = (insertedOrder as any)?.id;
+    const newOrderId = Array.isArray(insertedOrder) ? insertedOrder[0]?.id : (insertedOrder as any)?.id;
     if (newOrderId) {
       // WhatsApp seller notification
       supabase.functions.invoke("notify-seller-whatsapp", { body: { orderId: newOrderId } })

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, forwardRef } from "react";
 import { motion, useMotionValue, useTransform, useInView, useSpring, AnimatePresence } from "framer-motion";
 import { ArrowRight, Sparkles, Link2, Instagram, Youtube, Twitter, Music, Globe, ShoppingBag } from "lucide-react";
 import { GradientButton } from "@/components/ui/GradientButton";

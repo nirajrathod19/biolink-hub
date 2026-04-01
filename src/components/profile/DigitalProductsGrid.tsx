@@ -20,6 +20,16 @@ export const DigitalProductsGrid = ({ userId, themeColor = "#8B5CF6", theme, cre
 
   const accent = theme?.accent || themeColor;
 
+  const loadRazorpay = (): Promise<void> => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) { resolve(); return; }
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve();
+      document.head.appendChild(script);
+    });
+  };
+
   const handleBuyNow = async (product: any) => {
     setBuyingId(product.id);
     try {
@@ -33,9 +43,25 @@ export const DigitalProductsGrid = ({ userId, themeColor = "#8B5CF6", theme, cre
         },
       });
       if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, "_blank");
-      }
+      if (!data?.order_id) throw new Error("No order created");
+
+      await loadRazorpay();
+
+      const options = {
+        key: data.key_id,
+        amount: data.amount,
+        currency: data.currency,
+        name: "Brioo Store",
+        description: product.title,
+        order_id: data.order_id,
+        handler: (response: any) => {
+          toast.success("Payment successful! You'll receive your download link shortly.");
+        },
+        theme: { color: accent },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
     } catch (err: any) {
       toast.error("Checkout failed. Please try again.");
     } finally {
