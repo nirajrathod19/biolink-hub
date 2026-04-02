@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Instagram, Youtube, Twitter, Linkedin, Github, ExternalLink, Sparkles,
@@ -13,7 +14,7 @@ import { StoreProductGrid } from "@/components/profile/StoreProductGrid";
 import { DigitalProductsGrid } from "@/components/profile/DigitalProductsGrid";
 import { ProductStorefront } from "@/components/profile/ProductStorefront";
 import { ShoppingCart } from "@/components/profile/ShoppingCart";
-import { CartProvider } from "@/components/profile/CartContext";
+import { CartProvider, useCart } from "@/components/profile/CartContext";
 import { ProfileSEO } from "@/components/seo/ProfileSEO";
 import { AdSenseAd } from "@/components/ads/AdSenseAd";
 import { TipJarDisplay } from "@/components/profile/TipJarDisplay";
@@ -42,11 +43,17 @@ const SOCIAL_ICONS: Record<string, any> = {
 const ProfilePageContent = () => {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
+  const { syncCreator } = useCart();
   const { data: profile, isLoading: profileLoading, error: profileError } = usePublicProfile(username || "");
   const { data: allLinks = [] } = usePublicLinks(profile?.user_id || "");
   const { data: socialLinks = [] } = usePublicSocialLinks(profile?.user_id || "");
   const { data: layoutElements = [] } = usePublicLayoutElements(profile?.user_id || "");
   const { data: displayRules = [] } = usePublicDisplayRules(profile?.user_id || "");
+
+  // Isolate cart per creator — clears items when visiting a different creator
+  useEffect(() => {
+    if (profile?.user_id) syncCreator(profile.user_id);
+  }, [profile?.user_id]);
 
   const visitorContext = getVisitorContext();
   const visibleLinkIds = displayRules.length > 0
