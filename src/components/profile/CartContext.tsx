@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
+import { toast } from "sonner";
 
 export interface CartItem {
   id: string;
@@ -19,11 +20,10 @@ interface CartState {
 interface CartContextType {
   items: CartItem[];
   activeCreatorId: string | null;
-  addItem: (item: Omit<CartItem, "quantity">) => void;
+  addItem: (item: Omit<CartItem, "quantity">) => boolean;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, qty: number) => void;
   clearCart: () => void;
-  syncCreator: (creatorId: string) => void;
   totalItems: number;
   totalAmount: number;
   allAllowCod: boolean;
@@ -33,56 +33,108 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const CART_KEY = "brioo_cart";
 
+const isCartItem = (value: unknown): value is CartItem => {
+  if (!value || typeof value !== "object") return false;
+
+  const item = value as Partial<CartItem>;
+  return (
+    typeof item.id === "string" &&
+    typeof item.title === "string" &&
+    typeof item.price === "number" &&
+    typeof item.currency === "string" &&
+    typeof item.quantity === "number" &&
+    typeof item.allow_cod === "boolean" &&
+    typeof item.creator_id === "string"
+  );
+};
+
+const buildCartState = (items: CartItem[], preferredCreatorId?: string | null): CartState => {
+  const creatorIds = Array.from(new Set(items.map((item) => item.creator_id).filter(Boolean)));
+
+  if (creatorIds.length === 0) {
+    return { items: [], active_creator_id: null };
+  }
+
+  const activeCreatorId =
+    creatorIds.length === 1
+      ? creatorIds[0]
+      : preferredCreatorId && creatorIds.includes(preferredCreatorId)
+        ? preferredCreatorId
+        : creatorIds[0];
+
+  return {
+    items: items.filter((item) => item.creator_id === activeCreatorId),
+    active_creator_id: activeCreatorId,
+  };
+};
+
 const loadCart = (): CartState => {
   try {
     const saved = localStorage.getItem(CART_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (parsed && Array.isArray(parsed.items)) return parsed;
-      // migrate old format (plain array)
-      if (Array.isArray(parsed)) return { items: parsed, active_creator_id: parsed[0]?.creator_id || null };
+
+      if (Array.isArray(parsed)) {
+        return buildCartState(parsed.filter(isCartItem));
+      }
+
+      if (parsed && typeof parsed === "object" && Array.isArray(parsed.items)) {
+        const preferredCreatorId = typeof parsed.active_creator_id === "string" ? parsed.active_creator_id : null;
+        return buildCartState(parsed.items.filter(isCartItem), preferredCreatorId);
+      }
     }
   } catch {}
+
   return { items: [], active_creator_id: null };
 };
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<CartState>(loadCart);
+  const stateRef = useRef(state);
 
   useEffect(() => {
+    stateRef.current = state;
     localStorage.setItem(CART_KEY, JSON.stringify(state));
   }, [state]);
 
-  const syncCreator = (creatorId: string) => {
-    setState((prev) => {
-      if (prev.active_creator_id === creatorId) return prev;
-      // Different creator — clear cart
-      return { items: [], active_creator_id: creatorId };
-    });
-  };
-
   const addItem = (item: Omit<CartItem, "quantity">) => {
+    const currentState = stateRef.current;
+    const cartCreatorId = currentState.active_creator_id ?? currentState.items[0]?.creator_id ?? null;
+
+    if (cartCreatorId && cartCreatorId !== item.creator_id) {
+      toast.error("You can only add items from one store at a time. Please clear your current cart first.");
+      return false;
+    }
+
     setState((prev) => {
-      // If cart belongs to a different creator, reset
-      if (prev.active_creator_id && prev.active_creator_id !== item.creator_id) {
-        return { active_creator_id: item.creator_id, items: [{ ...item, quantity: 1 }] };
-      }
-      const existing = prev.items.find((i) => i.id === item.id);
-      const newItems = existing
-        ? prev.items.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i))
+      const existing = prev.items.find((cartItem) => cartItem.id === item.id);
+      const items = existing
+        ? prev.items.map((cartItem) =>
+            cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem
+          )
         : [...prev.items, { ...item, quantity: 1 }];
-      return { active_creator_id: item.creator_id, items: newItems };
+
+      return buildCartState(items, prev.active_creator_id ?? prev.items[0]?.creator_id ?? item.creator_id);
     });
+
+    return true;
   };
 
-  const removeItem = (id: string) => setState((prev) => ({ ...prev, items: prev.items.filter((i) => i.id !== id) }));
+  const removeItem = (id: string) =>
+    setState((prev) => buildCartState(prev.items.filter((item) => item.id !== id), prev.active_creator_id));
 
   const updateQuantity = (id: string, qty: number) => {
     if (qty <= 0) return removeItem(id);
-    setState((prev) => ({ ...prev, items: prev.items.map((i) => (i.id === id ? { ...i, quantity: qty } : i)) }));
+
+    setState((prev) =>
+      buildCartState(
+        prev.items.map((item) => (item.id === id ? { ...item, quantity: qty } : item)),
+        prev.active_creator_id
+      )
+    );
   };
 
-  const clearCart = () => setState((prev) => ({ ...prev, items: [] }));
+  const clearCart = () => setState({ items: [], active_creator_id: null });
 
   const { items } = state;
   const totalItems = items.reduce((s, i) => s + i.quantity, 0);
@@ -90,7 +142,19 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const allAllowCod = items.length > 0 && items.every((i) => i.allow_cod);
 
   return (
-    <CartContext.Provider value={{ items, activeCreatorId: state.active_creator_id, addItem, removeItem, updateQuantity, clearCart, syncCreator, totalItems, totalAmount, allAllowCod }}>
+    <CartContext.Provider
+      value={{
+        items,
+        activeCreatorId: state.active_creator_id,
+        addItem,
+        removeItem,
+        updateQuantity,
+        clearCart,
+        totalItems,
+        totalAmount,
+        allAllowCod,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

@@ -28,7 +28,7 @@ declare global {
 }
 
 export const CartCheckoutForm = ({ theme, creatorUsername, discount = 0, couponCode, onBack, onSuccess }: Props) => {
-  const { items, totalAmount, allAllowCod, clearCart } = useCart();
+  const { items, activeCreatorId, totalAmount, allAllowCod, clearCart } = useCart();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -40,8 +40,28 @@ export const CartCheckoutForm = ({ theme, creatorUsername, discount = 0, couponC
   const [loading, setLoading] = useState(false);
 
   const currency = items[0]?.currency || "INR";
-  const creatorId = items[0]?.creator_id || "";
   const finalAmount = Math.max(0, totalAmount - discount);
+
+  const getValidatedCreatorId = () => {
+    if (items.length === 0) {
+      toast.error("Your cart is empty");
+      return null;
+    }
+
+    const creatorIds = Array.from(new Set(items.map((item) => item.creator_id).filter(Boolean)));
+    if (creatorIds.length !== 1) {
+      toast.error("Your cart contains items from multiple stores. Please clear it and try again.");
+      return null;
+    }
+
+    const creatorId = creatorIds[0];
+    if (activeCreatorId && activeCreatorId !== creatorId) {
+      toast.error("Your cart belongs to a different store. Please clear it and try again.");
+      return null;
+    }
+
+    return creatorId;
+  };
 
   const buildWhatsAppMessage = (method: string, transactionId?: string) => {
     const itemList = items.map((i) => `${i.title} x${i.quantity}`).join(", ");
@@ -52,16 +72,15 @@ export const CartCheckoutForm = ({ theme, creatorUsername, discount = 0, couponC
     return msg;
   };
 
-  const saveOrder = async (method: string, transactionId?: string) => {
-    // Sanitizing method for DB check constraints
+  const saveOrder = async (creatorId: string, method: string, transactionId?: string) => {
     const sanitizedMethod = method.toLowerCase();
-    
-    const orderItems = items.map((i) => ({ 
-      id: i.id, 
-      title: i.title, 
-      price: i.price, 
-      quantity: i.quantity, 
-      currency: i.currency 
+
+    const orderItems = items.map((i) => ({
+      id: i.id,
+      title: i.title,
+      price: i.price,
+      quantity: i.quantity,
+      currency: i.currency,
     }));
 
     const baseAmount = totalAmount;
@@ -100,13 +119,11 @@ export const CartCheckoutForm = ({ theme, creatorUsername, discount = 0, couponC
       throw error;
     }
 
-    // Trigger automated notifications (fire-and-forget)
     const newOrderId = Array.isArray(insertedOrder) ? insertedOrder[0]?.id : (insertedOrder as any)?.id;
     if (newOrderId) {
-      // WhatsApp seller notification
       supabase.functions.invoke("notify-seller-whatsapp", { body: { orderId: newOrderId } })
         .catch((e) => console.warn("WhatsApp notification failed:", e));
-      // Shiprocket order creation
+
       supabase.functions.invoke("create-shiprocket-order", { body: { orderId: newOrderId } })
         .catch((e) => console.warn("Shiprocket order creation failed:", e));
     }
@@ -119,7 +136,7 @@ export const CartCheckoutForm = ({ theme, creatorUsername, discount = 0, couponC
           .eq("code", couponCode)
           .eq("creator_id", creatorId)
           .single();
-        
+
         await supabase
           .from("coupons")
           .update({ used_count: (couponData?.used_count || 0) + 1 })
@@ -131,13 +148,13 @@ export const CartCheckoutForm = ({ theme, creatorUsername, discount = 0, couponC
     }
   };
 
-  const openWhatsApp = async (method: string, transactionId?: string) => {
+  const openWhatsApp = async (creatorId: string, method: string, transactionId?: string) => {
     const { data: profile } = await supabase
       .from("profiles")
       .select("whatsapp_number")
       .eq("user_id", creatorId)
       .single();
-    
+
     const whatsappNumber = (profile as any)?.whatsapp_number;
     if (whatsappNumber) {
       const msg = buildWhatsAppMessage(method, transactionId);
@@ -147,11 +164,18 @@ export const CartCheckoutForm = ({ theme, creatorUsername, discount = 0, couponC
   };
 
   const handleCOD = async () => {
-    if (!name || !phone || !addressLine1 || !city || !state || !pincode) { toast.error("Please fill all required fields"); return; }
+    if (!name || !phone || !addressLine1 || !city || !state || !pincode) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+
+    const creatorId = getValidatedCreatorId();
+    if (!creatorId) return;
+
     setLoading(true);
     try {
-      await saveOrder("cod");
-      await openWhatsApp("COD");
+      await saveOrder(creatorId, "cod");
+      await openWhatsApp(creatorId, "COD");
       toast.success("Order placed! Pay on delivery.");
       clearCart();
       onSuccess();
@@ -163,7 +187,14 @@ export const CartCheckoutForm = ({ theme, creatorUsername, discount = 0, couponC
   };
 
   const handleOnlinePayment = async () => {
-    if (!name || !phone || !addressLine1 || !city || !state || !pincode) { toast.error("Please fill all required fields"); return; }
+    if (!name || !phone || !addressLine1 || !city || !state || !pincode) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+
+    const creatorId = getValidatedCreatorId();
+    if (!creatorId) return;
+
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-product-checkout", {
@@ -196,8 +227,8 @@ export const CartCheckoutForm = ({ theme, creatorUsername, discount = 0, couponC
         handler: async (response: any) => {
           const txnId = response.razorpay_payment_id;
           try {
-            await saveOrder("online", txnId);
-            await openWhatsApp("Online", txnId);
+            await saveOrder(creatorId, "online", txnId);
+            await openWhatsApp(creatorId, "Online", txnId);
             toast.success("Payment successful! Order confirmed.");
             clearCart();
             onSuccess();

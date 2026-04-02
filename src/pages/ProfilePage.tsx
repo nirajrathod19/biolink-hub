@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 import {
   Instagram, Youtube, Twitter, Linkedin, Github, ExternalLink, Sparkles,
@@ -43,17 +44,23 @@ const SOCIAL_ICONS: Record<string, any> = {
 const ProfilePageContent = () => {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
-  const { syncCreator } = useCart();
+  const { items, activeCreatorId, clearCart } = useCart();
   const { data: profile, isLoading: profileLoading, error: profileError } = usePublicProfile(username || "");
   const { data: allLinks = [] } = usePublicLinks(profile?.user_id || "");
   const { data: socialLinks = [] } = usePublicSocialLinks(profile?.user_id || "");
   const { data: layoutElements = [] } = usePublicLayoutElements(profile?.user_id || "");
   const { data: displayRules = [] } = usePublicDisplayRules(profile?.user_id || "");
 
-  // Isolate cart per creator — clears items when visiting a different creator
   useEffect(() => {
-    if (profile?.user_id) syncCreator(profile.user_id);
-  }, [profile?.user_id]);
+    if (!profile?.user_id || items.length === 0 || !activeCreatorId) return;
+
+    if (activeCreatorId !== profile.user_id) {
+      clearCart();
+      toast("Cart cleared", {
+        description: "Your previous cart belonged to a different creator, so it was reset for this page.",
+      });
+    }
+  }, [username, profile?.user_id, items.length, activeCreatorId, clearCart]);
 
   const visitorContext = getVisitorContext();
   const visibleLinkIds = displayRules.length > 0
