@@ -14,7 +14,7 @@ import { StoreProductGrid } from "@/components/profile/StoreProductGrid";
 import { DigitalProductsGrid } from "@/components/profile/DigitalProductsGrid";
 import { ProductStorefront } from "@/components/profile/ProductStorefront";
 import { ShoppingCart } from "@/components/profile/ShoppingCart";
-import { CartProvider } from "@/components/profile/CartContext";
+import { CartProvider, useCart } from "@/components/profile/CartContext";
 import { ProfileSEO } from "@/components/seo/ProfileSEO";
 import { AdSenseAd } from "@/components/ads/AdSenseAd";
 import { TipJarDisplay } from "@/components/profile/TipJarDisplay";
