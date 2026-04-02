@@ -43,11 +43,17 @@ const SOCIAL_ICONS: Record<string, any> = {
 const ProfilePageContent = () => {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
+  const { syncCreator } = useCart();
   const { data: profile, isLoading: profileLoading, error: profileError } = usePublicProfile(username || "");
   const { data: allLinks = [] } = usePublicLinks(profile?.user_id || "");
   const { data: socialLinks = [] } = usePublicSocialLinks(profile?.user_id || "");
   const { data: layoutElements = [] } = usePublicLayoutElements(profile?.user_id || "");
   const { data: displayRules = [] } = usePublicDisplayRules(profile?.user_id || "");
+
+  // Isolate cart per creator — clears items when visiting a different creator
+  useEffect(() => {
+    if (profile?.user_id) syncCreator(profile.user_id);
+  }, [profile?.user_id]);
 
   const visitorContext = getVisitorContext();
   const visibleLinkIds = displayRules.length > 0
