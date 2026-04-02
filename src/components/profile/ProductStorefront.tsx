@@ -32,7 +32,7 @@ export const ProductStorefront = ({ userId, theme, creatorUsername }: Props) => 
   }, [products]);
 
   const handleAddToCart = (p: Product) => {
-    addItem({
+    const wasAdded = addItem({
       id: p.id,
       title: p.title,
       price: p.price,
@@ -41,7 +41,10 @@ export const ProductStorefront = ({ userId, theme, creatorUsername }: Props) => 
       allow_cod: p.allow_cod || false,
       creator_id: p.creator_id,
     });
-    toast.success(`${p.title} added to cart`);
+
+    if (wasAdded) {
+      toast.success(`${p.title} added to cart`);
+    }
   };
 
   if (isLoading) {
