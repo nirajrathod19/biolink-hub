@@ -82,7 +82,15 @@ Deno.serve(async (req) => {
       .from("profiles")
       .select("id, user_id, total_clicks, unique_clicks, is_pro, pending_revenue, referred_by, ads_balance")
       .eq("id", profile_id)
-      .single();
+      .limit(1)
+      .maybeSingle();
+
+    if (!profile) {
+      return new Response(
+        JSON.stringify({ error: "Profile not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (profileError) throw profileError;
 
