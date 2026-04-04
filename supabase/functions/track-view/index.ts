@@ -85,14 +85,14 @@ Deno.serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
+    if (profileError) throw profileError;
+
     if (!profile) {
       return new Response(
         JSON.stringify({ error: "Profile not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    if (profileError) throw profileError;
 
     const newTotalClicks = (profile.total_clicks || 0) + 1;
     const newUniqueClicks = isUnique 
