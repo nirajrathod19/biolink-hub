@@ -173,7 +173,8 @@ Deno.serve(async (req) => {
             .from("profiles")
             .select("id, user_id, pending_revenue")
             .eq("id", profile.referred_by)
-            .single();
+            .limit(1)
+            .maybeSingle();
 
           if (referrerProfile) {
             const platformShare = totalRevenue * (1 - creatorShareRate);
