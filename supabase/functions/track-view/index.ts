@@ -82,9 +82,17 @@ Deno.serve(async (req) => {
       .from("profiles")
       .select("id, user_id, total_clicks, unique_clicks, is_pro, pending_revenue, referred_by, ads_balance")
       .eq("id", profile_id)
-      .single();
+      .limit(1)
+      .maybeSingle();
 
     if (profileError) throw profileError;
+
+    if (!profile) {
+      return new Response(
+        JSON.stringify({ error: "Profile not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const newTotalClicks = (profile.total_clicks || 0) + 1;
     const newUniqueClicks = isUnique 
@@ -165,7 +173,8 @@ Deno.serve(async (req) => {
             .from("profiles")
             .select("id, user_id, pending_revenue")
             .eq("id", profile.referred_by)
-            .single();
+            .limit(1)
+            .maybeSingle();
 
           if (referrerProfile) {
             const platformShare = totalRevenue * (1 - creatorShareRate);
