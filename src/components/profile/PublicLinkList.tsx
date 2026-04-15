@@ -60,6 +60,8 @@ const DefaultLayout = ({ links, theme, onLinkClick, creatorId, creatorName }: Pu
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 + index * 0.05, duration: 0.5 }}
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={{ scale: 0.98 }}
           >
             <a
               href={link.url || "#"}
@@ -71,13 +73,28 @@ const DefaultLayout = ({ links, theme, onLinkClick, creatorId, creatorName }: Pu
                 color: theme.cardText,
                 backdropFilter: isGlass ? "blur(12px)" : undefined,
                 WebkitBackdropFilter: isGlass ? "blur(12px)" : undefined,
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = theme.hoverBg; e.currentTarget.style.borderColor = theme.accent; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = theme.cardBg; e.currentTarget.style.borderColor = theme.cardBorder; }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = theme.hoverBg;
+                e.currentTarget.style.borderColor = theme.accent;
+                e.currentTarget.style.boxShadow = `0 8px 25px ${theme.accent}20`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = theme.cardBg;
+                e.currentTarget.style.borderColor = theme.cardBorder;
+                e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)";
+              }}
               role="link"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:rotate-6"
+                    style={{ background: `${theme.accent}15` }}
+                  >
+                    <ExternalLink className="w-4 h-4" style={{ color: theme.accent }} />
+                  </div>
                   <p className="font-medium transition-colors">{link.title}</p>
                   {link.badge && (
                     <span className="px-2 py-0.5 text-xs font-semibold rounded-full" style={{ backgroundColor: `${theme.accent}20`, color: theme.accent }}>
@@ -85,7 +102,7 @@ const DefaultLayout = ({ links, theme, onLinkClick, creatorId, creatorName }: Pu
                     </span>
                   )}
                 </div>
-                <ExternalLink className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+                <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" aria-hidden="true" style={{ color: theme.accent }} />
               </div>
             </a>
           </motion.div>
