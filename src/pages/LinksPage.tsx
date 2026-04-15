@@ -33,6 +33,9 @@ import { LinkScheduleDialog } from "@/components/links/LinkScheduleDialog";
 import { getLinkAnimationClass } from "@/hooks/useLinkScheduling";
 import { useSubscription } from "@/hooks/useSubscription";
 import { cn } from "@/lib/utils";
+import { useProfile } from "@/hooks/useProfile";
+import { LiveMobilePreview } from "@/components/dashboard/LiveMobilePreview";
+import { ThemeQuickSwitcher } from "@/components/dashboard/ThemeQuickSwitcher";
 import {
   Select,
   SelectContent,
@@ -203,6 +206,7 @@ const LinksPage = () => {
   const reorderLinks = useReorderLinks();
   const { toast } = useToast();
   const { isSubscribed } = useSubscription();
+  const { data: profile } = useProfile();
 
   const [localLinks, setLocalLinks] = useState<Link[]>([]);
   const [isAdding, setIsAdding] = useState(false);
@@ -311,22 +315,24 @@ const LinksPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold mb-1">
-              My Links
-            </h1>
-            <p className="text-muted-foreground">
-              Drag to reorder • Toggle to enable/disable • Click clock to schedule
-            </p>
+      <div className="flex gap-8">
+        {/* Left: Editor */}
+        <div className="flex-1 max-w-4xl">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-display font-bold mb-1">
+                My Links
+              </h1>
+              <p className="text-muted-foreground">
+                Drag to reorder • Toggle to enable/disable • Click clock to schedule
+              </p>
+            </div>
+            <GradientButton onClick={() => setIsAdding(true)}>
+              <Plus className="w-4 h-4" />
+              Add New Link
+            </GradientButton>
           </div>
-          <GradientButton onClick={() => setIsAdding(true)}>
-            <Plus className="w-4 h-4" />
-            Add New Link
-          </GradientButton>
-        </div>
 
         {/* Add New Link Form */}
         {isAdding && (
@@ -447,15 +453,24 @@ const LinksPage = () => {
           />
         )}
 
-        {localLinks.length === 0 && !isAdding && (
-          <GlassCard className="text-center py-12">
-            <p className="text-muted-foreground mb-4">No links yet. Add your first link!</p>
-            <GradientButton onClick={() => setIsAdding(true)}>
-              <Plus className="w-4 h-4" />
-              Add New Link
-            </GradientButton>
-          </GlassCard>
-        )}
+          {localLinks.length === 0 && !isAdding && (
+            <GlassCard className="text-center py-12">
+              <p className="text-muted-foreground mb-4">No links yet. Add your first link!</p>
+              <GradientButton onClick={() => setIsAdding(true)}>
+                <Plus className="w-4 h-4" />
+                Add New Link
+              </GradientButton>
+            </GlassCard>
+          )}
+        </div>
+
+        {/* Right: Live Preview (desktop only) */}
+        <div className="hidden xl:block w-[340px] flex-shrink-0">
+          <ThemeQuickSwitcher />
+          <div className="mt-4">
+            <LiveMobilePreview profile={profile || null} links={localLinks} />
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );
