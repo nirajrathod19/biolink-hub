@@ -654,6 +654,7 @@ export type Database = {
           price: number
           title: string
           updated_at: string | null
+          upsell_product_ids: string[] | null
           user_id: string
         }
         Insert: {
@@ -672,6 +673,7 @@ export type Database = {
           price?: number
           title: string
           updated_at?: string | null
+          upsell_product_ids?: string[] | null
           user_id: string
         }
         Update: {
@@ -690,6 +692,7 @@ export type Database = {
           price?: number
           title?: string
           updated_at?: string | null
+          upsell_product_ids?: string[] | null
           user_id?: string
         }
         Relationships: []
@@ -737,6 +740,7 @@ export type Database = {
         Row: {
           created_at: string
           creator_id: string
+          digital_product_id: string | null
           email: string
           id: string
           message: string | null
@@ -745,6 +749,7 @@ export type Database = {
         Insert: {
           created_at?: string
           creator_id: string
+          digital_product_id?: string | null
           email: string
           id?: string
           message?: string | null
@@ -753,6 +758,7 @@ export type Database = {
         Update: {
           created_at?: string
           creator_id?: string
+          digital_product_id?: string | null
           email?: string
           id?: string
           message?: string | null
@@ -1236,6 +1242,8 @@ export type Database = {
           username: string
           verification_token: string | null
           verification_token_expires_at: string | null
+          video_background_url: string | null
+          video_overlay_opacity: number | null
           wallet_balance: number | null
           whatsapp_number: string | null
         }
@@ -1278,6 +1286,8 @@ export type Database = {
           username: string
           verification_token?: string | null
           verification_token_expires_at?: string | null
+          video_background_url?: string | null
+          video_overlay_opacity?: number | null
           wallet_balance?: number | null
           whatsapp_number?: string | null
         }
@@ -1320,6 +1330,8 @@ export type Database = {
           username?: string
           verification_token?: string | null
           verification_token_expires_at?: string | null
+          video_background_url?: string | null
+          video_overlay_opacity?: number | null
           wallet_balance?: number | null
           whatsapp_number?: string | null
         }
@@ -1580,6 +1592,7 @@ export type Database = {
           message: string | null
           minimum_amount: number | null
           paypal_email: string | null
+          razorpay_enabled: boolean | null
           suggested_amounts: Json | null
           updated_at: string | null
           user_id: string
@@ -1593,6 +1606,7 @@ export type Database = {
           message?: string | null
           minimum_amount?: number | null
           paypal_email?: string | null
+          razorpay_enabled?: boolean | null
           suggested_amounts?: Json | null
           updated_at?: string | null
           user_id: string
@@ -1606,10 +1620,53 @@ export type Database = {
           message?: string | null
           minimum_amount?: number | null
           paypal_email?: string | null
+          razorpay_enabled?: boolean | null
           suggested_amounts?: Json | null
           updated_at?: string | null
           user_id?: string
           venmo_username?: string | null
+        }
+        Relationships: []
+      }
+      tip_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          creator_id: string
+          currency: string | null
+          id: string
+          message: string | null
+          order_id: string | null
+          payment_id: string | null
+          status: string | null
+          supporter_email: string | null
+          supporter_name: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          creator_id: string
+          currency?: string | null
+          id?: string
+          message?: string | null
+          order_id?: string | null
+          payment_id?: string | null
+          status?: string | null
+          supporter_email?: string | null
+          supporter_name?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          creator_id?: string
+          currency?: string | null
+          id?: string
+          message?: string | null
+          order_id?: string | null
+          payment_id?: string | null
+          status?: string | null
+          supporter_email?: string | null
+          supporter_name?: string | null
         }
         Relationships: []
       }

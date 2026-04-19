@@ -36,6 +36,7 @@ import { cn } from "@/lib/utils";
 import { useProfile } from "@/hooks/useProfile";
 import { LiveMobilePreview } from "@/components/dashboard/LiveMobilePreview";
 import { ThemeQuickSwitcher } from "@/components/dashboard/ThemeQuickSwitcher";
+import { LinkPriorityBadge } from "@/components/dashboard/LinkPriorityBadge";
 import {
   Select,
   SelectContent,
@@ -52,9 +53,11 @@ interface SortableLinkItemProps {
   onUpdateAnimation: (id: string, animation: string | null) => void;
   onUpdateLockType: (id: string, lockType: string | null, lockPassword?: string) => void;
   isPro: boolean;
+  maxClicks: number;
+  totalClicks: number;
 }
 
-const SortableLinkItem = ({ link, onToggle, onDelete, onSchedule, onUpdateAnimation, onUpdateLockType, isPro }: SortableLinkItemProps) => {
+const SortableLinkItem = ({ link, onToggle, onDelete, onSchedule, onUpdateAnimation, onUpdateLockType, isPro, maxClicks, totalClicks }: SortableLinkItemProps) => {
   const {
     attributes,
     listeners,
@@ -119,6 +122,7 @@ const SortableLinkItem = ({ link, onToggle, onDelete, onSchedule, onUpdateAnimat
                   {(link as any).lock_type === "password" ? "Password" : "Newsletter"}
                 </Badge>
               )}
+              <LinkPriorityBadge clicks={link.click_count || 0} maxClicks={maxClicks} totalClicks={totalClicks} />
             </div>
             <p className="text-sm text-muted-foreground truncate">{link.url}</p>
           </div>
@@ -401,7 +405,11 @@ const LinksPage = () => {
             strategy={verticalListSortingStrategy}
           >
             <div className="space-y-3">
-              {localLinks.map((link, index) => (
+              {(() => {
+                const counts = localLinks.map((l) => l.click_count || 0);
+                const maxClicks = counts.length ? Math.max(...counts) : 0;
+                const totalClicks = counts.reduce((a, b) => a + b, 0);
+                return localLinks.map((link, index) => (
                 <motion.div
                   key={link.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -414,6 +422,8 @@ const LinksPage = () => {
                     onDelete={handleDeleteLink}
                     onSchedule={setSchedulingLink}
                     isPro={isSubscribed}
+                    maxClicks={maxClicks}
+                    totalClicks={totalClicks}
                     onUpdateAnimation={async (id, animation) => {
                       try {
                         await updateLink.mutateAsync({ id, animation: animation as any });

@@ -17,8 +17,9 @@ export const TipJarSettings = () => {
   const [paypalEmail, setPaypalEmail] = useState("");
   const [venmoUsername, setVenmoUsername] = useState("");
   const [cashappTag, setCashappTag] = useState("");
+  const [razorpayEnabled, setRazorpayEnabled] = useState(false);
   const [message, setMessage] = useState("Support my work!");
-  const [suggestedAmounts, setSuggestedAmounts] = useState("3, 5, 10");
+  const [suggestedAmounts, setSuggestedAmounts] = useState("100, 500, 1000");
 
   useEffect(() => {
     if (tipJar) {
@@ -26,8 +27,9 @@ export const TipJarSettings = () => {
       setPaypalEmail(tipJar.paypal_email || "");
       setVenmoUsername(tipJar.venmo_username || "");
       setCashappTag(tipJar.cashapp_tag || "");
+      setRazorpayEnabled((tipJar as any).razorpay_enabled ?? false);
       setMessage(tipJar.message || "Support my work!");
-      setSuggestedAmounts(tipJar.suggested_amounts?.join(", ") || "3, 5, 10");
+      setSuggestedAmounts(tipJar.suggested_amounts?.join(", ") || "100, 500, 1000");
     }
   }, [tipJar]);
 
@@ -43,9 +45,10 @@ export const TipJarSettings = () => {
         paypal_email: paypalEmail || null,
         venmo_username: venmoUsername || null,
         cashapp_tag: cashappTag || null,
+        razorpay_enabled: razorpayEnabled,
         message,
         suggested_amounts: amounts,
-      });
+      } as any);
       toast.success("Tip jar settings saved!");
     } catch (error) {
       toast.error("Failed to save settings");
@@ -54,7 +57,6 @@ export const TipJarSettings = () => {
 
   const handleToggle = async (val: boolean) => {
     setIsEnabled(val);
-    // Auto-save the toggle immediately for quick enable/disable
     try {
       const amounts = suggestedAmounts
         .split(",")
@@ -65,11 +67,12 @@ export const TipJarSettings = () => {
         paypal_email: paypalEmail || null,
         venmo_username: venmoUsername || null,
         cashapp_tag: cashappTag || null,
+        razorpay_enabled: razorpayEnabled,
         message,
         suggested_amounts: amounts,
-      });
+      } as any);
     } catch {
-      // silently fail toggle auto-save
+      // silently fail
     }
   };
 
@@ -145,6 +148,14 @@ export const TipJarSettings = () => {
                     className="h-7 text-xs"
                   />
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border border-border/40 bg-secondary/30 px-3 py-2">
+                <div>
+                  <Label className="text-xs font-semibold">Razorpay tips (₹)</Label>
+                  <p className="text-[10px] text-muted-foreground">Accept INR tips with presets ₹100 / ₹500 / ₹1000 + custom</p>
+                </div>
+                <Switch checked={razorpayEnabled} onCheckedChange={setRazorpayEnabled} />
               </div>
 
               <Button

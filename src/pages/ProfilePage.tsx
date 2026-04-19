@@ -19,6 +19,8 @@ import { CartProvider, useCart } from "@/components/profile/CartContext";
 import { ProfileSEO } from "@/components/seo/ProfileSEO";
 import { AdSenseAd } from "@/components/ads/AdSenseAd";
 import { TipJarDisplay } from "@/components/profile/TipJarDisplay";
+import { TipJarBlock } from "@/components/profile/TipJarBlock";
+import { VideoBackground } from "@/components/profile/VideoBackground";
 import { CommunityFeed } from "@/components/profile/CommunityFeed";
 import { QABox } from "@/components/profile/QABox";
 import { ProfileSkeleton } from "@/components/profile/ProfileSkeleton";
@@ -96,6 +98,12 @@ const ProfilePageContent = () => {
     <div className="min-h-screen relative overflow-hidden" style={{ background: theme.background }}>
       <ProfileSEO username={profile.username || ""} displayName={profile.display_name} bio={profile.bio} avatarUrl={profile.avatar_url} />
 
+      {(profile as any).is_pro && (profile as any).video_background_url && (
+        <VideoBackground
+          url={(profile as any).video_background_url}
+          overlayOpacity={(profile as any).video_overlay_opacity ?? 40}
+        />
+      )}
       {bgAssets.map((asset) => (
         <div key={asset.id} className="absolute inset-0 pointer-events-none" style={{ zIndex: asset.z_index, opacity: asset.opacity / 100 }}>
           {asset.custom_asset_url && (
@@ -178,6 +186,7 @@ const ProfilePageContent = () => {
         )}
 
         {profile.user_id && <section aria-label="Support and tips"><TipJarDisplay userId={profile.user_id} theme={theme} /></section>}
+        {profile.user_id && <section aria-label="Razorpay tip jar"><TipJarBlock userId={profile.user_id} creatorName={profile.display_name || profile.username || undefined} theme={theme} /></section>}
         {profile.user_id && <section aria-label="Contact form"><ContactMeForm creatorId={profile.user_id} creatorName={profile.display_name || profile.username || undefined} theme={theme} /></section>}
         {profile.user_id && <section aria-label="Subscribe to updates"><EmailCaptureBlock creatorId={profile.user_id} creatorName={profile.display_name || profile.username || undefined} theme={theme} /></section>}
 

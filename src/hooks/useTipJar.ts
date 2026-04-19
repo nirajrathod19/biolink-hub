@@ -9,6 +9,7 @@ export interface TipJar {
   paypal_email: string | null;
   venmo_username: string | null;
   cashapp_tag: string | null;
+  razorpay_enabled: boolean;
   minimum_amount: number;
   suggested_amounts: number[];
   message: string;
