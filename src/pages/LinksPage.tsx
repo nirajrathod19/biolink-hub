@@ -36,6 +36,7 @@ import { cn } from "@/lib/utils";
 import { useProfile } from "@/hooks/useProfile";
 import { LiveMobilePreview } from "@/components/dashboard/LiveMobilePreview";
 import { ThemeQuickSwitcher } from "@/components/dashboard/ThemeQuickSwitcher";
+import { LinkPriorityBadge } from "@/components/dashboard/LinkPriorityBadge";
 import {
   Select,
   SelectContent,
@@ -52,9 +53,11 @@ interface SortableLinkItemProps {
   onUpdateAnimation: (id: string, animation: string | null) => void;
   onUpdateLockType: (id: string, lockType: string | null, lockPassword?: string) => void;
   isPro: boolean;
+  maxClicks: number;
+  totalClicks: number;
 }
 
-const SortableLinkItem = ({ link, onToggle, onDelete, onSchedule, onUpdateAnimation, onUpdateLockType, isPro }: SortableLinkItemProps) => {
+const SortableLinkItem = ({ link, onToggle, onDelete, onSchedule, onUpdateAnimation, onUpdateLockType, isPro, maxClicks, totalClicks }: SortableLinkItemProps) => {
   const {
     attributes,
     listeners,
@@ -119,6 +122,7 @@ const SortableLinkItem = ({ link, onToggle, onDelete, onSchedule, onUpdateAnimat
                   {(link as any).lock_type === "password" ? "Password" : "Newsletter"}
                 </Badge>
               )}
+              <LinkPriorityBadge clicks={link.click_count || 0} maxClicks={maxClicks} totalClicks={totalClicks} />
             </div>
             <p className="text-sm text-muted-foreground truncate">{link.url}</p>
           </div>

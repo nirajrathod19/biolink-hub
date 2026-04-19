@@ -279,6 +279,42 @@ const AppearancePage = () => {
               </motion.div>
             )}
 
+            {/* Video Background (Pro only) */}
+            {isPro && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.185 }}>
+                <GlassCard>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Video className="w-5 h-5 text-primary" />
+                    <h3 className="font-display font-semibold text-sm">Video Background</h3>
+                    <Crown className="w-3.5 h-3.5 text-amber-500 ml-auto" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Add a looping video background. Supports YouTube, Vimeo, or direct .mp4/.webm links.
+                  </p>
+                  <Input
+                    value={videoBgUrl}
+                    onChange={(e) => setVideoBgUrl(e.target.value)}
+                    placeholder="https://youtube.com/watch?v=… or https://…/loop.mp4"
+                    className="bg-secondary/50 border-border mb-3"
+                  />
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Overlay opacity</Label>
+                      <span className="text-xs font-mono text-muted-foreground">{videoOverlay}%</span>
+                    </div>
+                    <Slider
+                      value={[videoOverlay]}
+                      onValueChange={([v]) => setVideoOverlay(v)}
+                      min={0}
+                      max={90}
+                      step={5}
+                    />
+                    <p className="text-[10px] text-muted-foreground">Higher overlay = better text readability over busy videos</p>
+                  </div>
+                </GlassCard>
+              </motion.div>
+            )}
+
             {/* AI Color Matcher (Pro only) */}
             {isPro && (
               <motion.div

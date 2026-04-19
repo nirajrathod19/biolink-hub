@@ -8,6 +8,7 @@ import { CartCheckoutForm } from "@/components/profile/CartCheckoutForm";
 import { useValidateCoupon } from "@/hooks/useCoupons";
 import { CURRENCIES } from "@/hooks/useExchangeRates";
 import { BioTheme } from "@/lib/bioThemes";
+import { CartUpsell } from "@/components/profile/CartUpsell";
 import { toast } from "sonner";
 
 const getCurrencySymbol = (code: string) => CURRENCIES.find((c) => c.code === code)?.symbol || code;
@@ -143,6 +144,14 @@ export const ShoppingCart = ({ theme, creatorUsername }: Props) => {
                       ))
                     )}
                   </div>
+
+                  {items.length > 0 && creatorId && (
+                    <CartUpsell
+                      theme={theme}
+                      cartProductIds={items.map((i) => i.id)}
+                      creatorId={creatorId}
+                    />
+                  )}
 
                   {items.length > 0 && (
                     <div className="p-4 border-t space-y-3">
