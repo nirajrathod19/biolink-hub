@@ -13,6 +13,7 @@ export interface DigitalProduct {
   preview_image: string | null;
   download_count: number;
   is_active: boolean;
+  upsell_product_ids?: string[] | null;
   created_at: string;
   updated_at: string;
 }
