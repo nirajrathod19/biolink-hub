@@ -449,7 +449,8 @@ const LinksPage = () => {
                     }}
                   />
                 </motion.div>
-              ))}
+              ));
+              })()}
             </div>
           </SortableContext>
         </DndContext>
