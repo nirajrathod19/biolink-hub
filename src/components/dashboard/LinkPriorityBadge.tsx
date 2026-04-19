@@ -21,14 +21,20 @@ export const LinkPriorityBadge = ({ clicks, maxClicks, totalClicks }: LinkPriori
 
   if (share >= 0.4 || isMax) {
     return (
-      <Badge className="text-[10px] bg-orange-500/15 text-orange-600 border border-orange-500/30 gap-1">
+      <Badge
+        className="text-[10px] gap-1 border"
+        style={{ background: "hsl(24 95% 53% / 0.15)", color: "hsl(24 95% 45%)", borderColor: "hsl(24 95% 53% / 0.35)" }}
+      >
         <Flame className="w-3 h-3" /> Top performer
       </Badge>
     );
   }
   if (share >= 0.2) {
     return (
-      <Badge className="text-[10px] bg-pink-500/15 text-pink-600 border border-pink-500/30 gap-1">
+      <Badge
+        className="text-[10px] gap-1 border"
+        style={{ background: "hsl(330 85% 60% / 0.15)", color: "hsl(330 85% 50%)", borderColor: "hsl(330 85% 60% / 0.35)" }}
+      >
         <TrendingUp className="w-3 h-3" /> Hot
       </Badge>
     );
