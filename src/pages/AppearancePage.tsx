@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Eye, Type, Heart, Save, Layers, Image, SlidersHorizontal, LayoutGrid, List, Grid3X3, Maximize, Megaphone } from "lucide-react";
+import { Eye, Type, Heart, Save, Layers, Image, SlidersHorizontal, LayoutGrid, List, Grid3X3, Maximize, Megaphone, Video, Crown } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GradientButton } from "@/components/ui/GradientButton";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
@@ -33,6 +33,8 @@ const AppearancePage = () => {
   const [productLayout, setProductLayout] = useState<"vertical" | "horizontal">("vertical");
   const [viewMode, setViewMode] = useState<"list" | "tiles" | "xl-icons">("tiles");
   const [announcementText, setAnnouncementText] = useState("");
+  const [videoBgUrl, setVideoBgUrl] = useState("");
+  const [videoOverlay, setVideoOverlay] = useState(40);
 
   useEffect(() => {
     if (profile) {
@@ -45,6 +47,8 @@ const AppearancePage = () => {
       setProductLayout(config.product_layout || "vertical");
       setViewMode(config.view_mode || "tiles");
       setAnnouncementText((profile as any).announcement_text || "");
+      setVideoBgUrl((profile as any).video_background_url || "");
+      setVideoOverlay((profile as any).video_overlay_opacity ?? 40);
     }
   }, [profile]);
 
@@ -64,6 +68,8 @@ const AppearancePage = () => {
         template: selectedTheme,
         interests: selectedInterests,
         announcement_text: announcementText || null,
+        video_background_url: isPro ? (videoBgUrl || null) : null,
+        video_overlay_opacity: videoOverlay,
         layout_config: {
           product_card_size: productCardSize,
           product_layout: productLayout,
