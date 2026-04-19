@@ -405,7 +405,11 @@ const LinksPage = () => {
             strategy={verticalListSortingStrategy}
           >
             <div className="space-y-3">
-              {localLinks.map((link, index) => (
+              {(() => {
+                const counts = localLinks.map((l) => l.click_count || 0);
+                const maxClicks = counts.length ? Math.max(...counts) : 0;
+                const totalClicks = counts.reduce((a, b) => a + b, 0);
+                return localLinks.map((link, index) => (
                 <motion.div
                   key={link.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -418,6 +422,8 @@ const LinksPage = () => {
                     onDelete={handleDeleteLink}
                     onSchedule={setSchedulingLink}
                     isPro={isSubscribed}
+                    maxClicks={maxClicks}
+                    totalClicks={totalClicks}
                     onUpdateAnimation={async (id, animation) => {
                       try {
                         await updateLink.mutateAsync({ id, animation: animation as any });
