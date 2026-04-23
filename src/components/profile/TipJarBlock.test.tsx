@@ -2,10 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, waitFor, screen } from "@testing-library/react";
 import { renderWithProviders, mockTheme } from "@/test/utils";
 
-const invokeMock = vi.fn();
+const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }));
 
 vi.mock("@/integrations/supabase/client", () => {
-  // Minimal chain so usePublicTipJar resolves with razorpay_enabled = true
   const buildChain = (row: any) => {
     const chain: any = {};
     chain.select = vi.fn(() => chain);

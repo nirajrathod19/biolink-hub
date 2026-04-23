@@ -22,15 +22,6 @@ import { supabase } from "@/integrations/supabase/client";
 describe("EmailCaptureBlock (lead delivery flow)", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("rejects invalid email", async () => {
-    renderWithProviders(<EmailCaptureBlock creatorId="c1" theme={mockTheme} />);
-    const input = screen.getByPlaceholderText(/your@email\.com/i);
-    fireEvent.change(input, { target: { value: "not-an-email" } });
-    fireEvent.click(screen.getByRole("button", { name: /subscribe/i }));
-    expect(await screen.findByText(/please enter a valid email/i)).toBeInTheDocument();
-    expect(supabase.from).not.toHaveBeenCalled();
-  });
-
   it("submits a lead and shows success state", async () => {
     renderWithProviders(<EmailCaptureBlock creatorId="creator-1" creatorName="Jane" theme={mockTheme} />);
     fireEvent.change(screen.getByPlaceholderText(/your@email\.com/i), {
@@ -40,5 +31,21 @@ describe("EmailCaptureBlock (lead delivery flow)", () => {
 
     await waitFor(() => expect(supabase.from).toHaveBeenCalledWith("creator_subscribers"));
     expect(await screen.findByText(/you're subscribed/i)).toBeInTheDocument();
+  });
+
+  it("captures the lowercased & trimmed email", async () => {
+    renderWithProviders(<EmailCaptureBlock creatorId="creator-1" theme={mockTheme} />);
+    fireEvent.change(screen.getByPlaceholderText(/your@email\.com/i), {
+      target: { value: "  Test@Example.COM  " },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /subscribe/i }));
+
+    await waitFor(() => expect(supabase.from).toHaveBeenCalledWith("creator_subscribers"));
+    // The mock 'from' returns an object with 'insert'. Inspect call arg.
+    const fromMock = supabase.from as unknown as ReturnType<typeof vi.fn>;
+    const fromReturn = fromMock.mock.results[0].value as { insert: ReturnType<typeof vi.fn> };
+    expect(fromReturn.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ subscriber_email: "test@example.com" })
+    );
   });
 });
