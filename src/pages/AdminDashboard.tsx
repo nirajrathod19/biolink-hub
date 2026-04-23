@@ -15,9 +15,10 @@ import { GuideManager } from "@/components/admin/GuideManager";
 import { BugReportsManager } from "@/components/admin/BugReportsManager";
 import { AdminTicketsTab } from "@/components/admin/AdminTicketsTab";
 import { AdminOrdersTab } from "@/components/admin/AdminOrdersTab";
+import { AdminDebugTab } from "@/components/admin/AdminDebugTab";
 import { useNewTicketCount } from "@/hooks/useSupportTickets";
 
-import { Inbox } from "lucide-react";
+import { Inbox, Bug as BugIcon } from "lucide-react";
 
 const adminMenuItems = [
   { icon: LayoutDashboard, label: "Overview", href: "/admin" },
@@ -29,6 +30,7 @@ const adminMenuItems = [
   { icon: Megaphone, label: "Ads", href: "/admin/ads" },
   { icon: BookOpen, label: "Guide", href: "/admin/guide" },
   { icon: Bug, label: "Bugs", href: "/admin/bugs" },
+  { icon: BugIcon, label: "Debug", href: "/admin/debug" },
   { icon: Shield, label: "Security", href: "/admin/security" },
   { icon: Settings, label: "Settings", href: "/admin/settings" },
 ];
@@ -100,6 +102,7 @@ const AdminDashboard = () => {
             </>
           )}
           {path === "/admin/bugs" && <BugReportsManager />}
+          {path === "/admin/debug" && <AdminDebugTab />}
           {path === "/admin/security" && <SecurityDashboard />}
           {path === "/admin/settings" && <AdminSettingsTab />}
         </div>
