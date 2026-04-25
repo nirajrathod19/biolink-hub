@@ -1,9 +1,11 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 
+interface VideoBackgroundProps {
   url: string;
   overlayOpacity?: number; // 0-100
 }
+
 
 const getYouTubeId = (url: string): string | null => {
   const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
