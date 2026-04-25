@@ -24,22 +24,138 @@ interface PublicLinkListProps {
   creatorName?: string;
 }
 
-const DefaultLayout = ({ links, theme, onLinkClick, creatorId, creatorName }: PublicLinkListProps) => {
+/**
+ * BentoCard — single link rendered as a glassmorphic tile with optional
+ * cursor-following glow on featured (highlighted) links and a press-squish.
+ */
+const BentoCard = ({
+  link,
+  theme,
+  onLinkClick,
+  span,
+  index,
+}: {
+  link: PublicLink;
+  theme: BioTheme;
+  onLinkClick: PublicLinkListProps["onLinkClick"];
+  span: 1 | 2;
+  index: number;
+}) => {
   const isGlass = theme.cardBg.includes("rgba");
-  const [unlockedLinks, setUnlockedLinks] = useState<Set<string>>(new Set());
+  const isFeatured = !!link.is_highlighted;
+  const cardRef = useRef<HTMLAnchorElement>(null);
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const glow = useMotionTemplate`radial-gradient(220px circle at ${mx}px ${my}px, ${theme.accent}33, transparent 70%)`;
+
+  const onMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const rect = cardRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    mx.set(e.clientX - rect.left);
+    my.set(e.clientY - rect.top);
+  };
 
   return (
-    <nav aria-label="Profile links" className="space-y-3">
+    <motion.div
+      variants={{
+        hidden: { opacity: 0, y: 24, scale: 0.96 },
+        show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 110, damping: 18 } },
+      }}
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.95 }}
+      className={span === 2 ? "col-span-2" : "col-span-1"}
+    >
+      <a
+        ref={cardRef}
+        href={link.url || "#"}
+        onClick={(e) => onLinkClick(e, { id: link.id, url: link.url || "" })}
+        onMouseMove={isFeatured ? onMove : undefined}
+        className="relative block h-full w-full overflow-hidden rounded-2xl p-4 transition-all group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+        style={{
+          background: theme.cardBg,
+          border: `1px solid ${theme.cardBorder}`,
+          color: theme.cardText,
+          backdropFilter: isGlass ? "blur(14px) saturate(140%)" : undefined,
+          WebkitBackdropFilter: isGlass ? "blur(14px) saturate(140%)" : undefined,
+          boxShadow:
+            "0 1px 1px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06), 0 12px 32px -8px rgba(0,0,0,0.10)",
+        }}
+        role="link"
+      >
+        {isFeatured && (
+          <motion.div
+            aria-hidden="true"
+            style={{ background: glow }}
+            className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          />
+        )}
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center transition-transform group-hover:rotate-6 flex-shrink-0"
+              style={{ background: `${theme.accent}1f`, border: `1px solid ${theme.accent}25` }}
+            >
+              {isFeatured ? (
+                <Sparkles className="w-4 h-4" style={{ color: theme.accent }} aria-hidden="true" />
+              ) : (
+                <ExternalLink className="w-4 h-4" style={{ color: theme.accent }} aria-hidden="true" />
+              )}
+            </div>
+            <p className="font-semibold tracking-tight truncate">{link.title}</p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {link.badge && (
+              <span
+                className="px-2 py-0.5 text-[10px] font-semibold rounded-full tracking-wide"
+                style={{ backgroundColor: `${theme.accent}20`, color: theme.accent }}
+              >
+                {link.badge}
+              </span>
+            )}
+            <ExternalLink
+              className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5"
+              aria-hidden="true"
+              style={{ color: theme.accent }}
+            />
+          </div>
+        </div>
+      </a>
+    </motion.div>
+  );
+};
+
+const DefaultLayout = ({ links, theme, onLinkClick, creatorId, creatorName }: PublicLinkListProps) => {
+  const [unlockedLinks, setUnlockedLinks] = useState<Set<string>>(new Set());
+
+  // Bento span pattern: highlighted links always span 2 cols.
+  // Otherwise create asymmetry: every 5th unhighlighted link spans 2.
+  const getSpan = (link: PublicLink, idx: number): 1 | 2 => {
+    if (link.is_highlighted) return 2;
+    if (idx > 0 && idx % 5 === 0) return 2;
+    return 1;
+  };
+
+  return (
+    <motion.nav
+      aria-label="Profile links"
+      variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } } }}
+      initial="hidden"
+      animate="show"
+      className="grid grid-cols-2 gap-3"
+    >
       {links.map((link, index) => {
         const isLocked = link.lock_type && link.lock_type !== "none" && !unlockedLinks.has(link.id);
+        const span = getSpan(link, index);
 
         if (isLocked) {
           return (
             <motion.div
               key={link.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + index * 0.05, duration: 0.5 }}
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                show: { opacity: 1, y: 0, transition: { duration: 0.45 } },
+              }}
+              className={span === 2 ? "col-span-2" : "col-span-1"}
             >
               <LockedLinkGate
                 linkId={link.id}
@@ -56,60 +172,17 @@ const DefaultLayout = ({ links, theme, onLinkClick, creatorId, creatorName }: Pu
         }
 
         return (
-          <motion.div
+          <BentoCard
             key={link.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 + index * 0.05, duration: 0.5 }}
-            whileHover={{ scale: 1.03, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <a
-              href={link.url || "#"}
-              onClick={(e) => onLinkClick(e, { id: link.id, url: link.url || "" })}
-              className="block rounded-xl p-4 transition-all group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-              style={{
-                background: theme.cardBg,
-                border: `1px solid ${theme.cardBorder}`,
-                color: theme.cardText,
-                backdropFilter: isGlass ? "blur(12px)" : undefined,
-                WebkitBackdropFilter: isGlass ? "blur(12px)" : undefined,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = theme.hoverBg;
-                e.currentTarget.style.borderColor = theme.accent;
-                e.currentTarget.style.boxShadow = `0 8px 25px ${theme.accent}20`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = theme.cardBg;
-                e.currentTarget.style.borderColor = theme.cardBorder;
-                e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)";
-              }}
-              role="link"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:rotate-6"
-                    style={{ background: `${theme.accent}15` }}
-                  >
-                    <ExternalLink className="w-4 h-4" style={{ color: theme.accent }} />
-                  </div>
-                  <p className="font-medium transition-colors">{link.title}</p>
-                  {link.badge && (
-                    <span className="px-2 py-0.5 text-xs font-semibold rounded-full" style={{ backgroundColor: `${theme.accent}20`, color: theme.accent }}>
-                      {link.badge}
-                    </span>
-                  )}
-                </div>
-                <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" aria-hidden="true" style={{ color: theme.accent }} />
-              </div>
-            </a>
-          </motion.div>
+            link={link}
+            theme={theme}
+            onLinkClick={onLinkClick}
+            span={span}
+            index={index}
+          />
         );
       })}
-    </nav>
+    </motion.nav>
   );
 };
 
