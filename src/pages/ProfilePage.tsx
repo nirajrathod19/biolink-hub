@@ -151,7 +151,7 @@ const ProfilePageContent = () => {
               </div>
             )}
           </div>
-          <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight mb-2 flex items-center justify-center gap-1.5" style={{ color: theme.textColor }}>
+          <h1 className="text-3xl md:text-4xl font-display font-bold tracking-[-0.03em] mb-2 flex items-center justify-center gap-1.5 leading-[1.05]" style={{ color: theme.textColor }}>
             {profile.display_name || `@${profile.username}`}
             {isVerified && <VerifiedBadge size={22} />}
           </h1>

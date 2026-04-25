@@ -140,7 +140,7 @@ const DefaultLayout = ({ links, theme, onLinkClick, creatorId, creatorName }: Pu
   return (
     <motion.nav
       aria-label="Profile links"
-      variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } } }}
+      variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1, delayChildren: 0.12 } } }}
       initial="hidden"
       animate="show"
       className="grid grid-cols-2 gap-3"
