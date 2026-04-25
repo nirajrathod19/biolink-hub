@@ -1,6 +1,6 @@
 import { useMemo } from "react";
+import { motion } from "framer-motion";
 
-interface VideoBackgroundProps {
   url: string;
   overlayOpacity?: number; // 0-100
 }
@@ -64,6 +64,24 @@ export const VideoBackground = ({ url, overlayOpacity = 40 }: VideoBackgroundPro
         />
       )}
       <div className="absolute inset-0" style={{ background: `rgba(0,0,0,${opacity})` }} />
+      {/* Premium mesh gradient overlay — three drifting blobs for depth */}
+      <div aria-hidden="true" className="absolute inset-0 overflow-hidden mix-blend-overlay">
+        <motion.div
+          animate={{ x: [0, 60, -40, 0], y: [0, -40, 30, 0], scale: [1, 1.15, 0.95, 1] }}
+          transition={{ repeat: Infinity, duration: 20, ease: "easeInOut" }}
+          className="absolute -top-32 -left-32 w-[30rem] h-[30rem] rounded-full blur-[120px] opacity-50 bg-fuchsia-500"
+        />
+        <motion.div
+          animate={{ x: [0, -50, 30, 0], y: [0, 40, -30, 0], scale: [1, 0.9, 1.1, 1] }}
+          transition={{ repeat: Infinity, duration: 24, ease: "easeInOut" }}
+          className="absolute -bottom-32 -right-32 w-[28rem] h-[28rem] rounded-full blur-[120px] opacity-40 bg-cyan-400"
+        />
+        <motion.div
+          animate={{ x: [0, 30, -30, 0], y: [0, 25, -25, 0], scale: [1, 1.08, 0.92, 1] }}
+          transition={{ repeat: Infinity, duration: 28, ease: "easeInOut" }}
+          className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[24rem] h-[24rem] rounded-full blur-[110px] opacity-35 bg-indigo-500"
+        />
+      </div>
     </div>
   );
 };
