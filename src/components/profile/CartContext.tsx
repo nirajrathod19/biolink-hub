@@ -117,6 +117,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return buildCartState(items, prev.active_creator_id ?? prev.items[0]?.creator_id ?? item.creator_id);
     });
 
+    // Pro micro-feedback — minimalist toast
+    toast.success(item.title, { description: "Added to cart", duration: 1800 });
     return true;
   };
 
