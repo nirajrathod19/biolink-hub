@@ -33,6 +33,7 @@ import { AnnouncementBar } from "@/components/profile/AnnouncementBar";
 import { RecentSalesTicker } from "@/components/profile/RecentSalesTicker";
 import { ContactMeForm } from "@/components/profile/ContactMeForm";
 import { ProfileStats } from "@/components/profile/ProfileStats";
+import { MagneticWrap } from "@/components/profile/MagneticWrap";
 import { getThemeById } from "@/lib/bioThemes";
 import { usePublicLayoutElements } from "@/hooks/useLayoutElements";
 import { usePublicDisplayRules } from "@/hooks/useLinkDisplayRules";
