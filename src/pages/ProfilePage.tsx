@@ -99,6 +99,22 @@ const ProfilePageContent = () => {
     <div className="min-h-screen relative overflow-hidden" style={{ background: theme.background }}>
       <ProfileSEO username={profile.username || ""} displayName={profile.display_name} bio={profile.bio} avatarUrl={profile.avatar_url} />
 
+      {/* Animated mesh gradient background — subtle, theme-aware */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <motion.div
+          animate={{ x: [0, 40, -20, 0], y: [0, -30, 20, 0] }}
+          transition={{ repeat: Infinity, duration: 18, ease: "easeInOut" }}
+          className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full blur-[120px] opacity-40"
+          style={{ background: theme.accent }}
+        />
+        <motion.div
+          animate={{ x: [0, -30, 20, 0], y: [0, 25, -15, 0] }}
+          transition={{ repeat: Infinity, duration: 22, ease: "easeInOut" }}
+          className="absolute -bottom-32 -right-32 w-[26rem] h-[26rem] rounded-full blur-[120px] opacity-30"
+          style={{ background: theme.accent }}
+        />
+      </div>
+
       {(profile as any).is_pro && (profile as any).video_background_url && (
         <VideoBackground
           url={(profile as any).video_background_url}
