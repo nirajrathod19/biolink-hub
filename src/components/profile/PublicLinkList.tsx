@@ -58,11 +58,11 @@ const BentoCard = ({
   return (
     <motion.div
       variants={{
-        hidden: { opacity: 0, y: 24, scale: 0.96 },
+        hidden: { opacity: 0, y: 28, scale: 0.96 },
         show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 110, damping: 18 } },
       }}
       whileHover={{ y: -3 }}
-      whileTap={{ scale: 0.95 }}
+      whileTap={{ scale: 0.96, rotate: 0.5 }}
       className={span === 2 ? "col-span-2" : "col-span-1"}
     >
       <a
@@ -75,10 +75,12 @@ const BentoCard = ({
           background: theme.cardBg,
           border: `1px solid ${theme.cardBorder}`,
           color: theme.cardText,
-          backdropFilter: isGlass ? "blur(14px) saturate(140%)" : undefined,
-          WebkitBackdropFilter: isGlass ? "blur(14px) saturate(140%)" : undefined,
-          boxShadow:
-            "0 1px 1px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06), 0 12px 32px -8px rgba(0,0,0,0.10)",
+          backdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
+          WebkitBackdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
+          // Multi-layered shadow + subtle inner highlight for physical depth
+          boxShadow: isGlass
+            ? "inset 0 1px 0 rgba(255,255,255,0.08), 0 1px 2px rgba(0,0,0,0.05), 0 8px 24px -6px rgba(0,0,0,0.18), 0 20px 48px -12px rgba(0,0,0,0.22)"
+            : "inset 0 1px 0 rgba(255,255,255,0.5), 0 1px 2px rgba(0,0,0,0.04), 0 6px 16px -4px rgba(0,0,0,0.08), 0 16px 36px -10px rgba(0,0,0,0.10)",
         }}
         role="link"
       >
@@ -138,7 +140,7 @@ const DefaultLayout = ({ links, theme, onLinkClick, creatorId, creatorName }: Pu
   return (
     <motion.nav
       aria-label="Profile links"
-      variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } } }}
+      variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1, delayChildren: 0.12 } } }}
       initial="hidden"
       animate="show"
       className="grid grid-cols-2 gap-3"

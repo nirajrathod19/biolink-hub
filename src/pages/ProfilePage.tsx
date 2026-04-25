@@ -99,19 +99,25 @@ const ProfilePageContent = () => {
     <div className="min-h-screen relative overflow-hidden" style={{ background: theme.background }}>
       <ProfileSEO username={profile.username || ""} displayName={profile.display_name} bio={profile.bio} avatarUrl={profile.avatar_url} />
 
-      {/* Animated mesh gradient background — subtle, theme-aware */}
+      {/* Animated mesh gradient — slowly shifts hue + position for depth */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         <motion.div
-          animate={{ x: [0, 40, -20, 0], y: [0, -30, 20, 0] }}
+          animate={{ x: [0, 40, -20, 0], y: [0, -30, 20, 0], scale: [1, 1.1, 0.95, 1] }}
           transition={{ repeat: Infinity, duration: 18, ease: "easeInOut" }}
           className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full blur-[120px] opacity-40"
           style={{ background: theme.accent }}
         />
         <motion.div
-          animate={{ x: [0, -30, 20, 0], y: [0, 25, -15, 0] }}
+          animate={{ x: [0, -30, 20, 0], y: [0, 25, -15, 0], scale: [1, 0.9, 1.08, 1] }}
           transition={{ repeat: Infinity, duration: 22, ease: "easeInOut" }}
           className="absolute -bottom-32 -right-32 w-[26rem] h-[26rem] rounded-full blur-[120px] opacity-30"
           style={{ background: theme.accent }}
+        />
+        <motion.div
+          animate={{ x: [0, 25, -25, 0], y: [0, 20, -20, 0], opacity: [0.18, 0.28, 0.18] }}
+          transition={{ repeat: Infinity, duration: 26, ease: "easeInOut" }}
+          className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[22rem] h-[22rem] rounded-full blur-[110px]"
+          style={{ background: theme.textColor }}
         />
       </div>
 
@@ -151,7 +157,7 @@ const ProfilePageContent = () => {
               </div>
             )}
           </div>
-          <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight mb-2 flex items-center justify-center gap-1.5" style={{ color: theme.textColor }}>
+          <h1 className="text-3xl md:text-4xl font-display font-bold tracking-[-0.03em] mb-2 flex items-center justify-center gap-1.5 leading-[1.05]" style={{ color: theme.textColor }}>
             {profile.display_name || `@${profile.username}`}
             {isVerified && <VerifiedBadge size={22} />}
           </h1>
