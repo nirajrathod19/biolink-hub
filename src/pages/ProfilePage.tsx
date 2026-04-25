@@ -151,22 +151,38 @@ const ProfilePageContent = () => {
               </div>
             )}
           </div>
-          <h1 className="text-2xl font-display font-bold mb-2 flex items-center justify-center gap-1.5" style={{ color: theme.textColor }}>
+          <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight mb-2 flex items-center justify-center gap-1.5" style={{ color: theme.textColor }}>
             {profile.display_name || `@${profile.username}`}
             {isVerified && <VerifiedBadge size={22} />}
           </h1>
-          {profile.bio && <p className="text-sm max-w-xs mx-auto mb-4" style={{ color: theme.bioTextColor }}>{profile.bio}</p>}
+          {profile.display_name && (
+            <p className="text-xs font-medium tracking-wide mb-2 opacity-70" style={{ color: theme.bioTextColor }}>
+              @{profile.username}
+            </p>
+          )}
+          {profile.bio && (
+            <p className="text-sm leading-relaxed max-w-xs mx-auto mb-4 tracking-tight" style={{ color: theme.bioTextColor }}>
+              {profile.bio}
+            </p>
+          )}
           {socialLinks.length > 0 && (
             <nav aria-label="Social media links" className="flex justify-center gap-3 mb-4">
               {socialLinks.map((social) => {
                 const Icon = SOCIAL_ICONS[social.platform] || ExternalLink;
                 return (
-                  <a key={social.id} href={social.url} target="_blank" rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                    style={{ background: theme.socialBg, color: theme.socialText, backdropFilter: theme.socialBg.includes("rgba") ? "blur(8px)" : undefined }}
-                    aria-label={`Visit ${social.platform} profile`}>
-                    <Icon className="w-5 h-5" aria-hidden="true" />
-                  </a>
+                  <MagneticWrap key={social.id} strength={10}>
+                    <a href={social.url} target="_blank" rel="noopener noreferrer"
+                      className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                      style={{
+                        background: theme.socialBg,
+                        color: theme.socialText,
+                        backdropFilter: theme.socialBg.includes("rgba") ? "blur(8px)" : undefined,
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+                      }}
+                      aria-label={`Visit ${social.platform} profile`}>
+                      <Icon className="w-5 h-5" aria-hidden="true" />
+                    </a>
+                  </MagneticWrap>
                 );
               })}
             </nav>
