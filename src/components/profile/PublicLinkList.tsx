@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { ExternalLink, FileText, FolderOpen, Lock } from "lucide-react";
+import { useRef, useState } from "react";
+import { motion, useMotionValue, useMotionTemplate } from "framer-motion";
+import { ExternalLink, FileText, FolderOpen, Sparkles } from "lucide-react";
 import type { BioTheme, LayoutType } from "@/lib/bioThemes";
 import { LockedLinkGate } from "./LockedLinkGate";
 
@@ -10,6 +10,7 @@ interface PublicLink {
   url: string | null;
   badge?: string | null;
   is_active?: boolean | null;
+  is_highlighted?: boolean | null;
   click_count?: number | null;
   lock_type?: string | null;
   lock_password?: string | null;
