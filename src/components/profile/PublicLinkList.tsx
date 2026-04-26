@@ -129,8 +129,9 @@ const BentoCard = ({
 const DefaultLayout = ({ links, theme, onLinkClick, creatorId, creatorName }: PublicLinkListProps) => {
   const [unlockedLinks, setUnlockedLinks] = useState<Set<string>>(new Set());
 
-  // Bento span pattern: highlighted links always span 2 cols.
-  // Otherwise create asymmetry: every 5th unhighlighted link spans 2.
+  // Bento span pattern: highlighted links always span 2 cols on mobile and
+  // sm+ (within a 3-col grid) to claim prime visual real estate.
+  // Asymmetry: every 5th unhighlighted link also spans 2 for visual rhythm.
   const getSpan = (link: PublicLink, idx: number): 1 | 2 => {
     if (link.is_highlighted) return 2;
     if (idx > 0 && idx % 5 === 0) return 2;
@@ -143,7 +144,7 @@ const DefaultLayout = ({ links, theme, onLinkClick, creatorId, creatorName }: Pu
       variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1, delayChildren: 0.12 } } }}
       initial="hidden"
       animate="show"
-      className="grid grid-cols-2 gap-3"
+      className="grid grid-cols-2 sm:grid-cols-3 gap-3"
     >
       {links.map((link, index) => {
         const isLocked = link.lock_type && link.lock_type !== "none" && !unlockedLinks.has(link.id);
