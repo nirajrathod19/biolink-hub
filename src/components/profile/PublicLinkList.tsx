@@ -242,41 +242,49 @@ const FinderLayout = ({ links, theme, onLinkClick }: PublicLinkListProps) => (
   </motion.nav>
 );
 
-const GridLayout = ({ links, theme, onLinkClick }: PublicLinkListProps) => (
-  <nav aria-label="Profile links" className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-    {links.map((link, index) => (
-      <motion.a
-        key={link.id}
-        href={link.url || "#"}
-        onClick={(e) => onLinkClick(e, { id: link.id, url: link.url || "" })}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: index * 0.05 }}
-        className="flex flex-col items-center gap-2 p-4 rounded-xl cursor-pointer transition-all group text-center"
-        style={{
-          background: theme.cardBg,
-          border: `1px solid ${theme.cardBorder}`,
-          backdropFilter: theme.cardBg.includes("rgba") ? "blur(12px)" : undefined,
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = theme.hoverBg; e.currentTarget.style.transform = "scale(1.03)"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = theme.cardBg; e.currentTarget.style.transform = "scale(1)"; }}
-      >
-        <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center"
-          style={{ background: `${theme.accent}20` }}
+const GridLayout = ({ links, theme, onLinkClick }: PublicLinkListProps) => {
+  const isGlass = theme.cardBg.includes("rgba");
+  return (
+    <nav aria-label="Profile links" className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      {links.map((link, index) => (
+        <motion.a
+          key={link.id}
+          href={link.url || "#"}
+          onClick={(e) => onLinkClick(e, { id: link.id, url: link.url || "" })}
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ delay: index * 0.05, type: "spring", stiffness: 110, damping: 18 }}
+          whileHover={{ y: -3 }}
+          whileTap={{ scale: 0.96, rotate: 0.5 }}
+          className="flex flex-col items-center gap-2 p-4 rounded-2xl cursor-pointer transition-colors group text-center"
+          style={{
+            background: theme.cardBg,
+            border: `1px solid ${theme.cardBorder}`,
+            color: theme.cardText,
+            backdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
+            WebkitBackdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
+            boxShadow: isGlass
+              ? "inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 24px -6px rgba(0,0,0,0.18), 0 20px 48px -12px rgba(0,0,0,0.22)"
+              : "inset 0 1px 0 rgba(255,255,255,0.5), 0 6px 16px -4px rgba(0,0,0,0.08), 0 16px 36px -10px rgba(0,0,0,0.10)",
+          }}
         >
-          <ExternalLink className="w-5 h-5" style={{ color: theme.accent }} />
-        </div>
-        <span className="text-xs font-semibold line-clamp-2" style={{ color: theme.cardText }}>{link.title}</span>
-        {link.badge && (
-          <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-full" style={{ backgroundColor: `${theme.accent}20`, color: theme.accent }}>
-            {link.badge}
-          </span>
-        )}
-      </motion.a>
-    ))}
-  </nav>
-);
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center"
+            style={{ background: `${theme.accent}1f`, border: `1px solid ${theme.accent}25` }}
+          >
+            <ExternalLink className="w-5 h-5" style={{ color: theme.accent }} />
+          </div>
+          <span className="text-xs font-semibold tracking-tight line-clamp-2" style={{ color: theme.cardText }}>{link.title}</span>
+          {link.badge && (
+            <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-full" style={{ backgroundColor: `${theme.accent}20`, color: theme.accent }}>
+              {link.badge}
+            </span>
+          )}
+        </motion.a>
+      ))}
+    </nav>
+  );
+};
 
 const KanbanLayout = ({ links, theme, onLinkClick }: PublicLinkListProps) => {
   // Auto-group: first 40% "Featured", next 40% "Links", rest "More"
