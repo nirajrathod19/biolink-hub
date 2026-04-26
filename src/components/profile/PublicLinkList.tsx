@@ -347,43 +347,51 @@ const KanbanLayout = ({ links, theme, onLinkClick }: PublicLinkListProps) => {
   );
 };
 
-const CarouselLayout = ({ links, theme, onLinkClick }: PublicLinkListProps) => (
-  <nav aria-label="Profile links" className="overflow-x-auto pb-3 scrollbar-none">
-    <div className="flex gap-3" style={{ width: "max-content" }}>
-      {links.map((link, index) => (
-        <motion.a
-          key={link.id}
-          href={link.url || "#"}
-          onClick={(e) => onLinkClick(e, { id: link.id, url: link.url || "" })}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: index * 0.06 }}
-          className="flex-shrink-0 w-40 rounded-xl p-4 cursor-pointer transition-all group text-center"
-          style={{
-            background: theme.cardBg,
-            border: `1px solid ${theme.cardBorder}`,
-            backdropFilter: theme.cardBg.includes("rgba") ? "blur(12px)" : undefined,
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = theme.hoverBg; e.currentTarget.style.borderColor = theme.accent; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = theme.cardBg; e.currentTarget.style.borderColor = theme.cardBorder; }}
-        >
-          <div
-            className="w-10 h-10 rounded-lg mx-auto mb-2 flex items-center justify-center"
-            style={{ background: `${theme.accent}20` }}
+const CarouselLayout = ({ links, theme, onLinkClick }: PublicLinkListProps) => {
+  const isGlass = theme.cardBg.includes("rgba");
+  return (
+    <nav aria-label="Profile links" className="overflow-x-auto pb-3 scrollbar-none">
+      <div className="flex gap-3" style={{ width: "max-content" }}>
+        {links.map((link, index) => (
+          <motion.a
+            key={link.id}
+            href={link.url || "#"}
+            onClick={(e) => onLinkClick(e, { id: link.id, url: link.url || "" })}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.06 }}
+            whileHover={{ y: -3 }}
+            whileTap={{ scale: 0.96, rotate: 0.5 }}
+            className="flex-shrink-0 w-40 rounded-2xl p-4 cursor-pointer transition-colors group text-center"
+            style={{
+              background: theme.cardBg,
+              border: `1px solid ${theme.cardBorder}`,
+              color: theme.cardText,
+              backdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
+              WebkitBackdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
+              boxShadow: isGlass
+                ? "inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 24px -6px rgba(0,0,0,0.18), 0 20px 48px -12px rgba(0,0,0,0.22)"
+                : "inset 0 1px 0 rgba(255,255,255,0.5), 0 6px 16px -4px rgba(0,0,0,0.08), 0 16px 36px -10px rgba(0,0,0,0.10)",
+            }}
           >
-            <ExternalLink className="w-5 h-5" style={{ color: theme.accent }} />
-          </div>
-          <span className="text-xs font-semibold line-clamp-2" style={{ color: theme.cardText }}>{link.title}</span>
-          {link.badge && (
-            <span className="mt-1 inline-block px-1.5 py-0.5 text-[9px] font-bold rounded-full" style={{ backgroundColor: `${theme.accent}20`, color: theme.accent }}>
-              {link.badge}
-            </span>
-          )}
-        </motion.a>
-      ))}
-    </div>
-  </nav>
-);
+            <div
+              className="w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center"
+              style={{ background: `${theme.accent}1f`, border: `1px solid ${theme.accent}25` }}
+            >
+              <ExternalLink className="w-5 h-5" style={{ color: theme.accent }} />
+            </div>
+            <span className="text-xs font-semibold tracking-tight line-clamp-2" style={{ color: theme.cardText }}>{link.title}</span>
+            {link.badge && (
+              <span className="mt-1 inline-block px-1.5 py-0.5 text-[9px] font-bold rounded-full" style={{ backgroundColor: `${theme.accent}20`, color: theme.accent }}>
+                {link.badge}
+              </span>
+            )}
+          </motion.a>
+        ))}
+      </div>
+    </nav>
+  );
+};
 
 export const PublicLinkList = ({ links, theme, onLinkClick, creatorId, creatorName }: PublicLinkListProps) => {
   if (links.length === 0) {
