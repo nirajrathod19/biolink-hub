@@ -309,26 +309,37 @@ const KanbanLayout = ({ links, theme, onLinkClick }: PublicLinkListProps) => {
             {group.title}
           </div>
           <div className="space-y-2">
-            {group.items.map((link, li) => (
-              <a
-                key={link.id}
-                href={link.url || "#"}
-                onClick={(e) => onLinkClick(e, { id: link.id, url: link.url || "" })}
-                className="block px-3 py-2.5 rounded-lg text-xs font-medium cursor-pointer transition-all"
-                style={{
-                  background: theme.cardBg,
-                  color: theme.cardText,
-                  border: `1px solid ${theme.cardBorder}`,
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = theme.hoverBg; e.currentTarget.style.borderColor = theme.accent; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = theme.cardBg; e.currentTarget.style.borderColor = theme.cardBorder; }}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="flex-1 line-clamp-1">{link.title}</span>
-                  <ExternalLink className="w-3 h-3 opacity-50" />
-                </div>
-              </a>
-            ))}
+            {group.items.map((link, li) => {
+              const isGlass = theme.cardBg.includes("rgba");
+              return (
+                <motion.a
+                  key={link.id}
+                  href={link.url || "#"}
+                  onClick={(e) => onLinkClick(e, { id: link.id, url: link.url || "" })}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: gi * 0.1 + li * 0.04 }}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.96, rotate: 0.5 }}
+                  className="block px-3 py-2.5 rounded-xl text-xs font-medium tracking-tight cursor-pointer transition-colors"
+                  style={{
+                    background: theme.cardBg,
+                    color: theme.cardText,
+                    border: `1px solid ${theme.cardBorder}`,
+                    backdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
+                    WebkitBackdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
+                    boxShadow: isGlass
+                      ? "inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 12px -2px rgba(0,0,0,0.15)"
+                      : "inset 0 1px 0 rgba(255,255,255,0.5), 0 2px 8px -2px rgba(0,0,0,0.06)",
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="flex-1 line-clamp-1">{link.title}</span>
+                    <ExternalLink className="w-3 h-3 opacity-50" />
+                  </div>
+                </motion.a>
+              );
+            })}
           </div>
         </motion.div>
       ))}
