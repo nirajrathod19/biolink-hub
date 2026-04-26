@@ -129,8 +129,9 @@ const BentoCard = ({
 const DefaultLayout = ({ links, theme, onLinkClick, creatorId, creatorName }: PublicLinkListProps) => {
   const [unlockedLinks, setUnlockedLinks] = useState<Set<string>>(new Set());
 
-  // Bento span pattern: highlighted links always span 2 cols.
-  // Otherwise create asymmetry: every 5th unhighlighted link spans 2.
+  // Bento span pattern: highlighted links always span 2 cols on mobile and
+  // sm+ (within a 3-col grid) to claim prime visual real estate.
+  // Asymmetry: every 5th unhighlighted link also spans 2 for visual rhythm.
   const getSpan = (link: PublicLink, idx: number): 1 | 2 => {
     if (link.is_highlighted) return 2;
     if (idx > 0 && idx % 5 === 0) return 2;
@@ -143,7 +144,7 @@ const DefaultLayout = ({ links, theme, onLinkClick, creatorId, creatorName }: Pu
       variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1, delayChildren: 0.12 } } }}
       initial="hidden"
       animate="show"
-      className="grid grid-cols-2 gap-3"
+      className="grid grid-cols-2 sm:grid-cols-3 gap-3"
     >
       {links.map((link, index) => {
         const isLocked = link.lock_type && link.lock_type !== "none" && !unlockedLinks.has(link.id);
@@ -241,41 +242,49 @@ const FinderLayout = ({ links, theme, onLinkClick }: PublicLinkListProps) => (
   </motion.nav>
 );
 
-const GridLayout = ({ links, theme, onLinkClick }: PublicLinkListProps) => (
-  <nav aria-label="Profile links" className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-    {links.map((link, index) => (
-      <motion.a
-        key={link.id}
-        href={link.url || "#"}
-        onClick={(e) => onLinkClick(e, { id: link.id, url: link.url || "" })}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: index * 0.05 }}
-        className="flex flex-col items-center gap-2 p-4 rounded-xl cursor-pointer transition-all group text-center"
-        style={{
-          background: theme.cardBg,
-          border: `1px solid ${theme.cardBorder}`,
-          backdropFilter: theme.cardBg.includes("rgba") ? "blur(12px)" : undefined,
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = theme.hoverBg; e.currentTarget.style.transform = "scale(1.03)"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = theme.cardBg; e.currentTarget.style.transform = "scale(1)"; }}
-      >
-        <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center"
-          style={{ background: `${theme.accent}20` }}
+const GridLayout = ({ links, theme, onLinkClick }: PublicLinkListProps) => {
+  const isGlass = theme.cardBg.includes("rgba");
+  return (
+    <nav aria-label="Profile links" className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      {links.map((link, index) => (
+        <motion.a
+          key={link.id}
+          href={link.url || "#"}
+          onClick={(e) => onLinkClick(e, { id: link.id, url: link.url || "" })}
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ delay: index * 0.05, type: "spring", stiffness: 110, damping: 18 }}
+          whileHover={{ y: -3 }}
+          whileTap={{ scale: 0.96, rotate: 0.5 }}
+          className="flex flex-col items-center gap-2 p-4 rounded-2xl cursor-pointer transition-colors group text-center"
+          style={{
+            background: theme.cardBg,
+            border: `1px solid ${theme.cardBorder}`,
+            color: theme.cardText,
+            backdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
+            WebkitBackdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
+            boxShadow: isGlass
+              ? "inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 24px -6px rgba(0,0,0,0.18), 0 20px 48px -12px rgba(0,0,0,0.22)"
+              : "inset 0 1px 0 rgba(255,255,255,0.5), 0 6px 16px -4px rgba(0,0,0,0.08), 0 16px 36px -10px rgba(0,0,0,0.10)",
+          }}
         >
-          <ExternalLink className="w-5 h-5" style={{ color: theme.accent }} />
-        </div>
-        <span className="text-xs font-semibold line-clamp-2" style={{ color: theme.cardText }}>{link.title}</span>
-        {link.badge && (
-          <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-full" style={{ backgroundColor: `${theme.accent}20`, color: theme.accent }}>
-            {link.badge}
-          </span>
-        )}
-      </motion.a>
-    ))}
-  </nav>
-);
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center"
+            style={{ background: `${theme.accent}1f`, border: `1px solid ${theme.accent}25` }}
+          >
+            <ExternalLink className="w-5 h-5" style={{ color: theme.accent }} />
+          </div>
+          <span className="text-xs font-semibold tracking-tight line-clamp-2" style={{ color: theme.cardText }}>{link.title}</span>
+          {link.badge && (
+            <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-full" style={{ backgroundColor: `${theme.accent}20`, color: theme.accent }}>
+              {link.badge}
+            </span>
+          )}
+        </motion.a>
+      ))}
+    </nav>
+  );
+};
 
 const KanbanLayout = ({ links, theme, onLinkClick }: PublicLinkListProps) => {
   // Auto-group: first 40% "Featured", next 40% "Links", rest "More"
@@ -300,26 +309,37 @@ const KanbanLayout = ({ links, theme, onLinkClick }: PublicLinkListProps) => {
             {group.title}
           </div>
           <div className="space-y-2">
-            {group.items.map((link, li) => (
-              <a
-                key={link.id}
-                href={link.url || "#"}
-                onClick={(e) => onLinkClick(e, { id: link.id, url: link.url || "" })}
-                className="block px-3 py-2.5 rounded-lg text-xs font-medium cursor-pointer transition-all"
-                style={{
-                  background: theme.cardBg,
-                  color: theme.cardText,
-                  border: `1px solid ${theme.cardBorder}`,
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = theme.hoverBg; e.currentTarget.style.borderColor = theme.accent; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = theme.cardBg; e.currentTarget.style.borderColor = theme.cardBorder; }}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="flex-1 line-clamp-1">{link.title}</span>
-                  <ExternalLink className="w-3 h-3 opacity-50" />
-                </div>
-              </a>
-            ))}
+            {group.items.map((link, li) => {
+              const isGlass = theme.cardBg.includes("rgba");
+              return (
+                <motion.a
+                  key={link.id}
+                  href={link.url || "#"}
+                  onClick={(e) => onLinkClick(e, { id: link.id, url: link.url || "" })}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: gi * 0.1 + li * 0.04 }}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.96, rotate: 0.5 }}
+                  className="block px-3 py-2.5 rounded-xl text-xs font-medium tracking-tight cursor-pointer transition-colors"
+                  style={{
+                    background: theme.cardBg,
+                    color: theme.cardText,
+                    border: `1px solid ${theme.cardBorder}`,
+                    backdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
+                    WebkitBackdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
+                    boxShadow: isGlass
+                      ? "inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 12px -2px rgba(0,0,0,0.15)"
+                      : "inset 0 1px 0 rgba(255,255,255,0.5), 0 2px 8px -2px rgba(0,0,0,0.06)",
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="flex-1 line-clamp-1">{link.title}</span>
+                    <ExternalLink className="w-3 h-3 opacity-50" />
+                  </div>
+                </motion.a>
+              );
+            })}
           </div>
         </motion.div>
       ))}
@@ -327,43 +347,51 @@ const KanbanLayout = ({ links, theme, onLinkClick }: PublicLinkListProps) => {
   );
 };
 
-const CarouselLayout = ({ links, theme, onLinkClick }: PublicLinkListProps) => (
-  <nav aria-label="Profile links" className="overflow-x-auto pb-3 scrollbar-none">
-    <div className="flex gap-3" style={{ width: "max-content" }}>
-      {links.map((link, index) => (
-        <motion.a
-          key={link.id}
-          href={link.url || "#"}
-          onClick={(e) => onLinkClick(e, { id: link.id, url: link.url || "" })}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: index * 0.06 }}
-          className="flex-shrink-0 w-40 rounded-xl p-4 cursor-pointer transition-all group text-center"
-          style={{
-            background: theme.cardBg,
-            border: `1px solid ${theme.cardBorder}`,
-            backdropFilter: theme.cardBg.includes("rgba") ? "blur(12px)" : undefined,
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = theme.hoverBg; e.currentTarget.style.borderColor = theme.accent; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = theme.cardBg; e.currentTarget.style.borderColor = theme.cardBorder; }}
-        >
-          <div
-            className="w-10 h-10 rounded-lg mx-auto mb-2 flex items-center justify-center"
-            style={{ background: `${theme.accent}20` }}
+const CarouselLayout = ({ links, theme, onLinkClick }: PublicLinkListProps) => {
+  const isGlass = theme.cardBg.includes("rgba");
+  return (
+    <nav aria-label="Profile links" className="overflow-x-auto pb-3 scrollbar-none">
+      <div className="flex gap-3" style={{ width: "max-content" }}>
+        {links.map((link, index) => (
+          <motion.a
+            key={link.id}
+            href={link.url || "#"}
+            onClick={(e) => onLinkClick(e, { id: link.id, url: link.url || "" })}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.06 }}
+            whileHover={{ y: -3 }}
+            whileTap={{ scale: 0.96, rotate: 0.5 }}
+            className="flex-shrink-0 w-40 rounded-2xl p-4 cursor-pointer transition-colors group text-center"
+            style={{
+              background: theme.cardBg,
+              border: `1px solid ${theme.cardBorder}`,
+              color: theme.cardText,
+              backdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
+              WebkitBackdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
+              boxShadow: isGlass
+                ? "inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 24px -6px rgba(0,0,0,0.18), 0 20px 48px -12px rgba(0,0,0,0.22)"
+                : "inset 0 1px 0 rgba(255,255,255,0.5), 0 6px 16px -4px rgba(0,0,0,0.08), 0 16px 36px -10px rgba(0,0,0,0.10)",
+            }}
           >
-            <ExternalLink className="w-5 h-5" style={{ color: theme.accent }} />
-          </div>
-          <span className="text-xs font-semibold line-clamp-2" style={{ color: theme.cardText }}>{link.title}</span>
-          {link.badge && (
-            <span className="mt-1 inline-block px-1.5 py-0.5 text-[9px] font-bold rounded-full" style={{ backgroundColor: `${theme.accent}20`, color: theme.accent }}>
-              {link.badge}
-            </span>
-          )}
-        </motion.a>
-      ))}
-    </div>
-  </nav>
-);
+            <div
+              className="w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center"
+              style={{ background: `${theme.accent}1f`, border: `1px solid ${theme.accent}25` }}
+            >
+              <ExternalLink className="w-5 h-5" style={{ color: theme.accent }} />
+            </div>
+            <span className="text-xs font-semibold tracking-tight line-clamp-2" style={{ color: theme.cardText }}>{link.title}</span>
+            {link.badge && (
+              <span className="mt-1 inline-block px-1.5 py-0.5 text-[9px] font-bold rounded-full" style={{ backgroundColor: `${theme.accent}20`, color: theme.accent }}>
+                {link.badge}
+              </span>
+            )}
+          </motion.a>
+        ))}
+      </div>
+    </nav>
+  );
+};
 
 export const PublicLinkList = ({ links, theme, onLinkClick, creatorId, creatorName }: PublicLinkListProps) => {
   if (links.length === 0) {
