@@ -1,5 +1,6 @@
 import { Header } from "@/components/landing/Header";
 import { Hero } from "@/components/landing/Hero";
+import { CreatorModes } from "@/components/landing/CreatorModes";
 import { Features } from "@/components/landing/Features";
 import { Pricing } from "@/components/landing/Pricing";
 import { Footer } from "@/components/landing/Footer";
@@ -11,6 +12,7 @@ const Landing = () => {
       <Header />
       <main>
         <Hero />
+        <CreatorModes />
         <Features />
         <Pricing />
       </main>
