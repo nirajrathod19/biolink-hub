@@ -158,17 +158,17 @@ export const Hero = () => {
           className="text-center max-w-4xl mx-auto"
         >
           {/* Badge */}
-          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8">
+          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 backdrop-blur-md">
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Creator monetization platform</span>
+            <span className="text-sm font-medium text-primary">The #1 Creator Monetization Platform</span>
           </motion.div>
 
           {/* Main heading with dynamic gradient */}
           <motion.h1
             variants={fadeUp}
-            className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-tight mb-6"
+            className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-[1.05] tracking-tight mb-6"
           >
-            One Link to{" "}
+            One Link To Build Your{" "}
             <AnimatePresence mode="wait">
               <motion.span
                 key={themeIdx}
@@ -178,7 +178,7 @@ export const Hero = () => {
                 transition={{ duration: 0.5 }}
                 className={`bg-gradient-to-r ${THEME_GRADIENTS[themeIdx]} bg-clip-text text-transparent`}
               >
-                Rule Them All
+                Creator Empire
               </motion.span>
             </AnimatePresence>
           </motion.h1>
@@ -188,8 +188,8 @@ export const Hero = () => {
             variants={fadeUp}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10"
           >
-            Create your personalized bio link page, share all your content in one place, 
-            and start earning from your audience. The ultimate link-in-bio for creators.
+            Turn followers into customers, fans, clients, and income with one intelligent
+            creator platform — built for the next generation of digital entrepreneurs.
           </motion.p>
 
           {/* CTA Buttons */}
