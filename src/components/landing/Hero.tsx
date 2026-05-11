@@ -121,31 +121,7 @@ export const Hero = () => {
       onMouseMove={handleMouseMove}
       className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
     >
-      {/* Animated background blobs */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          animate={{ x: [0, 30, -20, 0], y: [0, -20, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
-          className="absolute top-1/4 -left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[120px]"
-        />
-        <motion.div
-          animate={{ x: [0, -25, 15, 0], y: [0, 15, -25, 0] }}
-          transition={{ repeat: Infinity, duration: 15, ease: "easeInOut" }}
-          className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-[120px]"
-        />
-        <motion.div
-          animate={{ scale: [1, 1.1, 1], opacity: [0.05, 0.1, 0.05] }}
-          transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-primary/5 to-accent/5 rounded-full blur-[100px]"
-        />
-      </div>
-
-      {/* Moving grid pattern */}
-      <motion.div
-        animate={{ backgroundPosition: ["0px 0px", "60px 60px"] }}
-        transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-        className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border)/0.15)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.15)_1px,transparent_1px)] bg-[size:60px_60px]"
-      />
+      {/* Ambient background is provided globally by <AmbientBackground /> on the page */}
 
       {/* Floating social media icons */}
       {FLOATING_ICONS.map(({ Icon, x, y, delay, size, color }, i) => (
@@ -182,17 +158,17 @@ export const Hero = () => {
           className="text-center max-w-4xl mx-auto"
         >
           {/* Badge */}
-          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8">
+          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 backdrop-blur-md">
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Creator monetization platform</span>
+            <span className="text-sm font-medium text-primary">The #1 Creator Monetization Platform</span>
           </motion.div>
 
           {/* Main heading with dynamic gradient */}
           <motion.h1
             variants={fadeUp}
-            className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-tight mb-6"
+            className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-[1.05] tracking-tight mb-6"
           >
-            One Link to{" "}
+            One Link To Build Your{" "}
             <AnimatePresence mode="wait">
               <motion.span
                 key={themeIdx}
@@ -202,7 +178,7 @@ export const Hero = () => {
                 transition={{ duration: 0.5 }}
                 className={`bg-gradient-to-r ${THEME_GRADIENTS[themeIdx]} bg-clip-text text-transparent`}
               >
-                Rule Them All
+                Creator Empire
               </motion.span>
             </AnimatePresence>
           </motion.h1>
@@ -212,8 +188,8 @@ export const Hero = () => {
             variants={fadeUp}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10"
           >
-            Create your personalized bio link page, share all your content in one place, 
-            and start earning from your audience. The ultimate link-in-bio for creators.
+            Turn followers into customers, fans, clients, and income with one intelligent
+            creator platform — built for the next generation of digital entrepreneurs.
           </motion.p>
 
           {/* CTA Buttons */}

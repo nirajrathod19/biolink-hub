@@ -5,10 +5,12 @@ import { Features } from "@/components/landing/Features";
 import { Pricing } from "@/components/landing/Pricing";
 import { Footer } from "@/components/landing/Footer";
 import { FloatingDemoCard } from "@/components/landing/FloatingDemoCard";
+import { AmbientBackground } from "@/components/landing/AmbientBackground";
 
 const Landing = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <AmbientBackground />
       <Header />
       <main>
         <Hero />
