@@ -121,31 +121,7 @@ export const Hero = () => {
       onMouseMove={handleMouseMove}
       className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
     >
-      {/* Animated background blobs */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          animate={{ x: [0, 30, -20, 0], y: [0, -20, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
-          className="absolute top-1/4 -left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[120px]"
-        />
-        <motion.div
-          animate={{ x: [0, -25, 15, 0], y: [0, 15, -25, 0] }}
-          transition={{ repeat: Infinity, duration: 15, ease: "easeInOut" }}
-          className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-[120px]"
-        />
-        <motion.div
-          animate={{ scale: [1, 1.1, 1], opacity: [0.05, 0.1, 0.05] }}
-          transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-primary/5 to-accent/5 rounded-full blur-[100px]"
-        />
-      </div>
-
-      {/* Moving grid pattern */}
-      <motion.div
-        animate={{ backgroundPosition: ["0px 0px", "60px 60px"] }}
-        transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-        className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border)/0.15)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.15)_1px,transparent_1px)] bg-[size:60px_60px]"
-      />
+      {/* Ambient background is provided globally by <AmbientBackground /> on the page */}
 
       {/* Floating social media icons */}
       {FLOATING_ICONS.map(({ Icon, x, y, delay, size, color }, i) => (
