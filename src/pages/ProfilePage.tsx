@@ -197,6 +197,19 @@ const ProfilePageContent = () => {
           {profile.user_id && <ProfileStats profileId={profile.id!} userId={profile.user_id!} initialViews={(profile as any).total_clicks || 0} initialClicks={(profile as any).unique_clicks || 0} theme={theme} />}
         </motion.header>
 
+        <ProfileModeRouter
+          mode={resolveCreatorMode((profile as any).content_track)}
+          ctx={{
+            displayName: profile.display_name || profile.username || "",
+            username: profile.username || "",
+            bio: profile.bio,
+            avatarUrl: profile.avatar_url,
+            socialLinks: socialLinks as any,
+            links: links as any,
+            themeAccent: theme.accent,
+            isPro: !!(profile as any).is_pro,
+          }}
+        >
         {profile.user_id && <RecentSalesTicker userId={profile.user_id} theme={theme} />}
 
         <PublicLinkList links={links} theme={theme} onLinkClick={handleLinkClick} creatorId={profile.user_id} creatorName={profile.display_name || profile.username || undefined} />
@@ -229,6 +242,8 @@ const ProfilePageContent = () => {
         {profile.user_id && <section aria-label="Razorpay tip jar"><TipJarBlock userId={profile.user_id} creatorName={profile.display_name || profile.username || undefined} theme={theme} /></section>}
         {profile.user_id && <section aria-label="Contact form"><ContactMeForm creatorId={profile.user_id} creatorName={profile.display_name || profile.username || undefined} theme={theme} /></section>}
         {profile.user_id && <section aria-label="Subscribe to updates"><EmailCaptureBlock creatorId={profile.user_id} creatorName={profile.display_name || profile.username || undefined} theme={theme} /></section>}
+        </ProfileModeRouter>
+
 
         <AdSenseAd slot="footer" format="horizontal" className="mt-6" profileId={profile.id} />
 
