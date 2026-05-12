@@ -38,6 +38,7 @@ import { getThemeById } from "@/lib/bioThemes";
 import { usePublicLayoutElements } from "@/hooks/useLayoutElements";
 import { usePublicDisplayRules } from "@/hooks/useLinkDisplayRules";
 import { getVisitorContext, applyDisplayRules } from "@/lib/visitorDetection";
+import { ProfileModeRouter, resolveCreatorMode } from "@/components/profile/modes/ProfileModeRouter";
 
 const SOCIAL_ICONS: Record<string, any> = {
   instagram: Instagram, youtube: Youtube, twitter: Twitter, linkedin: Linkedin,
