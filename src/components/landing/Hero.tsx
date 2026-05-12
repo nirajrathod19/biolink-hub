@@ -150,71 +150,91 @@ export const Hero = () => {
       {/* 3D Floating Bio Card */}
       <FloatingBioCard mouseX={mouseX} mouseY={mouseY} />
 
-      <div className="container relative z-10 px-4 md:px-6">
+      <div className="container relative z-10 px-4 md:px-6 py-24 md:py-32">
         <motion.div
           variants={stagger}
           initial="hidden"
           animate="show"
-          className="text-center max-w-4xl mx-auto"
+          className="text-center max-w-5xl mx-auto"
         >
           {/* Badge */}
-          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 backdrop-blur-md">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">The #1 Creator Monetization Platform</span>
+          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-foreground/[0.04] border border-white/10 mb-10 backdrop-blur-md">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <span className="text-[12px] font-medium text-foreground/80 tracking-wide">The Creator Operating System</span>
+            <span className="text-[10px] font-medium text-muted-foreground/70 ml-1 pl-2 border-l border-white/10">v2.0</span>
           </motion.div>
 
-          {/* Main heading with dynamic gradient */}
+          {/* Main heading — editorial scale */}
           <motion.h1
             variants={fadeUp}
-            className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-[1.05] tracking-tight mb-6"
+            className="font-display font-semibold leading-[0.98] tracking-[-0.035em] mb-8 text-[clamp(2.5rem,7vw,5.75rem)]"
           >
-            One Link To Build Your{" "}
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={themeIdx}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.5 }}
-                className={`bg-gradient-to-r ${THEME_GRADIENTS[themeIdx]} bg-clip-text text-transparent`}
-              >
-                Creator Empire
-              </motion.span>
-            </AnimatePresence>
+            <span className="block text-foreground/95">One link to build</span>
+            <span className="block">
+              your{" "}
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={themeIdx}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -14 }}
+                  transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                  className={`inline-block bg-gradient-to-r ${THEME_GRADIENTS[themeIdx]} bg-clip-text text-transparent`}
+                >
+                  creator empire.
+                </motion.span>
+              </AnimatePresence>
+            </span>
           </motion.h1>
 
-          {/* Subtitle */}
+          {/* Subtitle — narrower, premium rhythm */}
           <motion.p
             variants={fadeUp}
-            className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10"
+            className="text-base md:text-lg text-muted-foreground/90 max-w-xl mx-auto mb-12 leading-relaxed"
           >
-            Turn followers into customers, fans, clients, and income with one intelligent
-            creator platform — built for the next generation of digital entrepreneurs.
+            Turn followers into customers, fans, clients, and income — with one
+            intelligent platform designed for modern creators.
           </motion.p>
 
           {/* CTA Buttons */}
           <motion.div
             variants={fadeUp}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+            className="flex flex-col sm:flex-row gap-3 justify-center items-center"
           >
             <Link to="/signup">
-              <GradientButton variant="glow" size="xl">
-                Get Started Free
+              <GradientButton variant="glow" size="xl" className="rounded-full">
+                Start free
                 <ArrowRight className="w-5 h-5" />
               </GradientButton>
             </Link>
             <Link to="/demo">
-              <GradientButton variant="outline" size="xl">
+              <GradientButton variant="ghost" size="xl" className="rounded-full">
                 <Link2 className="w-5 h-5" />
-                See Demo
+                See a live demo
               </GradientButton>
             </Link>
           </motion.div>
 
-          {/* Stats with counting animation */}
+          {/* Trust row */}
           <motion.div
             variants={fadeUp}
-            className="mt-16 grid grid-cols-3 gap-8 max-w-lg mx-auto"
+            className="mt-10 flex items-center justify-center gap-3 text-[12px] text-muted-foreground/80"
+          >
+            <div className="flex -space-x-2">
+              {["from-pink-400 to-rose-500", "from-violet-400 to-indigo-500", "from-emerald-400 to-cyan-500", "from-amber-400 to-orange-500"].map((g, i) => (
+                <span
+                  key={i}
+                  className={`w-6 h-6 rounded-full bg-gradient-to-br ${g} border-2 border-background`}
+                />
+              ))}
+            </div>
+            <span>Loved by creators in 40+ countries</span>
+          </motion.div>
+
+          {/* Stats — refined */}
+          <motion.div
+            variants={fadeUp}
+            className="mt-20 grid grid-cols-3 gap-6 md:gap-12 max-w-2xl mx-auto pt-10 border-t border-white/[0.06]"
           >
             {isLoading ? (
               <>
