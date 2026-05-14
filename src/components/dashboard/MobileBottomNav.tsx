@@ -60,22 +60,30 @@ export const MobileBottomNav = ({ username, onAddClick, onPreviewClick }: Mobile
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-lg border-t border-border z-50 lg:hidden">
-      <div className="flex items-center justify-around py-2 px-4">
+    <div className="fixed bottom-3 left-1/2 z-50 -translate-x-1/2 lg:hidden">
+      <div
+        className="relative flex items-center gap-1 rounded-full border border-border/60 bg-background/70 px-2 py-1.5 shadow-[0_18px_50px_-12px_hsl(var(--primary)/0.35)] backdrop-blur-2xl"
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 rounded-full opacity-70"
+          style={{
+            background:
+              "radial-gradient(60% 80% at 50% 0%, hsl(var(--primary) / 0.18), transparent 70%)",
+          }}
+        />
         {navItems.map((item) => {
           const isActive = item.href && location.pathname === item.href;
-          
+
           if (item.action === "add") {
             return (
               <button
                 key={item.label}
                 onClick={onAddClick}
-                className="flex flex-col items-center gap-1 px-4 py-2"
+                aria-label={item.label}
+                className="relative mx-1 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-[0_8px_24px_-6px_hsl(var(--primary)/0.7)] transition-transform active:scale-95"
               >
-                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-                  <Plus className="w-5 h-5 text-primary-foreground" />
-                </div>
-                <span className="text-xs font-medium">{item.label}</span>
+                <Plus className="h-5 w-5" />
               </button>
             );
           }
@@ -85,10 +93,10 @@ export const MobileBottomNav = ({ username, onAddClick, onPreviewClick }: Mobile
               <button
                 key={item.label}
                 onClick={onPreviewClick}
-                className="flex flex-col items-center gap-1 px-4 py-2"
+                aria-label={item.label}
+                className="relative flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-all hover:bg-foreground/5 hover:text-foreground active:scale-95"
               >
-                <item.icon className="w-6 h-6 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">{item.label}</span>
+                <item.icon className="h-5 w-5" />
               </button>
             );
           }
@@ -98,10 +106,13 @@ export const MobileBottomNav = ({ username, onAddClick, onPreviewClick }: Mobile
               <button
                 key={item.label}
                 onClick={handleShare}
-                className="flex flex-col items-center gap-1 px-4 py-2"
+                aria-label={item.label}
+                className={cn(
+                  "relative flex h-11 w-11 items-center justify-center rounded-full transition-all hover:bg-foreground/5 active:scale-95",
+                  copied ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                )}
               >
-                <item.icon className={cn("w-6 h-6", copied ? "text-green-500" : "text-muted-foreground")} />
-                <span className={cn("text-xs", copied ? "text-green-500 font-medium" : "text-muted-foreground")}>{item.label}</span>
+                <item.icon className="h-5 w-5" />
               </button>
             );
           }
@@ -110,16 +121,15 @@ export const MobileBottomNav = ({ username, onAddClick, onPreviewClick }: Mobile
             <Link
               key={item.label}
               to={item.href || "#"}
-              className="flex flex-col items-center gap-1 px-4 py-2"
+              aria-label={item.label}
+              className={cn(
+                "relative flex h-11 w-11 items-center justify-center rounded-full transition-all active:scale-95",
+                isActive
+                  ? "bg-primary/15 text-primary shadow-[0_0_18px_-4px_hsl(var(--primary)/0.6)]"
+                  : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+              )}
             >
-              <item.icon className={cn(
-                "w-6 h-6",
-                isActive ? "text-primary" : "text-muted-foreground"
-              )} />
-              <span className={cn(
-                "text-xs",
-                isActive ? "text-primary font-medium" : "text-muted-foreground"
-              )}>{item.label}</span>
+              <item.icon className="h-5 w-5" />
             </Link>
           );
         })}
