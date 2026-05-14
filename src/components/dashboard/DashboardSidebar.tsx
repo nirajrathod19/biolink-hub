@@ -89,11 +89,22 @@ export const DashboardSidebar = () => { // sidebar component
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 bottom-0 z-40 bg-sidebar border-r border-sidebar-border transition-all duration-300",
+        "fixed left-0 top-0 bottom-0 z-40 transition-all duration-300",
+        "bg-sidebar/70 backdrop-blur-2xl border-r border-sidebar-border/60",
+        "shadow-[inset_-1px_0_0_hsl(var(--foreground)/0.04)]",
         collapsed ? "w-16" : "w-64"
       )}
     >
-      <div className="flex flex-col h-full p-4">
+      {/* subtle aurora wash */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-60"
+        style={{
+          background:
+            "radial-gradient(80% 40% at 50% 0%, hsl(var(--primary) / 0.10), transparent 70%), radial-gradient(80% 40% at 50% 100%, hsl(var(--accent) / 0.10), transparent 70%)",
+        }}
+      />
+      <div className="relative flex flex-col h-full p-4">
         {/* Logo + Share */}
         <div className="flex items-center justify-between mb-8">
           {!collapsed && (
