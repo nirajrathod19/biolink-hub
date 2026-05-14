@@ -89,11 +89,22 @@ export const DashboardSidebar = () => { // sidebar component
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 bottom-0 z-40 bg-sidebar border-r border-sidebar-border transition-all duration-300",
+        "fixed left-0 top-0 bottom-0 z-40 transition-all duration-300",
+        "bg-sidebar/70 backdrop-blur-2xl border-r border-sidebar-border/60",
+        "shadow-[inset_-1px_0_0_hsl(var(--foreground)/0.04)]",
         collapsed ? "w-16" : "w-64"
       )}
     >
-      <div className="flex flex-col h-full p-4">
+      {/* subtle aurora wash */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-60"
+        style={{
+          background:
+            "radial-gradient(80% 40% at 50% 0%, hsl(var(--primary) / 0.10), transparent 70%), radial-gradient(80% 40% at 50% 100%, hsl(var(--accent) / 0.10), transparent 70%)",
+        }}
+      />
+      <div className="relative flex flex-col h-full p-4">
         {/* Logo + Share */}
         <div className="flex items-center justify-between mb-8">
           {!collapsed && (
@@ -181,14 +192,26 @@ export const DashboardSidebar = () => { // sidebar component
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all",
+                  "group relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all",
                   isActive
-                    ? "bg-sidebar-accent text-primary"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                    ? "text-primary"
+                    : "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/40"
                 )}
               >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+                {isActive && (
+                  <>
+                    <span
+                      aria-hidden
+                      className="absolute inset-0 rounded-lg border border-primary/25 bg-primary/10 shadow-[0_0_24px_-6px_hsl(var(--primary)/0.55)]"
+                    />
+                    <span
+                      aria-hidden
+                      className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-primary shadow-[0_0_12px_hsl(var(--primary)/0.7)]"
+                    />
+                  </>
+                )}
+                <item.icon className="relative w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110" />
+                {!collapsed && <span className="relative text-sm font-medium">{item.label}</span>}
               </Link>
             );
           })}
