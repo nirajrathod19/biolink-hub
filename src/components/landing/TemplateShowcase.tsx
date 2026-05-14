@@ -443,7 +443,7 @@ const TiltCard: React.FC<{ tpl: Template; onUse: (t: Template) => void }> = ({ t
         aria-hidden
         className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"
         style={{
-          background: useMotionTemplate(`radial-gradient(400px circle at ${glowX} ${glowY}, hsl(var(--primary) / 0.18), transparent 60%)`),
+          background: useMotionTemplate`radial-gradient(400px circle at ${glowX} ${glowY}, hsl(var(--primary) / 0.18), transparent 60%)`,
         }}
       />
       {/* glass reflection */}
