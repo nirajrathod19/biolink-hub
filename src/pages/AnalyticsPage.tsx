@@ -2,9 +2,6 @@ import { motion } from "framer-motion";
 import {
   BarChart3,
   TrendingUp,
-  TrendingDown,
-  Eye,
-  MousePointer,
   Globe,
   Smartphone,
   Monitor,
@@ -12,14 +9,18 @@ import {
   Tablet,
   Crown,
   Lock,
+  MousePointer,
 } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { EnhancedAnalytics } from "@/components/analytics/EnhancedAnalytics";
 import { AnalyticsSettingsCard } from "@/components/analytics/AnalyticsSettingsCard";
 import { RevenueForecast } from "@/components/analytics/RevenueForecast";
-import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
-import { LiveIndicator } from "@/components/ui/LiveIndicator";
+import { EtlytixAmbient } from "@/components/analytics/EtlytixAmbient";
+import { EtlytixHero } from "@/components/analytics/EtlytixHero";
+import { AIInsightEngine } from "@/components/analytics/AIInsightEngine";
+import { ConversionFunnel } from "@/components/analytics/ConversionFunnel";
+import { LiveActivityTicker } from "@/components/analytics/LiveActivityTicker";
 import { useProfile } from "@/hooks/useProfile";
 import { useLinks } from "@/hooks/useLinks";
 import { useRealtimeAnalytics } from "@/hooks/useRealtimeAnalytics";
