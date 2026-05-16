@@ -68,68 +68,68 @@
     --slate-blue: 200 43% 21%;
   }
 
-  /* Dark Theme */
+  /* Dark Theme — Brioo Cinematic Premium
+     Midnight Navy #07111F   -> HSL(213, 65%, 7%)
+     Electric Violet #7B61FF -> HSL(249, 100%, 69%)
+     Aurora Cyan #69EACB     -> HSL(167, 71%, 67%)
+     Soft Lavender #C8B6FF   -> HSL(254, 100%, 86%)
+     Frost White #F8FAFC     -> HSL(210, 40%, 98%) */
   .dark {
-    /* Deep Slate Blue: #1F3B4D -> HSL(200, 43%, 21%) */
-    /* Soft Lavender: #D6CDEA -> HSL(261, 36%, 86%) */
-    /* Electric Lime: #C8EB5E -> HSL(76, 77%, 64%) */
-    /* Matte Black: #121212 -> HSL(0, 0%, 7%) */
+    --background: 213 65% 7%;
+    --foreground: 210 40% 98%;
 
-    --background: 0 0% 7%;
-    --foreground: 0 0% 98%;
+    --card: 220 50% 10%;
+    --card-foreground: 210 40% 98%;
 
-    --card: 200 43% 12%;
-    --card-foreground: 0 0% 98%;
+    --popover: 220 50% 10%;
+    --popover-foreground: 210 40% 98%;
 
-    --popover: 200 43% 12%;
-    --popover-foreground: 0 0% 98%;
+    --primary: 249 100% 69%;
+    --primary-foreground: 210 40% 98%;
 
-    --primary: 76 77% 64%;
-    --primary-foreground: 0 0% 7%;
+    --secondary: 220 40% 16%;
+    --secondary-foreground: 210 40% 98%;
 
-    --secondary: 200 43% 21%;
-    --secondary-foreground: 0 0% 98%;
+    --muted: 220 35% 14%;
+    --muted-foreground: 254 30% 75%;
 
-    --muted: 200 30% 18%;
-    --muted-foreground: 261 20% 70%;
-
-    --accent: 261 36% 86%;
-    --accent-foreground: 0 0% 7%;
+    --accent: 167 71% 67%;
+    --accent-foreground: 213 65% 7%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 200 30% 22%;
-    --input: 200 30% 22%;
-    --ring: 76 77% 64%;
+    --border: 220 30% 20%;
+    --input: 220 30% 20%;
+    --ring: 249 100% 69%;
 
-    /* Custom Brioo tokens - Dark */
-    --gradient-primary: linear-gradient(135deg, hsl(76, 77%, 64%) 0%, hsl(261, 36%, 86%) 100%);
-    --gradient-secondary: linear-gradient(135deg, hsl(261, 36%, 86%) 0%, hsl(200, 43%, 21%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(200, 43%, 16%) 0%, hsl(200, 43%, 10%) 100%);
-    --gradient-glass: linear-gradient(135deg, hsla(0, 0%, 100%, 0.1) 0%, hsla(0, 0%, 100%, 0.05) 100%);
-    
-    --shadow-neon: 0 0 30px hsla(76, 77%, 64%, 0.3);
-    --shadow-neon-accent: 0 0 30px hsla(261, 36%, 86%, 0.3);
-    --shadow-card: 0 4px 30px hsla(0, 0%, 0%, 0.3);
-    --shadow-elevated: 0 20px 60px hsla(0, 0%, 0%, 0.5);
+    /* Custom Brioo tokens - Dark Cinematic */
+    --gradient-primary: linear-gradient(135deg, hsl(249, 100%, 69%) 0%, hsl(167, 71%, 67%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(254, 100%, 86%) 0%, hsl(249, 100%, 69%) 100%);
+    --gradient-aurora: linear-gradient(135deg, hsl(249, 100%, 69%) 0%, hsl(254, 100%, 86%) 50%, hsl(167, 71%, 67%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(220, 50%, 12%) 0%, hsl(213, 65%, 8%) 100%);
+    --gradient-glass: linear-gradient(135deg, hsla(0, 0%, 100%, 0.08) 0%, hsla(0, 0%, 100%, 0.02) 100%);
 
-    --glass-bg: hsla(200, 43%, 15%, 0.7);
-    --glass-border: hsla(0, 0%, 100%, 0.1);
+    --shadow-neon: 0 0 40px hsla(249, 100%, 69%, 0.35);
+    --shadow-neon-accent: 0 0 40px hsla(167, 71%, 67%, 0.3);
+    --shadow-card: 0 8px 40px hsla(213, 65%, 4%, 0.5);
+    --shadow-elevated: 0 30px 80px hsla(213, 65%, 4%, 0.65);
 
-    --sidebar-background: 200 43% 10%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 76 77% 64%;
-    --sidebar-primary-foreground: 0 0% 7%;
-    --sidebar-accent: 200 43% 18%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 200 30% 18%;
-    --sidebar-ring: 76 77% 64%;
+    --glass-bg: hsla(220, 50%, 10%, 0.6);
+    --glass-border: hsla(254, 100%, 86%, 0.12);
 
-    /* Specific color tokens */
-    --lime: 76 77% 64%;
-    --lavender: 261 36% 86%;
-    --slate-blue: 200 43% 21%;
+    --sidebar-background: 213 65% 6%;
+    --sidebar-foreground: 210 40% 92%;
+    --sidebar-primary: 249 100% 69%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 220 40% 14%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 220 30% 18%;
+    --sidebar-ring: 249 100% 69%;
+
+    --lime: 167 71% 67%;
+    --lavender: 254 100% 86%;
+    --slate-blue: 220 50% 16%;
   }
 }
 
@@ -257,3 +257,19 @@
   -webkit-mask-image: linear-gradient(to right, transparent 0, black 8%, black 92%, transparent 100%);
           mask-image: linear-gradient(to right, transparent 0, black 8%, black 92%, transparent 100%);
 }
+
+/* Premium aurora gradient text */
+.aurora-text {
+  background: linear-gradient(135deg, hsl(249, 100%, 76%) 0%, hsl(254, 100%, 86%) 45%, hsl(167, 71%, 72%) 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  color: transparent;
+}
+
+/* Soft float keyframe for floating UI cards */
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0) }
+  50%      { transform: translateY(-10px) }
+}
+.float-soft { animation: float-soft 6s ease-in-out infinite; }
+
