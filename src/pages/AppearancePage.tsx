@@ -17,6 +17,7 @@ import { ThemeGallery } from "@/components/appearance/ThemeGallery";
 import { ThemeLivePreview } from "@/components/appearance/ThemeLivePreview";
 import { AssetLayerManager } from "@/components/appearance/AssetLayerManager";
 import { AIColorMatcher } from "@/components/appearance/AIColorMatcher";
+import { PremiumThemeShowcase } from "@/components/appearance/PremiumThemeShowcase";
 
 const AppearancePage = () => {
   const { data: profile, isLoading } = useProfile();
@@ -137,6 +138,20 @@ const AppearancePage = () => {
                     />
                   </div>
                 </div>
+              </GlassCard>
+            </motion.div>
+
+            {/* Premium Adaptive Themes */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08 }}
+            >
+              <GlassCard>
+                <PremiumThemeShowcase
+                  selectedThemeId={selectedTheme}
+                  onSelect={setSelectedTheme}
+                />
               </GlassCard>
             </motion.div>
 
