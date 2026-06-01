@@ -64,7 +64,9 @@ export const DashboardSidebar = () => { // sidebar component
   const { toast } = useToast();
 
   const isPro = profile?.is_pro || false;
-  const menuItems = allMenuItems;
+  const [advancedOpen, setAdvancedOpen] = useState(
+    advancedMenu.some((i) => location.pathname === i.href)
+  );
 
   const bioUrl = profile?.username ? `https://brioo.in/${profile.username}` : "";
 
@@ -165,7 +167,7 @@ export const DashboardSidebar = () => { // sidebar component
 
       {/* Navigation */}
         <nav className="flex-1 space-y-1 overflow-y-auto min-h-0">
-          {menuItems.map((item) => {
+          {primaryMenu.map((item) => {
             const isActive = location.pathname === item.href;
             const isLocked = item.proOnly && !isPro;
 
@@ -214,10 +216,54 @@ export const DashboardSidebar = () => { // sidebar component
                   </>
                 )}
                 <item.icon className="relative w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110" />
-                {!collapsed && <span className="relative text-sm font-medium">{item.label}</span>}
+                {!collapsed && (
+                  <span className="relative flex flex-1 items-center justify-between text-sm font-medium">
+                    {item.label}
+                    {"badge" in item && item.badge && (
+                      <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                        {item.badge}
+                      </span>
+                    )}
+                  </span>
+                )}
               </Link>
             );
           })}
+
+          {/* Advanced group */}
+          {!collapsed && (
+            <div className="pt-4">
+              <button
+                onClick={() => setAdvancedOpen((v) => !v)}
+                className="flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:text-foreground"
+              >
+                Advanced
+                <ChevronDown className={cn("h-3 w-3 transition-transform", advancedOpen && "rotate-180")} />
+              </button>
+              {advancedOpen && (
+                <div className="mt-1 space-y-0.5">
+                  {advancedMenu.map((item) => {
+                    const isActive = location.pathname === item.href;
+                    return (
+                      <Link
+                        key={item.href}
+                        to={item.href}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                          isActive
+                            ? "bg-sidebar-accent/60 text-primary"
+                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground"
+                        )}
+                      >
+                        <item.icon className="h-4 w-4 flex-shrink-0 opacity-80" />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
 
         {/* User Section */}
