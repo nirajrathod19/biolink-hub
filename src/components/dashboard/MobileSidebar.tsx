@@ -53,6 +53,9 @@ export const MobileSidebar = () => {
   const { data: profile } = useProfile();
   const [proModalOpen, setProModalOpen] = useState(false);
   const [proFeatureName, setProFeatureName] = useState("");
+  const [advancedOpen, setAdvancedOpen] = useState(
+    advancedMenu.some((i) => location.pathname === i.href)
+  );
 
   const isPro = profile?.is_pro || false;
 
@@ -100,7 +103,7 @@ export const MobileSidebar = () => {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto min-h-0">
-        {menuItems.map((item) => {
+        {primaryMenu.map((item) => {
           const isActive = location.pathname === item.href;
           const isLocked = item.proOnly && !isPro;
 
@@ -128,18 +131,59 @@ export const MobileSidebar = () => {
               <Link
                 to={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all",
+                  "flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all",
                   isActive
                     ? "bg-sidebar-accent text-primary font-medium"
                     : "text-sidebar-foreground hover:bg-sidebar-accent/50"
                 )}
               >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
-                <span className="text-sm">{item.label}</span>
+                <span className="flex items-center gap-3">
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-sm">{item.label}</span>
+                </span>
+                {"badge" in item && item.badge && (
+                  <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             </SheetClose>
           );
         })}
+
+        {/* Advanced group */}
+        <div className="pt-4">
+          <button
+            onClick={() => setAdvancedOpen((v) => !v)}
+            className="flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:text-foreground"
+          >
+            Advanced
+            <ChevronDown className={cn("h-3 w-3 transition-transform", advancedOpen && "rotate-180")} />
+          </button>
+          {advancedOpen && (
+            <div className="mt-1 space-y-0.5">
+              {advancedMenu.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <SheetClose asChild key={item.href}>
+                    <Link
+                      to={item.href}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                        isActive
+                          ? "bg-sidebar-accent/60 text-primary"
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground"
+                      )}
+                    >
+                      <item.icon className="h-4 w-4 flex-shrink-0 opacity-80" />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SheetClose>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </nav>
 
       {/* Support + Sign Out */}
