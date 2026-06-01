@@ -4,23 +4,23 @@ import {
   Link2,
   LayoutDashboard,
   Settings,
-  Wallet,
   BarChart3,
-  Share2,
-  Palette,
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Users,
   Eye,
   DollarSign,
   ExternalLink,
   Copy,
   Check,
+  Sparkles,
+  ChevronDown,
+  Wallet,
+  Users,
+  Mail,
+  Share2,
   MessageSquare,
   UserCircle,
-  Mail,
-  Bug,
   Zap,
   Crown,
 } from "lucide-react";
@@ -33,20 +33,23 @@ import { BugReportDialog } from "@/components/dashboard/BugReportDialog";
 import { ContactSupportDialog } from "@/components/dashboard/ContactSupportDialog";
 import { ProUpgradeModal } from "@/components/dashboard/ProUpgradeModal";
 
-const allMenuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", proOnly: false },
-  { icon: Link2, label: "My Links", href: "/dashboard/links", proOnly: false },
-  { icon: Share2, label: "Social Media", href: "/dashboard/social", proOnly: false },
-  { icon: Palette, label: "Appearance", href: "/dashboard/appearance", proOnly: false },
-  { icon: MessageSquare, label: "Community", href: "/dashboard/community", proOnly: false },
+const primaryMenu = [
+  { icon: LayoutDashboard, label: "Home", href: "/dashboard", proOnly: false },
+  { icon: Link2, label: "My Page", href: "/dashboard/links", proOnly: false },
   { icon: BarChart3, label: "Analytics", href: "/dashboard/analytics", proOnly: false },
   { icon: DollarSign, label: "Monetization", href: "/dashboard/monetization", proOnly: true },
-  { icon: Wallet, label: "Wallet", href: "/dashboard/wallet", proOnly: false },
-  { icon: Users, label: "Referrals", href: "/dashboard/referrals", proOnly: false },
+  { icon: Sparkles, label: "AI Studio", href: "/dashboard/ai", proOnly: false, badge: "New" as const },
   { icon: Settings, label: "Settings", href: "/dashboard/settings", proOnly: false },
-  { icon: UserCircle, label: "Profile", href: "/dashboard/profile", proOnly: false },
-  { icon: Mail, label: "Subscribers", href: "/dashboard/subscribers", proOnly: false },
-  { icon: Zap, label: "Dynamic Rules", href: "/dashboard/rules", proOnly: false },
+];
+
+const advancedMenu = [
+  { icon: UserCircle, label: "Profile", href: "/dashboard/profile" },
+  { icon: Share2, label: "Social", href: "/dashboard/social" },
+  { icon: Wallet, label: "Wallet", href: "/dashboard/wallet" },
+  { icon: Mail, label: "Subscribers", href: "/dashboard/subscribers" },
+  { icon: Users, label: "Referrals", href: "/dashboard/referrals" },
+  { icon: MessageSquare, label: "Community", href: "/dashboard/community" },
+  { icon: Zap, label: "Dynamic Rules", href: "/dashboard/rules" },
 ];
 
 export const DashboardSidebar = () => { // sidebar component
