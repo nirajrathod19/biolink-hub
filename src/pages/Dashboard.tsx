@@ -18,8 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useLinks } from "@/hooks/useLinks";
 import { useRealtimeAnalytics } from "@/hooks/useRealtimeAnalytics";
-import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
-import { IntentSurvey } from "@/components/onboarding/IntentSurvey";
+import { OnboardingWizardV2 } from "@/features/onboarding";
 import {
   Dialog,
   DialogContent,
@@ -38,18 +37,15 @@ const Dashboard = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
-  const [showIntentSurvey, setShowIntentSurvey] = useState(false);
 
-  // Detect new user needing onboarding
+  // Detect new user needing onboarding (single unified flow)
   useEffect(() => {
     if (profile && !onboardingDismissed && !profileLoading) {
       const isAutoUsername = profile.username?.startsWith("user_");
-      const noAvatar = !profile.avatar_url;
-      if (isAutoUsername || noAvatar) {
+      const noBio = !profile.bio;
+      const noIntent = !profile.content_track;
+      if (isAutoUsername || noBio || noIntent) {
         setShowOnboarding(true);
-      } else if (!profile.content_track) {
-        // Profile setup done but no intent survey completed yet
-        setShowIntentSurvey(true);
       }
     }
   }, [profile, profileLoading, onboardingDismissed]);
@@ -184,24 +180,14 @@ const Dashboard = () => {
         links={links}
       />
 
-      {/* Onboarding Wizard */}
-      <OnboardingWizard
+      {/* Onboarding Wizard v2 — unified 60-second flow */}
+      <OnboardingWizardV2
         open={showOnboarding}
         onComplete={() => {
           setShowOnboarding(false);
           setOnboardingDismissed(true);
-          // Show intent survey after onboarding
-          if (!profile?.content_track) {
-            setShowIntentSurvey(true);
-          }
         }}
         currentUsername={profile?.username}
-      />
-
-      {/* Intent Survey */}
-      <IntentSurvey
-        open={showIntentSurvey}
-        onComplete={() => setShowIntentSurvey(false)}
       />
 
       {/* Add Link Dialog */}
