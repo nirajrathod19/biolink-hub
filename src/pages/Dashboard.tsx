@@ -180,24 +180,14 @@ const Dashboard = () => {
         links={links}
       />
 
-      {/* Onboarding Wizard */}
-      <OnboardingWizard
+      {/* Onboarding Wizard v2 — unified 60-second flow */}
+      <OnboardingWizardV2
         open={showOnboarding}
         onComplete={() => {
           setShowOnboarding(false);
           setOnboardingDismissed(true);
-          // Show intent survey after onboarding
-          if (!profile?.content_track) {
-            setShowIntentSurvey(true);
-          }
         }}
         currentUsername={profile?.username}
-      />
-
-      {/* Intent Survey */}
-      <IntentSurvey
-        open={showIntentSurvey}
-        onComplete={() => setShowIntentSurvey(false)}
       />
 
       {/* Add Link Dialog */}
