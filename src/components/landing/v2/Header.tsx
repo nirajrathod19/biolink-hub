@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { BriooLogo } from "@/components/brand/BriooLogo";
 
 const navLinks = [
   { href: "#features", label: "Features" },
@@ -35,9 +36,8 @@ export const Header = () => {
       )}
     >
       <div className="container mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 font-display font-bold text-lg">
-          <span className="w-7 h-7 rounded-lg bg-primary grid place-items-center text-primary-foreground text-sm">B</span>
-          Brioo
+        <Link to="/" className="flex items-center" aria-label="Brioo home">
+          <BriooLogo height={32} />
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">

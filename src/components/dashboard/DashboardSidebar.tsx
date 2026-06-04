@@ -32,6 +32,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { BugReportDialog } from "@/components/dashboard/BugReportDialog";
 import { ContactSupportDialog } from "@/components/dashboard/ContactSupportDialog";
 import { ProUpgradeModal } from "@/components/dashboard/ProUpgradeModal";
+import { BriooLogo } from "@/components/brand/BriooLogo";
 
 const primaryMenu = [
   { icon: LayoutDashboard, label: "Home", href: "/dashboard", proOnly: false },
@@ -113,11 +114,8 @@ export const DashboardSidebar = () => { // sidebar component
         {/* Logo + Share */}
         <div className="flex items-center justify-between mb-8">
           {!collapsed && (
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <Link2 className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="font-display font-bold">Brioo</span>
+            <Link to="/" className="flex items-center" aria-label="Brioo home">
+              <BriooLogo height={28} />
             </Link>
           )}
           <div className="flex items-center gap-1">

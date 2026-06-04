@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
+import { BriooLogo } from "@/components/brand/BriooLogo";
 
 export const Footer = () => {
   return (
     <footer className="border-t border-border py-12">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <Link to="/" className="flex items-center gap-2 font-display font-bold">
-            <span className="w-7 h-7 rounded-lg bg-primary grid place-items-center text-primary-foreground text-sm">B</span>
-            Brioo
+          <Link to="/" aria-label="Brioo home">
+            <BriooLogo height={28} />
           </Link>
           <div className="flex items-center gap-5 text-sm text-muted-foreground">
             <a href="#features" className="hover:text-foreground">Features</a>
