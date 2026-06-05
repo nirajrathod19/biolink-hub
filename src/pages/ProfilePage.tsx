@@ -39,6 +39,7 @@ import { usePublicLayoutElements } from "@/hooks/useLayoutElements";
 import { usePublicDisplayRules } from "@/hooks/useLinkDisplayRules";
 import { getVisitorContext, applyDisplayRules } from "@/lib/visitorDetection";
 import { ProfileModeRouter, resolveCreatorMode } from "@/components/profile/modes/ProfileModeRouter";
+import { BriooLogo } from "@/components/brand/BriooLogo";
 
 const SOCIAL_ICONS: Record<string, any> = {
   instagram: Instagram, youtube: Youtube, twitter: Twitter, linkedin: Linkedin,
@@ -261,7 +262,7 @@ const ProfilePageContent = () => {
         <motion.footer initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6, duration: 0.5 }} className="mt-12 text-center">
           <a href="/" className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm transition-all hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
             style={{ background: `${theme.accent}12`, border: `1px solid ${theme.accent}25`, color: theme.footerText }}>
-            <span className="font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Brioo</span>
+            <BriooLogo height={18} />
             <span className="text-xs opacity-70">•</span>
             <span className="text-xs">Create your free page →</span>
           </a>
