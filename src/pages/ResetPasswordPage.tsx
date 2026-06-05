@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Link2, Lock, Eye, EyeOff, Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Lock, Eye, EyeOff, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { GradientButton } from "@/components/ui/GradientButton";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
