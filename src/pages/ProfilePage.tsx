@@ -142,7 +142,7 @@ const ProfilePageContent = () => {
 
       <main className="relative z-10 max-w-lg mx-auto px-4 pt-6 pb-12">
         <GlobalAdBanner themeColor={theme.accent} />
-        {announcementText && <AnnouncementBar text={announcementText} theme={theme} />}
+        {/* Announcement now rendered inside FeaturedSection for unified hierarchy */}
         <AdSenseAd slot="header" format="horizontal" className="mb-4" profileId={profile.id} />
 
         <motion.header initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center mb-8">
