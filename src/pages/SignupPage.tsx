@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Link2, Mail, Lock, User, ArrowRight, Eye, EyeOff, Loader2, CheckCircle, AlertTriangle } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Loader2, CheckCircle, AlertTriangle } from "lucide-react";
+import { BriooLogo } from "@/components/brand/BriooLogo";
 import { GradientButton } from "@/components/ui/GradientButton";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -230,11 +231,8 @@ const SignupPage = () => {
           transition={{ duration: 0.6 }}
           className="w-full max-w-md"
         >
-          <Link to="/" className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Link2 className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-display font-bold">Brioo</span>
+          <Link to="/" className="inline-flex items-center mb-8" aria-label="Brioo home">
+            <BriooLogo height={32} />
           </Link>
 
           <h1 className="text-3xl font-display font-bold mb-2">Create your account</h1>
