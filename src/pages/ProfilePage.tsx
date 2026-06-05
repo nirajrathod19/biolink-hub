@@ -40,6 +40,7 @@ import { usePublicDisplayRules } from "@/hooks/useLinkDisplayRules";
 import { getVisitorContext, applyDisplayRules } from "@/lib/visitorDetection";
 import { ProfileModeRouter, resolveCreatorMode } from "@/components/profile/modes/ProfileModeRouter";
 import { BriooLogo } from "@/components/brand/BriooLogo";
+import { FeaturedSection } from "@/features/public-profile";
 
 const SOCIAL_ICONS: Record<string, any> = {
   instagram: Instagram, youtube: Youtube, twitter: Twitter, linkedin: Linkedin,
@@ -213,7 +214,20 @@ const ProfilePageContent = () => {
         >
         {profile.user_id && <RecentSalesTicker userId={profile.user_id} theme={theme} />}
 
-        <PublicLinkList links={links} theme={theme} onLinkClick={handleLinkClick} creatorId={profile.user_id} creatorName={profile.display_name || profile.username || undefined} />
+        <FeaturedSection
+          links={links as any}
+          announcementText={announcementText}
+          theme={theme}
+          onLinkClick={handleLinkClick}
+        />
+
+        <PublicLinkList
+          links={(links as any).filter((l: any) => !l.is_highlighted)}
+          theme={theme}
+          onLinkClick={handleLinkClick}
+          creatorId={profile.user_id}
+          creatorName={profile.display_name || profile.username || undefined}
+        />
 
         {profile.user_id && <section aria-label="Community updates"><CommunityFeed userId={profile.user_id} theme={theme} /></section>}
         {profile.user_id && <section aria-label="Questions and answers"><QABox creatorUserId={profile.user_id} creatorName={profile.display_name || profile.username} theme={theme} /></section>}
