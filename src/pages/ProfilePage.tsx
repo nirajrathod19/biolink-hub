@@ -2,10 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import {
-  Instagram, Youtube, Twitter, Linkedin, Github, ExternalLink, Sparkles,
-  MessageCircle, Send, Camera, Facebook,
-} from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { usePublicProfile } from "@/hooks/useProfile";
 import { usePublicLinks } from "@/hooks/useLinks";
 import { usePublicSocialLinks } from "@/hooks/useSocialLinks";
@@ -28,24 +25,34 @@ import { ProfileNotFound } from "@/components/profile/ProfileNotFound";
 import { PublicLinkList } from "@/components/profile/PublicLinkList";
 import { EmailCaptureBlock } from "@/components/profile/EmailCaptureBlock";
 import { FloatingMusicPlayer } from "@/components/profile/FloatingMusicPlayer";
-import { VerifiedBadge } from "@/components/profile/VerifiedBadge";
-import { AnnouncementBar } from "@/components/profile/AnnouncementBar";
 import { RecentSalesTicker } from "@/components/profile/RecentSalesTicker";
-import { ContactMeForm } from "@/components/profile/ContactMeForm";
 import { ProfileStats } from "@/components/profile/ProfileStats";
-import { MagneticWrap } from "@/components/profile/MagneticWrap";
 import { getThemeById } from "@/lib/bioThemes";
 import { usePublicLayoutElements } from "@/hooks/useLayoutElements";
 import { usePublicDisplayRules } from "@/hooks/useLinkDisplayRules";
 import { getVisitorContext, applyDisplayRules } from "@/lib/visitorDetection";
 import { ProfileModeRouter, resolveCreatorMode } from "@/components/profile/modes/ProfileModeRouter";
 import { BriooLogo } from "@/components/brand/BriooLogo";
-import { FeaturedSection } from "@/features/public-profile";
+import {
+  FeaturedSection,
+  ProfileHeader,
+  ContactSection,
+  type QuickAction,
+} from "@/features/public-profile";
 
-const SOCIAL_ICONS: Record<string, any> = {
-  instagram: Instagram, youtube: Youtube, twitter: Twitter, linkedin: Linkedin,
-  facebook: Facebook, github: Github, whatsapp: MessageCircle, telegram: Send, snapchat: Camera,
+const CONTENT_TRACK_CATEGORY: Record<string, string> = {
+  links: "Creator",
+  audio: "Musician",
+  video: "Video Creator",
+  blog: "Writer",
+  shop: "Shop Owner",
+  services: "Coach",
+  developer: "Developer",
+  agency: "Agency",
+  founder: "Founder",
 };
+
+
 
 const ProfilePageContent = () => {
   const { username } = useParams<{ username: string }>();
