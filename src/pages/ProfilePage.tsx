@@ -152,59 +152,68 @@ const ProfilePageContent = () => {
         {/* Announcement now rendered inside FeaturedSection for unified hierarchy */}
         <AdSenseAd slot="header" format="horizontal" className="mb-4" profileId={profile.id} />
 
-        <motion.header initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center mb-8">
-          <div className="relative inline-block mb-4">
-            <div className="w-28 h-28 rounded-full p-1" style={{ background: `linear-gradient(135deg, ${theme.accent}, ${theme.accent}88)` }}>
-              {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt={`${profile.display_name || profile.username}'s avatar`} className="w-full h-full rounded-full object-cover" />
-              ) : (
-                <div className="w-full h-full rounded-full flex items-center justify-center text-4xl" style={{ background: theme.cardBg }} role="img" aria-label="Default avatar">👤</div>
-              )}
-            </div>
-            {profile.is_pro && (
-              <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${theme.accent}, ${theme.accent}88)` }} aria-label="Pro member">
-                <Sparkles className="w-4 h-4" style={{ color: theme.accentText }} aria-hidden="true" />
-              </div>
-            )}
+        {(() => {
+          const lc = (profile as any).layout_config || {};
+          const contentTrack = (profile as any).content_track;
+          const category =
+            lc.creator_category ||
+            (contentTrack ? CONTENT_TRACK_CATEGORY[contentTrack] : null);
+          const headerActions: QuickAction[] = [];
+          const whatsapp = (profile as any).whatsapp_number;
+          const websiteSocial = (socialLinks as any[]).find(
+            (s) => s.platform.toLowerCase() === "website",
+          );
+          if (lc.show_contact !== false) {
+            headerActions.push({
+              kind: "contact",
+              label: "Contact",
+              href: "#contact",
+              primary: true,
+            });
+          }
+          if (whatsapp) {
+            headerActions.push({
+              kind: "whatsapp",
+              label: "Message",
+              href: `https://wa.me/${String(whatsapp).replace(/\D/g, "")}`,
+            });
+          }
+          if (lc.book_call_url) {
+            headerActions.push({ kind: "book", label: "Book a call", href: lc.book_call_url });
+          }
+          if (websiteSocial) {
+            headerActions.push({ kind: "website", label: "Website", href: websiteSocial.url });
+          }
+          return (
+            <ProfileHeader
+              displayName={profile.display_name || `@${profile.username}`}
+              username={profile.username || ""}
+              bio={profile.bio}
+              avatarUrl={profile.avatar_url}
+              coverUrl={lc.cover_image_url}
+              category={category}
+              location={lc.location}
+              isVerified={isVerified}
+              isPro={!!(profile as any).is_pro}
+              socials={socialLinks as any}
+              actions={headerActions}
+              theme={theme}
+            />
+          );
+        })()}
+
+        {profile.user_id && (
+          <div className="mb-6">
+            <ProfileStats
+              profileId={profile.id!}
+              userId={profile.user_id!}
+              initialViews={(profile as any).total_clicks || 0}
+              initialClicks={(profile as any).unique_clicks || 0}
+              theme={theme}
+            />
           </div>
-          <h1 className="text-3xl md:text-4xl font-display font-bold tracking-[-0.03em] mb-2 flex items-center justify-center gap-1.5 leading-[1.05]" style={{ color: theme.textColor }}>
-            {profile.display_name || `@${profile.username}`}
-            {isVerified && <VerifiedBadge size={22} />}
-          </h1>
-          {profile.display_name && (
-            <p className="text-xs font-medium tracking-wide mb-2 opacity-70" style={{ color: theme.bioTextColor }}>
-              @{profile.username}
-            </p>
-          )}
-          {profile.bio && (
-            <p className="text-sm leading-relaxed max-w-xs mx-auto mb-4 tracking-tight" style={{ color: theme.bioTextColor }}>
-              {profile.bio}
-            </p>
-          )}
-          {socialLinks.length > 0 && (
-            <nav aria-label="Social media links" className="flex justify-center gap-3 mb-4">
-              {socialLinks.map((social) => {
-                const Icon = SOCIAL_ICONS[social.platform] || ExternalLink;
-                return (
-                  <MagneticWrap key={social.id} strength={10}>
-                    <a href={social.url} target="_blank" rel="noopener noreferrer"
-                      className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                      style={{
-                        background: theme.socialBg,
-                        color: theme.socialText,
-                        backdropFilter: theme.socialBg.includes("rgba") ? "blur(8px)" : undefined,
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
-                      }}
-                      aria-label={`Visit ${social.platform} profile`}>
-                      <Icon className="w-5 h-5" aria-hidden="true" />
-                    </a>
-                  </MagneticWrap>
-                );
-              })}
-            </nav>
-          )}
-          {profile.user_id && <ProfileStats profileId={profile.id!} userId={profile.user_id!} initialViews={(profile as any).total_clicks || 0} initialClicks={(profile as any).unique_clicks || 0} theme={theme} />}
-        </motion.header>
+        )}
+
 
         <ProfileModeRouter
           mode={resolveCreatorMode((profile as any).content_track)}
