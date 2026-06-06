@@ -28,7 +28,7 @@ export const usePublicStoreIntegrations = (userId: string) => {
       if (!userId) return [];
 
       const { data, error } = await supabase
-        .from("store_integrations")
+        .from("store_integrations_public" as any)
         .select("id, platform, store_domain, store_name, is_active")
         .eq("user_id", userId)
         .eq("is_active", true);
