@@ -34,7 +34,7 @@ export const usePublicStoreIntegrations = (userId: string) => {
         .eq("is_active", true);
 
       if (error) throw error;
-      return data as StoreIntegrationPublic[];
+      return (data as unknown as StoreIntegrationPublic[]);
     },
     enabled: !!userId,
   });
