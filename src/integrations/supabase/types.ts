@@ -1957,6 +1957,33 @@ export type Database = {
         }
         Relationships: []
       }
+      store_integrations_public: {
+        Row: {
+          id: string | null
+          is_active: boolean | null
+          platform: string | null
+          store_domain: string | null
+          store_name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string | null
+          is_active?: boolean | null
+          platform?: string | null
+          store_domain?: string | null
+          store_name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string | null
+          is_active?: boolean | null
+          platform?: string | null
+          store_domain?: string | null
+          store_name?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       tip_jar_public: {
         Row: {
           created_at: string | null
