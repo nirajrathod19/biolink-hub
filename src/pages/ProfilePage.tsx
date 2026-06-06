@@ -271,7 +271,20 @@ const ProfilePageContent = () => {
 
         {profile.user_id && <section aria-label="Support and tips"><TipJarDisplay userId={profile.user_id} theme={theme} /></section>}
         {profile.user_id && <section aria-label="Razorpay tip jar"><TipJarBlock userId={profile.user_id} creatorName={profile.display_name || profile.username || undefined} theme={theme} /></section>}
-        {profile.user_id && <section aria-label="Contact form"><ContactMeForm creatorId={profile.user_id} creatorName={profile.display_name || profile.username || undefined} theme={theme} /></section>}
+        {profile.user_id && (
+          <ContactSection
+            creatorId={profile.user_id}
+            creatorName={profile.display_name || profile.username || undefined}
+            email={(profile as any).contact_email}
+            whatsapp={(profile as any).whatsapp_number}
+            website={
+              (socialLinks as any[]).find((s) => s.platform.toLowerCase() === "website")?.url ||
+              (profile as any).layout_config?.website_url
+            }
+            ctas={((profile as any).layout_config?.contact_ctas as any[]) || []}
+            theme={theme}
+          />
+        )}
         {profile.user_id && <section aria-label="Subscribe to updates"><EmailCaptureBlock creatorId={profile.user_id} creatorName={profile.display_name || profile.username || undefined} theme={theme} /></section>}
         </ProfileModeRouter>
 
