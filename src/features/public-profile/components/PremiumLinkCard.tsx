@@ -75,7 +75,7 @@ export const PremiumLinkCard = memo(({ link, theme, onLinkClick, size = "md" }: 
       style={{
         background: theme.cardBg,
         border: `1px solid ${isFeatured ? theme.accent + "55" : theme.cardBorder}`,
-        color: validAnim === "glow" ? theme.accent : theme.cardText,
+        color: theme.cardText,
         backdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
         WebkitBackdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
         boxShadow: isFeatured
