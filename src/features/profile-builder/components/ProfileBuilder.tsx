@@ -77,12 +77,22 @@ const LinkRowCard = ({
   const [title, setTitle] = useState(link.title);
   const [url, setUrl] = useState(link.url);
   const [thumb, setThumb] = useState(link.icon || "");
+  const [animation, setAnimation] = useState<string>(link.animation || "none");
+  const [scheduledStart, setScheduledStart] = useState<string>(
+    link.scheduled_start ? new Date(link.scheduled_start).toISOString().slice(0, 16) : ""
+  );
+  const [scheduledEnd, setScheduledEnd] = useState<string>(
+    link.scheduled_end ? new Date(link.scheduled_end).toISOString().slice(0, 16) : ""
+  );
 
   useEffect(() => {
     setTitle(link.title);
     setUrl(link.url);
     setThumb(link.icon || "");
-  }, [link.id, link.title, link.url, link.icon]);
+    setAnimation(link.animation || "none");
+    setScheduledStart(link.scheduled_start ? new Date(link.scheduled_start).toISOString().slice(0, 16) : "");
+    setScheduledEnd(link.scheduled_end ? new Date(link.scheduled_end).toISOString().slice(0, 16) : "");
+  }, [link.id, link.title, link.url, link.icon, link.animation, link.scheduled_start, link.scheduled_end]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -91,7 +101,14 @@ const LinkRowCard = ({
   };
 
   const handleSave = async () => {
-    await onSave(link.id, { title, url, icon: thumb || null });
+    await onSave(link.id, {
+      title,
+      url,
+      icon: thumb || null,
+      animation: animation === "none" ? null : animation,
+      scheduled_start: scheduledStart ? new Date(scheduledStart).toISOString() : null,
+      scheduled_end: scheduledEnd ? new Date(scheduledEnd).toISOString() : null,
+    });
     setEditing(false);
   };
 
