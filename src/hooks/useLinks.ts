@@ -159,8 +159,17 @@ export const usePublicLinks = (userId: string) => {
         .order("position", { ascending: true });
 
       if (error) throw error;
-      return data as Link[];
+
+      // Client-side schedule window filter: hide links outside [scheduled_start, scheduled_end].
+      const now = Date.now();
+      return (data as Link[]).filter((l) => {
+        const startOk = !l.scheduled_start || new Date(l.scheduled_start).getTime() <= now;
+        const endOk = !l.scheduled_end || new Date(l.scheduled_end).getTime() >= now;
+        return startOk && endOk;
+      });
     },
+    // Refresh every minute so scheduled links appear/disappear without a full reload.
+    refetchInterval: 60_000,
     enabled: !!userId,
   });
 };
