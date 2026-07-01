@@ -426,6 +426,11 @@ export const ProfileBuilder = () => {
           </Button>
         </div>
 
+        {/* Pro: Global page redirect */}
+        <GlobalRedirectPanel profile={profile} />
+
+
+
         {/* Quick-add */}
         <AnimatePresence initial={false}>
           {adding && (
