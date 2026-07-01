@@ -178,6 +178,40 @@ const LinkRowCard = ({
                   placeholder="Thumbnail URL (optional)"
                   className="h-8 text-xs"
                 />
+                {/* Advanced: animation + schedule window */}
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/60 mt-1">
+                  <label className="col-span-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Animation
+                  </label>
+                  <select
+                    value={animation}
+                    onChange={(e) => setAnimation(e.target.value)}
+                    className="col-span-2 h-8 rounded-md border border-input bg-background px-2 text-xs"
+                  >
+                    <option value="none">None</option>
+                    <option value="pulse">Pulse</option>
+                    <option value="wobble">Wobble</option>
+                    <option value="bounce">Bounce</option>
+                    <option value="glow">Hover glow</option>
+                  </select>
+                  <label className="col-span-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground pt-1">
+                    Schedule (optional)
+                  </label>
+                  <Input
+                    type="datetime-local"
+                    value={scheduledStart}
+                    onChange={(e) => setScheduledStart(e.target.value)}
+                    className="h-8 text-xs"
+                    placeholder="Start"
+                  />
+                  <Input
+                    type="datetime-local"
+                    value={scheduledEnd}
+                    onChange={(e) => setScheduledEnd(e.target.value)}
+                    className="h-8 text-xs"
+                    placeholder="End"
+                  />
+                </div>
               </div>
             ) : (
               <button
