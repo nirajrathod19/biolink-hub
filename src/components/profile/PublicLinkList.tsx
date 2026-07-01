@@ -14,6 +14,7 @@ interface PublicLink {
   click_count?: number | null;
   lock_type?: string | null;
   lock_password?: string | null;
+  animation?: string | null;
 }
 
 interface PublicLinkListProps {
