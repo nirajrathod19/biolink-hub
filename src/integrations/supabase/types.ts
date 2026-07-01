@@ -104,6 +104,100 @@ export type Database = {
         }
         Relationships: []
       }
+      ad_analytics_logs: {
+        Row: {
+          ad_config_id: string
+          created_at: string
+          creator_id: string
+          event_type: string
+          id: string
+          ip_hash: string
+          user_agent: string | null
+        }
+        Insert: {
+          ad_config_id: string
+          created_at?: string
+          creator_id: string
+          event_type: string
+          id?: string
+          ip_hash: string
+          user_agent?: string | null
+        }
+        Update: {
+          ad_config_id?: string
+          created_at?: string
+          creator_id?: string
+          event_type?: string
+          id?: string
+          ip_hash?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_analytics_logs_ad_config_id_fkey"
+            columns: ["ad_config_id"]
+            isOneToOne: false
+            referencedRelation: "ad_configurations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_analytics_logs_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_analytics_logs_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_configurations: {
+        Row: {
+          ad_source_type: string | null
+          adsense_script: string | null
+          created_at: string
+          creator_id: string
+          custom_alt_text: string | null
+          custom_banner_url: string | null
+          custom_target_url: string | null
+          id: string
+          is_enabled: boolean | null
+          placement: Database["public"]["Enums"]["ad_placement_type"]
+          updated_at: string
+        }
+        Insert: {
+          ad_source_type?: string | null
+          adsense_script?: string | null
+          created_at?: string
+          creator_id: string
+          custom_alt_text?: string | null
+          custom_banner_url?: string | null
+          custom_target_url?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          placement: Database["public"]["Enums"]["ad_placement_type"]
+          updated_at?: string
+        }
+        Update: {
+          ad_source_type?: string | null
+          adsense_script?: string | null
+          created_at?: string
+          creator_id?: string
+          custom_alt_text?: string | null
+          custom_banner_url?: string | null
+          custom_target_url?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          placement?: Database["public"]["Enums"]["ad_placement_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ad_earnings_logs: {
         Row: {
           created_at: string | null
@@ -2058,6 +2152,7 @@ export type Database = {
       }
     }
     Enums: {
+      ad_placement_type: "top_banner" | "in_between" | "sticky_bottom"
       app_role: "admin" | "creator" | "user"
       ticket_status: "new" | "pending" | "resolved"
     }
@@ -2187,6 +2282,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ad_placement_type: ["top_banner", "in_between", "sticky_bottom"],
       app_role: ["admin", "creator", "user"],
       ticket_status: ["new", "pending", "resolved"],
     },
