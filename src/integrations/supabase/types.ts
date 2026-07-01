@@ -1307,6 +1307,8 @@ export type Database = {
           created_at: string
           display_name: string | null
           email_verified: boolean | null
+          enable_global_redirect: boolean
+          global_redirect_url: string | null
           id: string
           interests: string[] | null
           is_onboarded: boolean | null
@@ -1351,6 +1353,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email_verified?: boolean | null
+          enable_global_redirect?: boolean
+          global_redirect_url?: string | null
           id?: string
           interests?: string[] | null
           is_onboarded?: boolean | null
@@ -1395,6 +1399,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email_verified?: boolean | null
+          enable_global_redirect?: boolean
+          global_redirect_url?: string | null
           id?: string
           interests?: string[] | null
           is_onboarded?: boolean | null
