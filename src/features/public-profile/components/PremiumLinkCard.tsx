@@ -15,6 +15,7 @@ export interface PremiumLink {
   is_highlighted?: boolean | null;
   link_type?: string | null;
   click_count?: number | null;
+  animation?: string | null;
 }
 
 interface Props {
