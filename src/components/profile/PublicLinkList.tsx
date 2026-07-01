@@ -14,6 +14,7 @@ interface PublicLink {
   click_count?: number | null;
   lock_type?: string | null;
   lock_password?: string | null;
+  animation?: string | null;
 }
 
 interface PublicLinkListProps {
@@ -70,13 +71,18 @@ const BentoCard = ({
         href={link.url || "#"}
         onClick={(e) => onLinkClick(e, { id: link.id, url: link.url || "" })}
         onMouseMove={isFeatured ? onMove : undefined}
-        className="relative block h-full w-full overflow-hidden rounded-2xl p-4 transition-all group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+        data-anim={(() => {
+          const a = (link.animation || "").toLowerCase();
+          return ["pulse", "wobble", "bounce", "glow"].includes(a) ? a : undefined;
+        })()}
+        className={`relative block h-full w-full overflow-hidden rounded-2xl p-4 transition-all group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${isFeatured ? "spotlight-ring" : ""}`}
         style={{
           background: theme.cardBg,
           border: `1px solid ${theme.cardBorder}`,
           color: theme.cardText,
           backdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
           WebkitBackdropFilter: isGlass ? "blur(16px) saturate(160%)" : undefined,
+          ["--spotlight-color" as any]: theme.accent,
           // Multi-layered shadow + subtle inner highlight for physical depth
           boxShadow: isGlass
             ? "inset 0 1px 0 rgba(255,255,255,0.08), 0 1px 2px rgba(0,0,0,0.05), 0 8px 24px -6px rgba(0,0,0,0.18), 0 20px 48px -12px rgba(0,0,0,0.22)"

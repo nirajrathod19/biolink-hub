@@ -15,6 +15,7 @@ export interface PremiumLink {
   is_highlighted?: boolean | null;
   link_type?: string | null;
   click_count?: number | null;
+  animation?: string | null;
 }
 
 interface Props {
@@ -57,6 +58,9 @@ export const PremiumLinkCard = memo(({ link, theme, onLinkClick, size = "md" }: 
   const ytId = variant === "video" && link.url ? extractYouTubeId(link.url) : null;
   const thumbnail = ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : null;
 
+  const anim = (link.animation || "").toLowerCase();
+  const validAnim = ["pulse", "wobble", "bounce", "glow"].includes(anim) ? anim : undefined;
+
   return (
     <motion.a
       href={link.url || "#"}
@@ -66,7 +70,8 @@ export const PremiumLinkCard = memo(({ link, theme, onLinkClick, size = "md" }: 
       viewport={{ once: true, margin: "-40px" }}
       transition={{ type: "spring", stiffness: 140, damping: 20 }}
       whileTap={{ scale: 0.98 }}
-      className="group relative block w-full overflow-hidden rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+      data-anim={validAnim}
+      className={`group relative block w-full overflow-hidden rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${isFeatured ? "spotlight-ring" : ""}`}
       style={{
         background: theme.cardBg,
         border: `1px solid ${isFeatured ? theme.accent + "55" : theme.cardBorder}`,
@@ -79,6 +84,7 @@ export const PremiumLinkCard = memo(({ link, theme, onLinkClick, size = "md" }: 
           ? "inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 24px -6px rgba(0,0,0,0.18)"
           : "inset 0 1px 0 rgba(255,255,255,0.5), 0 6px 16px -4px rgba(0,0,0,0.08)",
         minHeight: size === "lg" ? 88 : 64,
+        ["--spotlight-color" as any]: theme.accent,
       }}
       aria-label={`${link.title || "Open link"} — ${variantLabel[variant]}`}
     >

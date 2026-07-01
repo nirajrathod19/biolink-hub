@@ -64,6 +64,26 @@ const ProfilePageContent = () => {
   const { data: layoutElements = [] } = usePublicLayoutElements(profile?.user_id || "");
   const { data: displayRules = [] } = usePublicDisplayRules(profile?.user_id || "");
 
+  // 🚀 Global Page Redirect — fires as soon as profile loads. Runs before
+  // any storefront rendering so the visitor is bounced to the creator's
+  // configured destination (e.g. their podcast, main site, etc.).
+  useEffect(() => {
+    if (!profile) return;
+    const enabled = (profile as any).enable_global_redirect;
+    const dest: string | undefined = (profile as any).global_redirect_url;
+    if (enabled && dest) {
+      try {
+        // Validate: only allow http/https to prevent javascript: injection.
+        const u = new URL(dest);
+        if (u.protocol === "http:" || u.protocol === "https:") {
+          window.location.replace(u.toString());
+        }
+      } catch {
+        /* invalid URL — silently ignore, render page normally */
+      }
+    }
+  }, [profile]);
+
   useEffect(() => {
     if (!profile?.user_id || items.length === 0 || !activeCreatorId) return;
 
@@ -91,6 +111,16 @@ const ProfilePageContent = () => {
 
   if (profileLoading) return <ProfileSkeleton />;
   if (profileError || !profile) return <ProfileNotFound username={username} />;
+
+  // While the global redirect is firing, render a neutral splash instead of
+  // flashing the storefront underneath.
+  if ((profile as any).enable_global_redirect && (profile as any).global_redirect_url) {
+    return (
+      <div className="min-h-screen grid place-items-center bg-background text-muted-foreground text-sm">
+        Redirecting…
+      </div>
+    );
+  }
 
   const theme = getThemeById(profile.template || "minimal-mono");
   const layoutConfig = (profile as any).layout_config || {};

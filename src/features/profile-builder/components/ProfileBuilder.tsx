@@ -49,6 +49,7 @@ import {
 } from "@/hooks/useLinks";
 import { useProfile } from "@/hooks/useProfile";
 import { LivePhonePreview } from "./LivePhonePreview";
+import { GlobalRedirectPanel } from "./GlobalRedirectPanel";
 
 interface RowProps {
   link: LinkRow;
@@ -77,12 +78,22 @@ const LinkRowCard = ({
   const [title, setTitle] = useState(link.title);
   const [url, setUrl] = useState(link.url);
   const [thumb, setThumb] = useState(link.icon || "");
+  const [animation, setAnimation] = useState<string>(link.animation || "none");
+  const [scheduledStart, setScheduledStart] = useState<string>(
+    link.scheduled_start ? new Date(link.scheduled_start).toISOString().slice(0, 16) : ""
+  );
+  const [scheduledEnd, setScheduledEnd] = useState<string>(
+    link.scheduled_end ? new Date(link.scheduled_end).toISOString().slice(0, 16) : ""
+  );
 
   useEffect(() => {
     setTitle(link.title);
     setUrl(link.url);
     setThumb(link.icon || "");
-  }, [link.id, link.title, link.url, link.icon]);
+    setAnimation(link.animation || "none");
+    setScheduledStart(link.scheduled_start ? new Date(link.scheduled_start).toISOString().slice(0, 16) : "");
+    setScheduledEnd(link.scheduled_end ? new Date(link.scheduled_end).toISOString().slice(0, 16) : "");
+  }, [link.id, link.title, link.url, link.icon, link.animation, link.scheduled_start, link.scheduled_end]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -91,7 +102,14 @@ const LinkRowCard = ({
   };
 
   const handleSave = async () => {
-    await onSave(link.id, { title, url, icon: thumb || null });
+    await onSave(link.id, {
+      title,
+      url,
+      icon: thumb || null,
+      animation: animation === "none" ? null : animation,
+      scheduled_start: scheduledStart ? new Date(scheduledStart).toISOString() : null,
+      scheduled_end: scheduledEnd ? new Date(scheduledEnd).toISOString() : null,
+    });
     setEditing(false);
   };
 
@@ -161,6 +179,40 @@ const LinkRowCard = ({
                   placeholder="Thumbnail URL (optional)"
                   className="h-8 text-xs"
                 />
+                {/* Advanced: animation + schedule window */}
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/60 mt-1">
+                  <label className="col-span-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Animation
+                  </label>
+                  <select
+                    value={animation}
+                    onChange={(e) => setAnimation(e.target.value)}
+                    className="col-span-2 h-8 rounded-md border border-input bg-background px-2 text-xs"
+                  >
+                    <option value="none">None</option>
+                    <option value="pulse">Pulse</option>
+                    <option value="wobble">Wobble</option>
+                    <option value="bounce">Bounce</option>
+                    <option value="glow">Hover glow</option>
+                  </select>
+                  <label className="col-span-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground pt-1">
+                    Schedule (optional)
+                  </label>
+                  <Input
+                    type="datetime-local"
+                    value={scheduledStart}
+                    onChange={(e) => setScheduledStart(e.target.value)}
+                    className="h-8 text-xs"
+                    placeholder="Start"
+                  />
+                  <Input
+                    type="datetime-local"
+                    value={scheduledEnd}
+                    onChange={(e) => setScheduledEnd(e.target.value)}
+                    className="h-8 text-xs"
+                    placeholder="End"
+                  />
+                </div>
               </div>
             ) : (
               <button
@@ -373,6 +425,11 @@ export const ProfileBuilder = () => {
             <Plus className="w-4 h-4 mr-1.5" /> Add link
           </Button>
         </div>
+
+        {/* Pro: Global page redirect */}
+        <GlobalRedirectPanel profile={profile} />
+
+
 
         {/* Quick-add */}
         <AnimatePresence initial={false}>
