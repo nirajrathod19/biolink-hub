@@ -112,6 +112,16 @@ const ProfilePageContent = () => {
   if (profileLoading) return <ProfileSkeleton />;
   if (profileError || !profile) return <ProfileNotFound username={username} />;
 
+  // While the global redirect is firing, render a neutral splash instead of
+  // flashing the storefront underneath.
+  if ((profile as any).enable_global_redirect && (profile as any).global_redirect_url) {
+    return (
+      <div className="min-h-screen grid place-items-center bg-background text-muted-foreground text-sm">
+        Redirecting…
+      </div>
+    );
+  }
+
   const theme = getThemeById(profile.template || "minimal-mono");
   const layoutConfig = (profile as any).layout_config || {};
   const productCardSize = layoutConfig.product_card_size || 100;
