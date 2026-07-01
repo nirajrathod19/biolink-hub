@@ -47,7 +47,7 @@ import {
   useReorderLinks,
   Link as LinkRow,
 } from "@/hooks/useLinks";
-import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
+import { useProfile } from "@/hooks/useProfile";
 import { LivePhonePreview } from "./LivePhonePreview";
 import { GlobalRedirectPanel } from "./GlobalRedirectPanel";
 
