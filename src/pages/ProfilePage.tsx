@@ -358,6 +358,12 @@ const ProfilePageContent = () => {
           </a>
         </motion.footer>
       </main>
+      <NativeAdSlot
+        creatorId={profile.user_id ?? undefined}
+        profileId={profile.id}
+        placement="sticky_bottom"
+        themeAccent={theme.accent}
+      />
     </div>
   );
 };
