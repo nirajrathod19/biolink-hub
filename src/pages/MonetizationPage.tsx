@@ -8,6 +8,7 @@ import { CouponManager } from "@/components/monetization/CouponManager";
 import { StoreIntegrationManager } from "@/components/monetization/StoreIntegrationManager";
 import { AdRevenueCard } from "@/components/monetization/AdRevenueCard";
 import { AdPlacementManager } from "@/components/monetization/AdPlacementManager";
+import { LeadsManager } from "@/components/monetization/LeadsManager";
 
 const MonetizationPage = () => {
   return (
