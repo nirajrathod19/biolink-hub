@@ -38,6 +38,10 @@ const MonetizationPage = () => {
           <AdPlacementManager />
         </motion.div>
 
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.07 }} className="mb-6">
+          <LeadsManager />
+        </motion.div>
+
         {/* Store Products (new e-commerce) */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="mb-6">
           <ProductManager />
