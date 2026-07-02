@@ -104,12 +104,12 @@ export const LeadCaptureBlock = ({
         <div className="min-w-0">
           <h3
             className="font-display font-semibold text-base leading-tight"
-            style={{ color: theme.text }}
+            style={{ color: theme.cardText }}
           >
             {title || "Get in touch"}
           </h3>
           {subtitle && (
-            <p className="text-xs opacity-70" style={{ color: theme.text }}>
+            <p className="text-xs opacity-70" style={{ color: theme.cardText }}>
               {subtitle}
             </p>
           )}
@@ -119,7 +119,7 @@ export const LeadCaptureBlock = ({
       {done ? (
         <div
           className="flex items-center gap-2 p-4 rounded-xl text-sm"
-          style={{ background: `${theme.accent}12`, color: theme.text }}
+          style={{ background: `${theme.accent}12`, color: theme.cardText }}
         >
           <Check className="w-4 h-4" style={{ color: theme.accent }} />
           Thanks — we'll be in touch shortly.
@@ -135,9 +135,9 @@ export const LeadCaptureBlock = ({
             placeholder="Your name"
             className="w-full h-11 px-3.5 rounded-xl text-sm outline-none transition-colors"
             style={{
-              background: isGlass ? "rgba(255,255,255,0.06)" : `${theme.text}0A`,
-              border: `1px solid ${theme.text}20`,
-              color: theme.text,
+              background: isGlass ? "rgba(255,255,255,0.06)" : `${theme.cardText}0A`,
+              border: `1px solid ${theme.cardText}20`,
+              color: theme.cardText,
             }}
           />
           <input
@@ -149,9 +149,9 @@ export const LeadCaptureBlock = ({
             placeholder="you@email.com"
             className="w-full h-11 px-3.5 rounded-xl text-sm outline-none"
             style={{
-              background: isGlass ? "rgba(255,255,255,0.06)" : `${theme.text}0A`,
-              border: `1px solid ${theme.text}20`,
-              color: theme.text,
+              background: isGlass ? "rgba(255,255,255,0.06)" : `${theme.cardText}0A`,
+              border: `1px solid ${theme.cardText}20`,
+              color: theme.cardText,
             }}
           />
           {showMessage && (
@@ -163,9 +163,9 @@ export const LeadCaptureBlock = ({
               rows={3}
               className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none resize-none"
               style={{
-                background: isGlass ? "rgba(255,255,255,0.06)" : `${theme.text}0A`,
-                border: `1px solid ${theme.text}20`,
-                color: theme.text,
+                background: isGlass ? "rgba(255,255,255,0.06)" : `${theme.cardText}0A`,
+                border: `1px solid ${theme.cardText}20`,
+                color: theme.cardText,
               }}
             />
           )}
@@ -175,7 +175,7 @@ export const LeadCaptureBlock = ({
             className="w-full h-11 rounded-xl text-sm font-semibold transition-transform active:scale-[0.98] disabled:opacity-60"
             style={{
               background: theme.accent,
-              color: theme.buttonText || "#fff",
+              color: theme.accentText,
               boxShadow: `0 8px 24px ${theme.accent}40`,
             }}
           >
@@ -187,7 +187,7 @@ export const LeadCaptureBlock = ({
               "Send"
             )}
           </button>
-          <p className="text-[11px] opacity-60 text-center" style={{ color: theme.text }}>
+          <p className="text-[11px] opacity-60 text-center" style={{ color: theme.cardText }}>
             Your details are shared only with this creator.
           </p>
         </form>
