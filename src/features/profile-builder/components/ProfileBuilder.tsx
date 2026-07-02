@@ -418,12 +418,32 @@ export const ProfileBuilder = () => {
               {localLinks.length} link{localLinks.length === 1 ? "" : "s"} · {featuredCount} featured
             </p>
           </div>
-          <Button
-            onClick={() => setAdding(true)}
-            className="bg-primary text-primary-foreground hover:bg-[hsl(var(--primary-hover))]"
-          >
-            <Plus className="w-4 h-4 mr-1.5" /> Add link
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => setAdding(true)}
+              className="bg-primary text-primary-foreground hover:bg-[hsl(var(--primary-hover))]"
+            >
+              <Plus className="w-4 h-4 mr-1.5" /> Add link
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await create.mutateAsync({
+                    title: "Get in touch",
+                    url: "",
+                    badge: "Share your details and I'll get back to you",
+                    link_type: "lead_capture",
+                  });
+                  toast({ title: "Lead form added", description: "Visible on your public page." });
+                } catch (err: any) {
+                  toast({ title: "Failed", description: err.message, variant: "destructive" });
+                }
+              }}
+            >
+              <Mail className="w-4 h-4 mr-1.5" /> Add lead form
+            </Button>
+          </div>
         </div>
 
         {/* Pro: Global page redirect */}
