@@ -38,6 +38,7 @@ import {
   NativeAdSlot,
   ProfileHeader,
   ContactSection,
+  LeadCaptureBlock,
   type QuickAction,
 } from "@/features/public-profile";
 
