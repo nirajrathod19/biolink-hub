@@ -277,12 +277,26 @@ const ProfilePageContent = () => {
         />
 
         <PublicLinkList
-          links={(links as any).filter((l: any) => !l.is_highlighted)}
+          links={(links as any).filter((l: any) => !l.is_highlighted && l.link_type !== "lead_capture")}
           theme={theme}
           onLinkClick={handleLinkClick}
           creatorId={profile.user_id}
           creatorName={profile.display_name || profile.username || undefined}
         />
+
+        {profile.user_id &&
+          (links as any)
+            .filter((l: any) => l.link_type === "lead_capture" && l.is_active !== false)
+            .map((l: any) => (
+              <LeadCaptureBlock
+                key={l.id}
+                creatorId={profile.user_id!}
+                title={l.title}
+                subtitle={l.badge}
+                successUrl={l.url}
+                theme={theme}
+              />
+            ))}
 
         <NativeAdSlot
           creatorId={profile.user_id ?? undefined}
