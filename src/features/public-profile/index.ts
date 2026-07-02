@@ -8,3 +8,4 @@ export { QuickActions, type QuickAction, type QuickActionKind } from "./componen
 export { ContactSection } from "./components/ContactSection";
 export { detectLinkVariant, type LinkVariant } from "./utils/linkVariant";
 export { NativeAdSlot } from "./components/NativeAdSlot";
+export { LeadCaptureBlock } from "./components/LeadCaptureBlock";

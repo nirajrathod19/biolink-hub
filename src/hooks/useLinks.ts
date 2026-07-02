@@ -48,7 +48,7 @@ export const useCreateLink = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (newLink: { title: string; url: string; icon?: string; badge?: string }) => {
+    mutationFn: async (newLink: { title: string; url: string; icon?: string; badge?: string; link_type?: string }) => {
       if (!user) throw new Error("Not authenticated");
 
       const { data: existingLinks } = await supabase
