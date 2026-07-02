@@ -35,6 +35,7 @@ import { ProfileModeRouter, resolveCreatorMode } from "@/components/profile/mode
 import { BriooLogo } from "@/components/brand/BriooLogo";
 import {
   FeaturedSection,
+  NativeAdSlot,
   ProfileHeader,
   ContactSection,
   type QuickAction,
@@ -178,6 +179,13 @@ const ProfilePageContent = () => {
       ))}
 
       <main className="relative z-10 max-w-lg mx-auto px-4 pt-6 pb-12">
+        <NativeAdSlot
+          creatorId={profile.user_id ?? undefined}
+          profileId={profile.id}
+          placement="top_banner"
+          themeAccent={theme.accent}
+          className="mb-4"
+        />
         <GlobalAdBanner themeColor={theme.accent} />
         {/* Announcement now rendered inside FeaturedSection for unified hierarchy */}
         <AdSenseAd slot="header" format="horizontal" className="mb-4" profileId={profile.id} />
@@ -275,6 +283,15 @@ const ProfilePageContent = () => {
           creatorName={profile.display_name || profile.username || undefined}
         />
 
+        <NativeAdSlot
+          creatorId={profile.user_id ?? undefined}
+          profileId={profile.id}
+          placement="in_between"
+          themeAccent={theme.accent}
+          className="my-6"
+        />
+
+
         {profile.user_id && <section aria-label="Community updates"><CommunityFeed userId={profile.user_id} theme={theme} /></section>}
         {profile.user_id && <section aria-label="Questions and answers"><QABox creatorUserId={profile.user_id} creatorName={profile.display_name || profile.username} theme={theme} /></section>}
 
@@ -341,6 +358,12 @@ const ProfilePageContent = () => {
           </a>
         </motion.footer>
       </main>
+      <NativeAdSlot
+        creatorId={profile.user_id ?? undefined}
+        profileId={profile.id}
+        placement="sticky_bottom"
+        themeAccent={theme.accent}
+      />
     </div>
   );
 };

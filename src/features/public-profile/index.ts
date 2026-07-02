@@ -7,3 +7,4 @@ export { SocialRow, type SocialItem } from "./components/SocialRow";
 export { QuickActions, type QuickAction, type QuickActionKind } from "./components/QuickActions";
 export { ContactSection } from "./components/ContactSection";
 export { detectLinkVariant, type LinkVariant } from "./utils/linkVariant";
+export { NativeAdSlot } from "./components/NativeAdSlot";

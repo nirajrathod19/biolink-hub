@@ -7,6 +7,7 @@ import { ProductManager } from "@/components/monetization/ProductManager";
 import { CouponManager } from "@/components/monetization/CouponManager";
 import { StoreIntegrationManager } from "@/components/monetization/StoreIntegrationManager";
 import { AdRevenueCard } from "@/components/monetization/AdRevenueCard";
+import { AdPlacementManager } from "@/components/monetization/AdPlacementManager";
 
 const MonetizationPage = () => {
   return (
@@ -30,6 +31,10 @@ const MonetizationPage = () => {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mb-6">
           <AdRevenueCard />
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }} className="mb-6">
+          <AdPlacementManager />
         </motion.div>
 
         {/* Store Products (new e-commerce) */}
