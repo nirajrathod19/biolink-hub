@@ -35,6 +35,8 @@ import { ProfileModeRouter, resolveCreatorMode } from "@/components/profile/mode
 import { BriooLogo } from "@/components/brand/BriooLogo";
 import {
   FeaturedSection,
+  ContactSection,
+  NativeAdSlot,
   ProfileHeader,
   ContactSection,
   type QuickAction,
