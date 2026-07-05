@@ -39,7 +39,10 @@ import {
   ProfileHeader,
   ContactSection,
   LeadCaptureBlock,
+  BookingsBlock,
+  AffiliateCarousel,
   type QuickAction,
+  type AffiliateItem,
 } from "@/features/public-profile";
 
 const CONTENT_TRACK_CATEGORY: Record<string, string> = {
@@ -128,6 +131,12 @@ const ProfilePageContent = () => {
   const layoutConfig = (profile as any).layout_config || {};
   const productCardSize = layoutConfig.product_card_size || 100;
   const productLayout = layoutConfig.product_layout || "vertical";
+  const isPro = !!(profile as any).is_pro;
+  // Premium theme controls (Pro-only; falls back to defaults otherwise)
+  const bgBlur = isPro ? Number(layoutConfig.bg_blur ?? 0) : 0;
+  const cardOpacity = isPro ? Number(layoutConfig.card_opacity ?? 100) : 100;
+  const letterSpacing = isPro ? Number(layoutConfig.letter_spacing ?? 0) : 0;
+  const affiliateItems: AffiliateItem[] = Array.isArray(layoutConfig.affiliate_items) ? layoutConfig.affiliate_items : [];
 
   const bgAssets = layoutElements.filter((e) => e.element_type === "custom_asset" && (e.settings as any)?.role === "background");
   const fgAssets = layoutElements.filter((e) => e.element_type === "custom_asset" && (e.settings as any)?.role === "foreground");
