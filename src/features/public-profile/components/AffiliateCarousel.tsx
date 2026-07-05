@@ -58,7 +58,7 @@ export const AffiliateCarousel = ({ items, theme, creatorId, heading = "Recommen
             transition={{ delay: idx * 0.04 }}
             className="snap-start shrink-0 w-40 rounded-2xl overflow-hidden backdrop-blur-md transition-transform hover:scale-[1.03]"
             style={{
-              background: `${theme.cardBackground || theme.accent + "10"}`,
+              background: `${theme.accent + "10"}`,
               border: `1px solid ${theme.accent}25`,
             }}
           >

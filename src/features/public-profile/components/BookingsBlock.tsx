@@ -119,7 +119,7 @@ export const BookingsBlock = ({ creatorId, creatorName, theme }: Props) => {
       aria-label="Book a call"
       className="my-6 rounded-2xl p-5 backdrop-blur-md"
       style={{
-        background: `${theme.cardBackground || theme.accent + "10"}`,
+        background: `${theme.accent + "10"}`,
         border: `1px solid ${theme.accent}30`,
       }}
     >
