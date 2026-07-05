@@ -9,6 +9,8 @@ import { StoreIntegrationManager } from "@/components/monetization/StoreIntegrat
 import { AdRevenueCard } from "@/components/monetization/AdRevenueCard";
 import { AdPlacementManager } from "@/components/monetization/AdPlacementManager";
 import { LeadsManager } from "@/components/monetization/LeadsManager";
+import { BookingsManager } from "@/components/monetization/BookingsManager";
+import { AffiliateManager } from "@/components/monetization/AffiliateManager";
 
 const MonetizationPage = () => {
   return (
@@ -41,6 +43,15 @@ const MonetizationPage = () => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.07 }} className="mb-6">
           <LeadsManager />
         </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.075 }} className="mb-6">
+          <BookingsManager />
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.078 }} className="mb-6">
+          <AffiliateManager />
+        </motion.div>
+
 
         {/* Store Products (new e-commerce) */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="mb-6">
