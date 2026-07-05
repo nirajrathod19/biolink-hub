@@ -36,6 +36,10 @@ const AppearancePage = () => {
   const [announcementText, setAnnouncementText] = useState("");
   const [videoBgUrl, setVideoBgUrl] = useState("");
   const [videoOverlay, setVideoOverlay] = useState(40);
+  // Premium theme controls (Pro-only)
+  const [bgBlur, setBgBlur] = useState(0);
+  const [cardOpacity, setCardOpacity] = useState(100);
+  const [letterSpacing, setLetterSpacing] = useState(0);
 
   useEffect(() => {
     if (profile) {
@@ -50,6 +54,9 @@ const AppearancePage = () => {
       setAnnouncementText((profile as any).announcement_text || "");
       setVideoBgUrl((profile as any).video_background_url || "");
       setVideoOverlay((profile as any).video_overlay_opacity ?? 40);
+      setBgBlur(config.bg_blur ?? 0);
+      setCardOpacity(config.card_opacity ?? 100);
+      setLetterSpacing(config.letter_spacing ?? 0);
     }
   }, [profile]);
 
@@ -75,6 +82,9 @@ const AppearancePage = () => {
           product_card_size: productCardSize,
           product_layout: productLayout,
           view_mode: viewMode,
+          bg_blur: isPro ? bgBlur : 0,
+          card_opacity: isPro ? cardOpacity : 100,
+          letter_spacing: isPro ? letterSpacing : 0,
         },
       } as any);
       toast({ title: "Saved!", description: "Your appearance settings have been updated." });
