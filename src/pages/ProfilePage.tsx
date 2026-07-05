@@ -332,6 +332,20 @@ const ProfilePageContent = () => {
           className="my-6"
         />
 
+        {profile.user_id && (
+          <BookingsBlock
+            creatorId={profile.user_id}
+            creatorName={profile.display_name || profile.username || undefined}
+            theme={theme}
+          />
+        )}
+
+        {profile.user_id && affiliateItems.length > 0 && (
+          <AffiliateCarousel items={affiliateItems} theme={theme} creatorId={profile.user_id} />
+        )}
+
+
+
 
         {profile.user_id && <section aria-label="Community updates"><CommunityFeed userId={profile.user_id} theme={theme} /></section>}
         {profile.user_id && <section aria-label="Questions and answers"><QABox creatorUserId={profile.user_id} creatorName={profile.display_name || profile.username} theme={theme} /></section>}
