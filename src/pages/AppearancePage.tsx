@@ -36,6 +36,10 @@ const AppearancePage = () => {
   const [announcementText, setAnnouncementText] = useState("");
   const [videoBgUrl, setVideoBgUrl] = useState("");
   const [videoOverlay, setVideoOverlay] = useState(40);
+  // Premium theme controls (Pro-only)
+  const [bgBlur, setBgBlur] = useState(0);
+  const [cardOpacity, setCardOpacity] = useState(100);
+  const [letterSpacing, setLetterSpacing] = useState(0);
 
   useEffect(() => {
     if (profile) {
@@ -50,6 +54,9 @@ const AppearancePage = () => {
       setAnnouncementText((profile as any).announcement_text || "");
       setVideoBgUrl((profile as any).video_background_url || "");
       setVideoOverlay((profile as any).video_overlay_opacity ?? 40);
+      setBgBlur(config.bg_blur ?? 0);
+      setCardOpacity(config.card_opacity ?? 100);
+      setLetterSpacing(config.letter_spacing ?? 0);
     }
   }, [profile]);
 
@@ -75,6 +82,9 @@ const AppearancePage = () => {
           product_card_size: productCardSize,
           product_layout: productLayout,
           view_mode: viewMode,
+          bg_blur: isPro ? bgBlur : 0,
+          card_opacity: isPro ? cardOpacity : 100,
+          letter_spacing: isPro ? letterSpacing : 0,
         },
       } as any);
       toast({ title: "Saved!", description: "Your appearance settings have been updated." });
@@ -329,6 +339,64 @@ const AppearancePage = () => {
                 </GlassCard>
               </motion.div>
             )}
+
+            {/* Premium Theme Controls (Pro only) */}
+            {isPro ? (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.187 }}>
+                <GlassCard>
+                  <div className="flex items-center gap-2 mb-3">
+                    <SlidersHorizontal className="w-5 h-5 text-primary" />
+                    <h3 className="font-display font-semibold text-sm">Premium Theme Controls</h3>
+                    <Crown className="w-3.5 h-3.5 text-amber-500 ml-auto" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Fine-tune the glassy feel of your profile — background blur, card translucency, and typography tracking.
+                  </p>
+                  <div className="space-y-5">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm">Background blur</Label>
+                        <span className="text-xs font-mono text-muted-foreground">{bgBlur}px</span>
+                      </div>
+                      <Slider value={[bgBlur]} onValueChange={([v]) => setBgBlur(v)} min={0} max={24} step={1} />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm">Card layer opacity</Label>
+                        <span className="text-xs font-mono text-muted-foreground">{cardOpacity}%</span>
+                      </div>
+                      <Slider value={[cardOpacity]} onValueChange={([v]) => setCardOpacity(v)} min={30} max={100} step={5} />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm">Letter spacing</Label>
+                        <span className="text-xs font-mono text-muted-foreground">{letterSpacing}px</span>
+                      </div>
+                      <Slider value={[letterSpacing]} onValueChange={([v]) => setLetterSpacing(v)} min={-1} max={4} step={0.5} />
+                    </div>
+                  </div>
+                </GlassCard>
+              </motion.div>
+            ) : (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.187 }}>
+                <GlassCard className="relative overflow-hidden">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Crown className="w-5 h-5 text-amber-500" />
+                    <h3 className="font-display font-semibold text-sm">Premium Theme Controls</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Unlock backdrop blur, glass card opacity, and typography tracking with Pro.
+                  </p>
+                  <a
+                    href="/wallet"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium px-3 py-1.5 hover:opacity-90"
+                  >
+                    <Crown className="w-3 h-3" /> Upgrade to Pro
+                  </a>
+                </GlassCard>
+              </motion.div>
+            )}
+
 
             {/* AI Color Matcher (Pro only) */}
             {isPro && (

@@ -39,7 +39,10 @@ import {
   ProfileHeader,
   ContactSection,
   LeadCaptureBlock,
+  BookingsBlock,
+  AffiliateCarousel,
   type QuickAction,
+  type AffiliateItem,
 } from "@/features/public-profile";
 
 const CONTENT_TRACK_CATEGORY: Record<string, string> = {
@@ -128,6 +131,12 @@ const ProfilePageContent = () => {
   const layoutConfig = (profile as any).layout_config || {};
   const productCardSize = layoutConfig.product_card_size || 100;
   const productLayout = layoutConfig.product_layout || "vertical";
+  const isPro = !!(profile as any).is_pro;
+  // Premium theme controls (Pro-only; falls back to defaults otherwise)
+  const bgBlur = isPro ? Number(layoutConfig.bg_blur ?? 0) : 0;
+  const cardOpacity = isPro ? Number(layoutConfig.card_opacity ?? 100) : 100;
+  const letterSpacing = isPro ? Number(layoutConfig.letter_spacing ?? 0) : 0;
+  const affiliateItems: AffiliateItem[] = Array.isArray(layoutConfig.affiliate_items) ? layoutConfig.affiliate_items : [];
 
   const bgAssets = layoutElements.filter((e) => e.element_type === "custom_asset" && (e.settings as any)?.role === "background");
   const fgAssets = layoutElements.filter((e) => e.element_type === "custom_asset" && (e.settings as any)?.role === "foreground");
@@ -179,7 +188,24 @@ const ProfilePageContent = () => {
         </div>
       ))}
 
-      <main className="relative z-10 max-w-lg mx-auto px-4 pt-6 pb-12">
+      {/* Premium Pro overlay — global backdrop blur across the profile chrome */}
+      {bgBlur > 0 && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{ backdropFilter: `blur(${bgBlur}px)`, WebkitBackdropFilter: `blur(${bgBlur}px)` }}
+        />
+      )}
+
+      <main
+        className="relative z-10 max-w-lg mx-auto px-4 pt-6 pb-12"
+        style={{
+          letterSpacing: letterSpacing ? `${letterSpacing}px` : undefined,
+          // Card opacity is exposed as a CSS var so themed cards can pick it up
+          ["--card-opacity" as any]: `${cardOpacity / 100}`,
+        }}
+      >
+
         <NativeAdSlot
           creatorId={profile.user_id ?? undefined}
           profileId={profile.id}
@@ -305,6 +331,20 @@ const ProfilePageContent = () => {
           themeAccent={theme.accent}
           className="my-6"
         />
+
+        {profile.user_id && (
+          <BookingsBlock
+            creatorId={profile.user_id}
+            creatorName={profile.display_name || profile.username || undefined}
+            theme={theme}
+          />
+        )}
+
+        {profile.user_id && affiliateItems.length > 0 && (
+          <AffiliateCarousel items={affiliateItems} theme={theme} creatorId={profile.user_id} />
+        )}
+
+
 
 
         {profile.user_id && <section aria-label="Community updates"><CommunityFeed userId={profile.user_id} theme={theme} /></section>}

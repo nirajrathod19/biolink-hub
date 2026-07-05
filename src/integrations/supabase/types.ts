@@ -495,6 +495,63 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_slots: {
+        Row: {
+          booked_by_email: string | null
+          booked_by_name: string | null
+          created_at: string
+          creator_id: string
+          currency: string
+          description: string | null
+          end_time: string
+          id: string
+          is_active: boolean
+          is_booked: boolean
+          order_id: string | null
+          price: number
+          slot_date: string
+          start_time: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          booked_by_email?: string | null
+          booked_by_name?: string | null
+          created_at?: string
+          creator_id: string
+          currency?: string
+          description?: string | null
+          end_time: string
+          id?: string
+          is_active?: boolean
+          is_booked?: boolean
+          order_id?: string | null
+          price?: number
+          slot_date: string
+          start_time: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          booked_by_email?: string | null
+          booked_by_name?: string | null
+          created_at?: string
+          creator_id?: string
+          currency?: string
+          description?: string | null
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          is_booked?: boolean
+          order_id?: string | null
+          price?: number
+          slot_date?: string
+          start_time?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bug_reports: {
         Row: {
           admin_notes: string | null
