@@ -188,7 +188,24 @@ const ProfilePageContent = () => {
         </div>
       ))}
 
-      <main className="relative z-10 max-w-lg mx-auto px-4 pt-6 pb-12">
+      {/* Premium Pro overlay — global backdrop blur across the profile chrome */}
+      {bgBlur > 0 && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{ backdropFilter: `blur(${bgBlur}px)`, WebkitBackdropFilter: `blur(${bgBlur}px)` }}
+        />
+      )}
+
+      <main
+        className="relative z-10 max-w-lg mx-auto px-4 pt-6 pb-12"
+        style={{
+          letterSpacing: letterSpacing ? `${letterSpacing}px` : undefined,
+          // Card opacity is exposed as a CSS var so themed cards can pick it up
+          ["--card-opacity" as any]: `${cardOpacity / 100}`,
+        }}
+      >
+
         <NativeAdSlot
           creatorId={profile.user_id ?? undefined}
           profileId={profile.id}
