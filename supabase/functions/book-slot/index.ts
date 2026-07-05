@@ -80,40 +80,19 @@ serve(async (req) => {
         .join("");
       if (expected !== razorpay_signature) return json({ error: "Invalid signature" }, 400);
 
-      // Insert order + mark slot booked (atomic-ish)
-      const { data: order, error: ordErr } = await admin
-        .from("orders")
-        .insert({
-          user_id: slot.creator_id,
-          buyer_email: email,
-          buyer_name: name,
-          amount: slot.price,
-          currency: slot.currency,
-          status: "paid",
-          payment_method: "razorpay",
-          razorpay_order_id,
-          razorpay_payment_id,
-          product_type: "booking",
-          metadata: { slot_id, title: slot.title, slot_date: slot.slot_date, start_time: slot.start_time },
-        })
-        .select()
-        .single();
-
-      const orderId = order?.id ?? null;
-
+      // Mark slot booked (payment verified)
       const { error: updErr } = await admin
         .from("booking_slots")
         .update({
           is_booked: true,
           booked_by_email: email,
           booked_by_name: name,
-          order_id: orderId,
         })
         .eq("id", slot_id)
         .eq("is_booked", false);
       if (updErr) return json({ error: updErr.message }, 500);
 
-      return json({ success: true, order_id: orderId, order_err: ordErr?.message });
+      return json({ success: true, payment_id: razorpay_payment_id });
     }
 
     // === Free slot: book immediately ===
