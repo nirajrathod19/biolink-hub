@@ -5,7 +5,7 @@
 import { readdirSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
-const REQUIRED = "Logo.png";
+const REQUIRED = "Logo1.png";
 const publicDir = resolve(process.cwd(), "public");
 
 if (!existsSync(publicDir)) {
