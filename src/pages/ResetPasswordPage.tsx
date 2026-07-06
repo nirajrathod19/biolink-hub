@@ -87,7 +87,7 @@ const ResetPasswordPage = () => {
         <Link to="/" className="flex items-center gap-2 mb-8 justify-center">
           <div className="flex items-center gap-2">
               <img 
-                src="/Logo1.png" 
+                src="/Logo.png" 
                 alt="Brioo Logo" 
                 className="w-8 h-8 object-contain drop-shadow-[0_0_1px_#fffff(255,255,255,0.2)]" 
               />
