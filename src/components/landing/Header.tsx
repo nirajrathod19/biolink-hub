@@ -47,7 +47,7 @@ export const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0 relative z-10">
             <img
-              src="/Logo.png"
+              src="/Logo1.png"
               alt="Brioo"
               className="h-9 md:h-10 w-auto object-contain"
             />
