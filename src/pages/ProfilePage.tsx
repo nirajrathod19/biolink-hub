@@ -307,7 +307,14 @@ const ProfilePageContent = () => {
         />
 
         <PublicLinkList
-          links={(links as any).filter((l: any) => !l.is_highlighted && l.link_type !== "lead_capture")}
+          links={(links as any).filter(
+            (l: any) =>
+              !l.is_highlighted &&
+              l.link_type !== "lead_capture" &&
+              l.link_type !== "social_feed" &&
+              l.link_type !== "music_hub" &&
+              l.link_type !== "content_locker",
+          )}
           theme={theme}
           onLinkClick={handleLinkClick}
           creatorId={profile.user_id}
@@ -327,6 +334,58 @@ const ProfilePageContent = () => {
                 theme={theme}
               />
             ))}
+
+        {profile.user_id &&
+          (links as any)
+            .filter((l: any) => l.link_type === "social_feed" && l.is_active !== false && l.url)
+            .map((l: any) => (
+              <SocialFeedBlock
+                key={l.id}
+                url={l.url}
+                title={l.title}
+                creatorId={profile.user_id!}
+                theme={theme}
+              />
+            ))}
+
+        {profile.user_id &&
+          (links as any)
+            .filter((l: any) => l.link_type === "music_hub" && l.is_active !== false && l.url)
+            .map((l: any) => {
+              let cfg: { alternates?: MusicPlatformLink[]; subtitle?: string } = {};
+              try { cfg = l.badge ? JSON.parse(l.badge) : {}; } catch { /* ignore */ }
+              return (
+                <MusicHubBlock
+                  key={l.id}
+                  primaryUrl={l.url}
+                  title={l.title}
+                  subtitle={cfg.subtitle}
+                  alternates={cfg.alternates || []}
+                  creatorId={profile.user_id!}
+                  theme={theme}
+                />
+              );
+            })}
+
+        {profile.user_id &&
+          (links as any)
+            .filter((l: any) => l.link_type === "content_locker" && l.is_active !== false && l.url)
+            .map((l: any) => {
+              let cfg: { wall_type?: "email" | "phone"; subtitle?: string; button_label?: string } = {};
+              try { cfg = l.badge ? JSON.parse(l.badge) : {}; } catch { /* ignore */ }
+              return (
+                <ContentLockerBlock
+                  key={l.id}
+                  creatorId={profile.user_id!}
+                  lockedUrl={l.url}
+                  title={l.title}
+                  subtitle={cfg.subtitle}
+                  wallType={cfg.wall_type || "email"}
+                  buttonLabel={cfg.button_label}
+                  theme={theme}
+                />
+              );
+            })}
 
         <NativeAdSlot
           creatorId={profile.user_id ?? undefined}
