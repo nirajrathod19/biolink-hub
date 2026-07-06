@@ -11,3 +11,6 @@ export { NativeAdSlot } from "./components/NativeAdSlot";
 export { LeadCaptureBlock } from "./components/LeadCaptureBlock";
 export { BookingsBlock } from "./components/BookingsBlock";
 export { AffiliateCarousel, type AffiliateItem } from "./components/AffiliateCarousel";
+export { SocialFeedBlock } from "./components/SocialFeedBlock";
+export { MusicHubBlock, type MusicPlatformLink } from "./components/MusicHubBlock";
+export { ContentLockerBlock } from "./components/ContentLockerBlock";

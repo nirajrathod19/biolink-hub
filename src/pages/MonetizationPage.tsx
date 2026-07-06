@@ -11,6 +11,7 @@ import { AdPlacementManager } from "@/components/monetization/AdPlacementManager
 import { LeadsManager } from "@/components/monetization/LeadsManager";
 import { BookingsManager } from "@/components/monetization/BookingsManager";
 import { AffiliateManager } from "@/components/monetization/AffiliateManager";
+import { ContentHubManager } from "@/components/monetization/ContentHubManager";
 
 const MonetizationPage = () => {
   return (
@@ -50,6 +51,10 @@ const MonetizationPage = () => {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.078 }} className="mb-6">
           <AffiliateManager />
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.079 }} className="mb-6">
+          <ContentHubManager />
         </motion.div>
 
 
