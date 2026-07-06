@@ -41,8 +41,12 @@ import {
   LeadCaptureBlock,
   BookingsBlock,
   AffiliateCarousel,
+  SocialFeedBlock,
+  MusicHubBlock,
+  ContentLockerBlock,
   type QuickAction,
   type AffiliateItem,
+  type MusicPlatformLink,
 } from "@/features/public-profile";
 
 const CONTENT_TRACK_CATEGORY: Record<string, string> = {
