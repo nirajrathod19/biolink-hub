@@ -10,7 +10,7 @@ export const MobileHeader = () => {
         <Link to="/" className="flex items-center gap-2">
           <div className="flex items-center gap-2">
               <img 
-                src="/Logo.png" 
+                src="/Logo1.png" 
                 alt="Brioo Logo" 
                 className="w-8 h-8 object-contain drop-shadow-[0_0_1px_#fffff(255,255,255,0.2)]" 
               />
