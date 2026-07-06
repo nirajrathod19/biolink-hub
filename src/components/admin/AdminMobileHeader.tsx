@@ -11,7 +11,7 @@ export const AdminMobileHeader = () => {
           <div className="flex items-center gap-2 mb-8 pt-2">
         <div className="flex items-center gap-2">
             <img 
-              src="/Logo1.png" 
+              src="/Logo.png" 
               alt="Brioo Mobile" 
               className="w-12 h-8 object-contain" 
             />            
