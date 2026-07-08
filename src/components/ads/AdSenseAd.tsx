@@ -5,6 +5,21 @@ const ADSENSE_PUBLISHER_ID = "ca-pub-5644108299979986";
 const ADSENSE_SLOT = "3003036738";
 const ADSENSE_LAYOUT_KEY = "-fb+5w+4e-db+86";
 
+/**
+ * Test-ad mode is enabled automatically in dev, on any *.lovable.app preview
+ * URL, or when localStorage.adsense_test === "1". This lets creators verify
+ * slots load correctly without triggering invalid-traffic on live AdSense.
+ */
+const isTestMode = () => {
+  if (typeof window === "undefined") return false;
+  if (import.meta.env?.DEV) return true;
+  try {
+    if (localStorage.getItem("adsense_test") === "1") return true;
+  } catch { /* ignore */ }
+  const host = window.location.hostname;
+  return host === "localhost" || host.endsWith(".lovable.app") && !host.startsWith("brioo.");
+};
+
 interface AdSenseAdProps {
   slot?: string;
   format?: "auto" | "fluid" | "rectangle" | "horizontal" | "vertical";
@@ -16,6 +31,7 @@ export const AdSenseAd = ({ slot, format = "fluid", className = "", profileId }:
   const adRef = useRef<HTMLDivElement>(null);
   const hasTrackedImpression = useRef(false);
   const hasPushed = useRef(false);
+  const testMode = isTestMode();
 
   useEffect(() => {
     if (!hasPushed.current) {
@@ -43,7 +59,8 @@ export const AdSenseAd = ({ slot, format = "fluid", className = "", profileId }:
         data-ad-format="fluid"
         data-ad-layout-key={ADSENSE_LAYOUT_KEY}
         data-ad-client={ADSENSE_PUBLISHER_ID}
-        data-ad-slot={ADSENSE_SLOT}
+        data-ad-slot={slot || ADSENSE_SLOT}
+        {...(testMode ? { "data-adtest": "on" } : {})}
       />
     </div>
   );

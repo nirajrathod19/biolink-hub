@@ -12,6 +12,7 @@ import { MissionControlHero } from "@/components/dashboard/MissionControlHero";
 import { AIInsightCard } from "@/components/dashboard/AIInsightCard";
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
 import { LiveActivityFeed } from "@/components/dashboard/LiveActivityFeed";
+import { EarningsSummaryCard } from "@/components/dashboard/EarningsSummaryCard";
 import { LinksList } from "@/components/dashboard/LinksList";
 import { PreviewDrawer } from "@/components/dashboard/PreviewDrawer";
 import { useAuth } from "@/contexts/AuthContext";
@@ -102,6 +103,11 @@ const Dashboard = () => {
             <AIInsightCard />
           </div>
           <LiveActivityFeed />
+        </div>
+
+        {/* Earnings snapshot */}
+        <div className="mb-4">
+          <EarningsSummaryCard />
         </div>
 
         {/* Quick actions */}
