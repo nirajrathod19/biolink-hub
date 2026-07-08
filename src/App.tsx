@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AdminRoute } from "@/components/auth/AdminRoute";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { CookieConsent } from "@/components/consent/CookieConsent";
 import Landing from "./pages/Landing";
 import DemoPage from "./pages/DemoPage";
 import LoginPage from "./pages/LoginPage";
@@ -43,6 +44,7 @@ const App = () => (
         <ThemeToggle />
         <Toaster />
         <Sonner />
+        <CookieConsent />
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
