@@ -734,6 +734,45 @@ export type Database = {
         }
         Relationships: []
       }
+      creator_monetization: {
+        Row: {
+          applied_at: string | null
+          created_at: string
+          id: string
+          revenue_share_pct: number
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["monetization_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          applied_at?: string | null
+          created_at?: string
+          id?: string
+          revenue_share_pct?: number
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["monetization_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          applied_at?: string | null
+          created_at?: string
+          id?: string
+          revenue_share_pct?: number
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["monetization_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       creator_posts: {
         Row: {
           comments_count: number
@@ -766,6 +805,71 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      creator_revenue: {
+        Row: {
+          created_at: string
+          creator_id: string
+          creator_share: number
+          currency: string
+          deductions: number
+          eligible_amount: number
+          gross_amount: number
+          id: string
+          metadata: Json
+          period: string | null
+          platform_share: number
+          reference_id: string | null
+          reverses_id: string | null
+          source: Database["public"]["Enums"]["revenue_source"]
+          status: Database["public"]["Enums"]["revenue_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          creator_share?: number
+          currency?: string
+          deductions?: number
+          eligible_amount?: number
+          gross_amount?: number
+          id?: string
+          metadata?: Json
+          period?: string | null
+          platform_share?: number
+          reference_id?: string | null
+          reverses_id?: string | null
+          source: Database["public"]["Enums"]["revenue_source"]
+          status?: Database["public"]["Enums"]["revenue_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          creator_share?: number
+          currency?: string
+          deductions?: number
+          eligible_amount?: number
+          gross_amount?: number
+          id?: string
+          metadata?: Json
+          period?: string | null
+          platform_share?: number
+          reference_id?: string | null
+          reverses_id?: string | null
+          source?: Database["public"]["Enums"]["revenue_source"]
+          status?: Database["public"]["Enums"]["revenue_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_revenue_reverses_id_fkey"
+            columns: ["reverses_id"]
+            isOneToOne: false
+            referencedRelation: "creator_revenue"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       creator_subscribers: {
         Row: {
@@ -1055,6 +1159,45 @@ export type Database = {
           ip_address?: string | null
           success?: boolean | null
           user_agent?: string | null
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          link: string | null
+          metadata: Json
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          metadata?: Json
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          metadata?: Json
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -2217,6 +2360,20 @@ export type Database = {
     Enums: {
       ad_placement_type: "top_banner" | "in_between" | "sticky_bottom"
       app_role: "admin" | "creator" | "user"
+      monetization_status:
+        | "NOT_ELIGIBLE"
+        | "PENDING_REVIEW"
+        | "APPROVED"
+        | "SUSPENDED"
+        | "REJECTED"
+      revenue_source: "ADS" | "PRODUCT" | "TIP" | "AFFILIATE" | "OTHER"
+      revenue_status:
+        | "ESTIMATED"
+        | "PENDING"
+        | "CONFIRMED"
+        | "AVAILABLE"
+        | "PAID"
+        | "REVERSED"
       ticket_status: "new" | "pending" | "resolved"
     }
     CompositeTypes: {
@@ -2347,6 +2504,22 @@ export const Constants = {
     Enums: {
       ad_placement_type: ["top_banner", "in_between", "sticky_bottom"],
       app_role: ["admin", "creator", "user"],
+      monetization_status: [
+        "NOT_ELIGIBLE",
+        "PENDING_REVIEW",
+        "APPROVED",
+        "SUSPENDED",
+        "REJECTED",
+      ],
+      revenue_source: ["ADS", "PRODUCT", "TIP", "AFFILIATE", "OTHER"],
+      revenue_status: [
+        "ESTIMATED",
+        "PENDING",
+        "CONFIRMED",
+        "AVAILABLE",
+        "PAID",
+        "REVERSED",
+      ],
       ticket_status: ["new", "pending", "resolved"],
     },
   },
