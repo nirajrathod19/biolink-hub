@@ -192,6 +192,37 @@ Deno.serve(async (req) => {
           { onConflict: "user_id" }
         );
 
+      // Immutable ledger entry
+      await supabase.from("creator_revenue").insert({
+        creator_id: profile.user_id,
+        source: "ADS",
+        gross_amount: grossRevenue,
+        deductions: 0,
+        eligible_amount: grossRevenue,
+        creator_share: creatorShare,
+        platform_share: platformShare,
+        currency: "USD",
+        period: yesterday,
+        status: "AVAILABLE",
+        reference_id: `ads-${profile.user_id}-${yesterday}`,
+        metadata: {
+          impressions: clean.length,
+          flagged: flagged.length,
+          plan,
+          creator_pct: creatorPct,
+        },
+      });
+
+      // Notify the creator
+      await supabase.from("notifications").insert({
+        user_id: profile.user_id,
+        type: "ad_earning",
+        title: "Ad revenue credited",
+        body: `You earned $${creatorShare.toFixed(4)} from ${clean.length} ad impressions.`,
+        link: "/dashboard/revenue",
+        metadata: { period: yesterday, creator_share: creatorShare },
+      });
+
       // Log in ad_earnings_logs
       await supabase.from("ad_earnings_logs").upsert(
         {
