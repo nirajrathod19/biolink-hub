@@ -119,9 +119,25 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      // Gate payouts on monetization approval
+      const { data: monetization } = await supabase
+        .from("creator_monetization")
+        .select("status, revenue_share_pct")
+        .eq("user_id", profile.user_id)
+        .maybeSingle();
+
+      if (!monetization || monetization.status !== "APPROVED") {
+        results.push({
+          username: profile.username,
+          status: "not_approved",
+          monetization_status: monetization?.status ?? "NOT_ELIGIBLE",
+        });
+        continue;
+      }
+
       const plan = walletSub.plan || "starter";
-      // Starter Pro = 50/50, Full Pro = 100% to creator
-      const creatorPct = plan === "full" ? 100 : 50;
+      // Full Pro = 100% to creator, otherwise use approved share (default 50%)
+      const creatorPct = plan === "full" ? 100 : Number(monetization.revenue_share_pct ?? 50);
 
       // Fetch yesterday's ad impressions for this profile
       const { data: impressions } = await supabase
