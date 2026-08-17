@@ -44,6 +44,7 @@ const primaryMenu = [
 ];
 
 const advancedMenu = [
+  { icon: DollarSign, label: "Revenue", href: "/dashboard/revenue" },
   { icon: UserCircle, label: "Profile", href: "/dashboard/profile" },
   { icon: Share2, label: "Social", href: "/dashboard/social" },
   { icon: Wallet, label: "Wallet", href: "/dashboard/wallet" },

@@ -119,9 +119,25 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      // Gate payouts on monetization approval
+      const { data: monetization } = await supabase
+        .from("creator_monetization")
+        .select("status, revenue_share_pct")
+        .eq("user_id", profile.user_id)
+        .maybeSingle();
+
+      if (!monetization || monetization.status !== "APPROVED") {
+        results.push({
+          username: profile.username,
+          status: "not_approved",
+          monetization_status: monetization?.status ?? "NOT_ELIGIBLE",
+        });
+        continue;
+      }
+
       const plan = walletSub.plan || "starter";
-      // Starter Pro = 50/50, Full Pro = 100% to creator
-      const creatorPct = plan === "full" ? 100 : 50;
+      // Full Pro = 100% to creator, otherwise use approved share (default 50%)
+      const creatorPct = plan === "full" ? 100 : Number(monetization.revenue_share_pct ?? 50);
 
       // Fetch yesterday's ad impressions for this profile
       const { data: impressions } = await supabase
@@ -175,6 +191,37 @@ Deno.serve(async (req) => {
           },
           { onConflict: "user_id" }
         );
+
+      // Immutable ledger entry
+      await supabase.from("creator_revenue").insert({
+        creator_id: profile.user_id,
+        source: "ADS",
+        gross_amount: grossRevenue,
+        deductions: 0,
+        eligible_amount: grossRevenue,
+        creator_share: creatorShare,
+        platform_share: platformShare,
+        currency: "USD",
+        period: yesterday,
+        status: "AVAILABLE",
+        reference_id: `ads-${profile.user_id}-${yesterday}`,
+        metadata: {
+          impressions: clean.length,
+          flagged: flagged.length,
+          plan,
+          creator_pct: creatorPct,
+        },
+      });
+
+      // Notify the creator
+      await supabase.from("notifications").insert({
+        user_id: profile.user_id,
+        type: "ad_earning",
+        title: "Ad revenue credited",
+        body: `You earned $${creatorShare.toFixed(4)} from ${clean.length} ad impressions.`,
+        link: "/dashboard/revenue",
+        metadata: { period: yesterday, creator_share: creatorShare },
+      });
 
       // Log in ad_earnings_logs
       await supabase.from("ad_earnings_logs").upsert(
