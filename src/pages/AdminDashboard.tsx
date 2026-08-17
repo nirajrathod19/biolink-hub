@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard, Users, DollarSign, Activity, Settings, Shield, Megaphone, BookOpen, Bug, BarChart3, ExternalLink, Package,
+  LayoutDashboard, Users, DollarSign, Activity, Settings, Shield, Megaphone, BookOpen, Bug, BarChart3, ExternalLink, Package, ShieldCheck,
 } from "lucide-react";
 import { GradientButton } from "@/components/ui/GradientButton";
 import { AdminMobileHeader } from "@/components/admin/AdminMobileHeader";
@@ -16,6 +16,7 @@ import { BugReportsManager } from "@/components/admin/BugReportsManager";
 import { AdminTicketsTab } from "@/components/admin/AdminTicketsTab";
 import { AdminOrdersTab } from "@/components/admin/AdminOrdersTab";
 import { AdminDebugTab } from "@/components/admin/AdminDebugTab";
+import { AdminMonetizationTab } from "@/components/admin/AdminMonetizationTab";
 import { useNewTicketCount } from "@/hooks/useSupportTickets";
 
 import { Inbox, Bug as BugIcon } from "lucide-react";
@@ -25,6 +26,7 @@ const adminMenuItems = [
   { icon: Users, label: "Users", href: "/admin/users" },
   { icon: Package, label: "Orders", href: "/admin/orders" },
   { icon: DollarSign, label: "Payouts", href: "/admin/payouts" },
+  { icon: ShieldCheck, label: "Monetization", href: "/admin/monetization" },
   { icon: Activity, label: "Activity", href: "/admin/activity" },
   { icon: Inbox, label: "Tickets", href: "/admin/tickets" },
   { icon: Megaphone, label: "Ads", href: "/admin/ads" },
@@ -88,6 +90,7 @@ const AdminDashboard = () => {
           {path === "/admin/users" && <AdminUsersTab />}
           {path === "/admin/orders" && <AdminOrdersTab />}
           {path === "/admin/payouts" && <AdminPayoutsTab />}
+          {path === "/admin/monetization" && <AdminMonetizationTab />}
           {path === "/admin/activity" && <AdminActivityTab />}
           {path === "/admin/ads" && <AdminSettingsTab />}
           {path === "/admin/revenue" && <AdminPayoutsTab />}

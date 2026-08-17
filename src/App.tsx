@@ -33,6 +33,7 @@ import ProfilePage from "./pages/ProfilePage";
 import AdRedirectPage from "./pages/AdRedirectPage";
 import DynamicRulesPage from "./pages/DynamicRulesPage";
 import AIStudioPage from "./pages/AIStudioPage";
+import RevenuePage from "./pages/RevenuePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -71,6 +72,7 @@ const App = () => (
             <Route path="/dashboard/subscribers" element={<ProtectedRoute><SubscribersPage /></ProtectedRoute>} />
             <Route path="/dashboard/rules" element={<ProtectedRoute><DynamicRulesPage /></ProtectedRoute>} />
             <Route path="/dashboard/ai" element={<ProtectedRoute><AIStudioPage /></ProtectedRoute>} />
+            <Route path="/dashboard/revenue" element={<ProtectedRoute><RevenuePage /></ProtectedRoute>} />
             
             {/* Admin routes */}
             <Route path="/admin/verify" element={<AdminVerify />} />
