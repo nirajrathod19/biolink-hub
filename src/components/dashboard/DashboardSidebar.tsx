@@ -33,6 +33,7 @@ import { BugReportDialog } from "@/components/dashboard/BugReportDialog";
 import { ContactSupportDialog } from "@/components/dashboard/ContactSupportDialog";
 import { ProUpgradeModal } from "@/components/dashboard/ProUpgradeModal";
 import { BriooLogo } from "@/components/brand/BriooLogo";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
 
 const primaryMenu = [
   { icon: LayoutDashboard, label: "Home", href: "/dashboard", proOnly: false },
