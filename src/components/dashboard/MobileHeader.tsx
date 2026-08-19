@@ -18,6 +18,8 @@ export const MobileHeader = () => {
             </div>
         </Link>
 
+        <div className="flex items-center gap-1">
+        <NotificationBell />
         <Sheet>
           <SheetTrigger asChild>
             <button className="p-2 rounded-lg hover:bg-secondary transition-colors">
