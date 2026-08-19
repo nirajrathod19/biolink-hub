@@ -120,6 +120,7 @@ export const DashboardSidebar = () => { // sidebar component
             </Link>
           )}
           <div className="flex items-center gap-1">
+            {!collapsed && <NotificationBell />}
             {profile?.username && (
               <button
                 onClick={handleShare}
