@@ -2,6 +2,7 @@ import { Menu, Link2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { MobileSidebar } from "./MobileSidebar";
+import { NotificationBell } from "./NotificationBell";
 
 export const MobileHeader = () => {
   return (
@@ -17,6 +18,8 @@ export const MobileHeader = () => {
             </div>
         </Link>
 
+        <div className="flex items-center gap-1">
+        <NotificationBell />
         <Sheet>
           <SheetTrigger asChild>
             <button className="p-2 rounded-lg hover:bg-secondary transition-colors">
@@ -27,6 +30,7 @@ export const MobileHeader = () => {
             <MobileSidebar />
           </SheetContent>
         </Sheet>
+        </div>
       </div>
     </header>
   );
