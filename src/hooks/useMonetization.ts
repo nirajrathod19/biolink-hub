@@ -69,6 +69,12 @@ export const useApplyForMonetization = () => {
 
 /* ---------------- Admin ---------------- */
 
+export interface MonetizationApplication extends CreatorMonetization {
+  username: string | null;
+  display_name: string | null;
+  is_pro: boolean | null;
+}
+
 export const useAllMonetizationApplications = () => {
   return useQuery({
     queryKey: ["admin-monetization"],
@@ -78,7 +84,26 @@ export const useAllMonetizationApplications = () => {
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []) as CreatorMonetization[];
+
+      const rows = (data || []) as CreatorMonetization[];
+      if (rows.length === 0) return [] as MonetizationApplication[];
+
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, username, display_name, is_pro")
+        .in("user_id", rows.map((r) => r.user_id));
+
+      const byUser = new Map((profiles || []).map((p) => [p.user_id, p]));
+
+      return rows.map((r) => {
+        const p = byUser.get(r.user_id);
+        return {
+          ...r,
+          username: p?.username ?? null,
+          display_name: p?.display_name ?? null,
+          is_pro: p?.is_pro ?? null,
+        };
+      }) as MonetizationApplication[];
     },
   });
 };
