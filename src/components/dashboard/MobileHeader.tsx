@@ -30,6 +30,7 @@ export const MobileHeader = () => {
             <MobileSidebar />
           </SheetContent>
         </Sheet>
+        </div>
       </div>
     </header>
   );
