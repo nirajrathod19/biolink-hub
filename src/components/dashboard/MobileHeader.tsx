@@ -2,6 +2,7 @@ import { Menu, Link2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { MobileSidebar } from "./MobileSidebar";
+import { NotificationBell } from "./NotificationBell";
 
 export const MobileHeader = () => {
   return (
