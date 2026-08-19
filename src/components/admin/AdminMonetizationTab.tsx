@@ -24,10 +24,13 @@ export const AdminMonetizationTab = () => {
   const review = useReviewMonetization();
   const [search, setSearch] = useState("");
 
+  const q = search.toLowerCase();
   const filtered = applications.filter(
     (a) =>
-      a.user_id.toLowerCase().includes(search.toLowerCase()) ||
-      a.status.toLowerCase().includes(search.toLowerCase())
+      a.user_id.toLowerCase().includes(q) ||
+      a.status.toLowerCase().includes(q) ||
+      (a.username || "").toLowerCase().includes(q) ||
+      (a.display_name || "").toLowerCase().includes(q)
   );
 
   return (
@@ -73,7 +76,17 @@ export const AdminMonetizationTab = () => {
               <tbody>
                 {filtered.map((a) => (
                   <tr key={a.id} className="border-b border-border/20">
-                    <td className="py-2 pr-3 font-mono text-xs">{a.user_id.slice(0, 8)}…</td>
+                    <td className="py-2 pr-3">
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {a.display_name || (a.username ? `@${a.username}` : "Unknown creator")}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground">
+                          {a.username ? `@${a.username}` : a.user_id.slice(0, 8) + "…"}
+                          {a.is_pro ? " · Pro" : ""}
+                        </span>
+                      </div>
+                    </td>
                     <td className="py-2 pr-3 text-xs text-muted-foreground">
                       {a.applied_at ? format(new Date(a.applied_at), "dd MMM yyyy") : "—"}
                     </td>
