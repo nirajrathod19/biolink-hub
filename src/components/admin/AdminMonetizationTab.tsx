@@ -24,10 +24,13 @@ export const AdminMonetizationTab = () => {
   const review = useReviewMonetization();
   const [search, setSearch] = useState("");
 
+  const q = search.toLowerCase();
   const filtered = applications.filter(
     (a) =>
-      a.user_id.toLowerCase().includes(search.toLowerCase()) ||
-      a.status.toLowerCase().includes(search.toLowerCase())
+      a.user_id.toLowerCase().includes(q) ||
+      a.status.toLowerCase().includes(q) ||
+      (a.username || "").toLowerCase().includes(q) ||
+      (a.display_name || "").toLowerCase().includes(q)
   );
 
   return (
