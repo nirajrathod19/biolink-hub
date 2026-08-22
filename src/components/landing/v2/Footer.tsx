@@ -13,9 +13,10 @@ export const Footer = () => {
             <a href="#features" className="hover:text-foreground">Features</a>
             <a href="#pricing" className="hover:text-foreground">Pricing</a>
             <a href="#faq" className="hover:text-foreground">FAQ</a>
+            <Link to="/about" className="hover:text-foreground">About</Link>
             <Link to="/login" className="hover:text-foreground">Log in</Link>
           </div>
-          <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Brioo. All rights reserved.</p>
+          <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Brioo — founded by Niraj Rathod. All rights reserved.</p>
         </div>
       </div>
     </footer>

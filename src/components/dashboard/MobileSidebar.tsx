@@ -37,14 +37,14 @@ const primaryMenu = [
 ];
 
 const advancedMenu = [
-  { icon: DollarSign, label: "Revenue", href: "/dashboard/revenue" },
-  { icon: UserCircle, label: "Profile", href: "/dashboard/profile" },
-  { icon: Share2, label: "Social", href: "/dashboard/social" },
-  { icon: Wallet, label: "Wallet", href: "/dashboard/wallet" },
-  { icon: Mail, label: "Subscribers", href: "/dashboard/subscribers" },
-  { icon: Users, label: "Referrals", href: "/dashboard/referrals" },
+  { icon: DollarSign, label: "Earnings", href: "/dashboard/revenue" },
+  { icon: Wallet, label: "Wallet & Payouts", href: "/dashboard/wallet" },
+  { icon: Users, label: "Invite & Earn", href: "/dashboard/referrals" },
+  { icon: UserCircle, label: "Edit Profile", href: "/dashboard/profile" },
+  { icon: Share2, label: "Social Links", href: "/dashboard/social" },
+  { icon: Mail, label: "My Audience", href: "/dashboard/subscribers" },
   { icon: MessageSquare, label: "Community", href: "/dashboard/community" },
-  { icon: Zap, label: "Dynamic Rules", href: "/dashboard/rules" },
+  { icon: Zap, label: "Smart Rules", href: "/dashboard/rules" },
 ];
 
 export const MobileSidebar = () => {
@@ -158,7 +158,7 @@ export const MobileSidebar = () => {
             onClick={() => setAdvancedOpen((v) => !v)}
             className="flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:text-foreground"
           >
-            Advanced
+            More
             <ChevronDown className={cn("h-3 w-3 transition-transform", advancedOpen && "rotate-180")} />
           </button>
           {advancedOpen && (
