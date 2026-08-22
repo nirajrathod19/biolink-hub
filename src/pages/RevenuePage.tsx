@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   DollarSign,
@@ -101,6 +102,34 @@ const MonetizationBanner = () => {
   );
 };
 
+const MIN_PAYOUT = 3;
+
+const PayoutCta = ({ available }: { available: number }) => {
+  const { data: profile } = useProfile();
+  const walletBalance = Number(profile?.wallet_balance ?? 0);
+  const canWithdraw = walletBalance >= MIN_PAYOUT;
+
+  return (
+    <GlassCard className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+      <div className="flex-1">
+        <p className="font-semibold text-sm">Ready to cash out</p>
+        <p className="text-xs text-muted-foreground">
+          {money(available)} confirmed in your ledger · {money(walletBalance)} in your wallet.{" "}
+          {canWithdraw
+            ? "You can request a payout now."
+            : `Minimum payout is ${money(MIN_PAYOUT)}.`}
+        </p>
+      </div>
+      <Link to="/dashboard/wallet">
+        <GradientButton size="sm" disabled={!canWithdraw}>
+          Request payout
+        </GradientButton>
+      </Link>
+    </GlassCard>
+  );
+};
+
+
 const RevenuePage = () => {
   const { data, isLoading } = useCreatorRevenue();
   const summary = data?.summary;
@@ -141,6 +170,10 @@ const RevenuePage = () => {
             </motion.div>
           ))}
         </div>
+
+        <PayoutCta available={summary?.available ?? 0} />
+
+
 
         <GlassCard className="p-4">
           <h2 className="font-semibold text-sm mb-3">Earnings over time</h2>
