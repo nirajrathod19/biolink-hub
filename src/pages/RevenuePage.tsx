@@ -142,6 +142,10 @@ const RevenuePage = () => {
           ))}
         </div>
 
+        <PayoutCta available={summary?.available ?? 0} />
+
+
+
         <GlassCard className="p-4">
           <h2 className="font-semibold text-sm mb-3">Earnings over time</h2>
           <div className="h-56">
